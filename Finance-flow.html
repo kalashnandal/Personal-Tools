@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Finance Tracker (INR)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- PDF.js for scanning GPay Statements -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Modal Animation */
+        .modal-enter { animation: modalFadeIn 0.3s ease-out forwards; }
+        .modal-exit { animation: modalFadeOut 0.2s ease-in forwards; }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes modalFadeOut {
+            from { opacity: 1; transform: scale(1) translateY(0); }
+            to { opacity: 0; transform: scale(0.95) translateY(10px); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">FinanceFlow</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-sm font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-full" id="current-month-display">
+                    Loading Month...
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col gap-8">
+        
+        <!-- Top Dashboard Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Total Balance -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 bg-indigo-50 w-24 h-24 rounded-full opacity-50"></div>
+                <p class="text-sm font-medium text-slate-500 mb-1 relative z-10">Available Balance</p>
+                <h2 class="text-4xl font-bold text-slate-900 relative z-10" id="total-balance">₹0</h2>
+                
+                <div class="mt-4 w-full bg-slate-100 rounded-full h-2 relative z-10">
+                    <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" id="balance-progress" style="width: 0%"></div>
+                </div>
+                <p class="text-xs text-slate-400 mt-2 relative z-10" id="balance-status">0% of income spent</p>
+            </div>
+
+            <!-- Total Income -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-sm font-medium text-slate-500">Total Monthly Income</p>
+                    <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                </div>
+                <h2 class="text-3xl font-bold text-emerald-600" id="total-income">₹0</h2>
+                <div class="mt-2 text-xs text-slate-500 flex justify-between">
+                    <span>5th: <span id="summary-salary" class="font-semibold">₹0</span></span>
+                    <span>15th: <span id="summary-incentive" class="font-semibold">₹0</span></span>
+                </div>
+            </div>
+
+            <!-- Total Expenses -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div class="flex justify-between items-start mb-1">
+                    <p class="text-sm font-medium text-slate-500">Total Expenses</p>
+                    <span class="bg-rose-100 text-rose-700 p-1.5 rounded-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5-5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                </div>
+                <h2 class="text-3xl font-bold text-rose-600" id="total-expenses">₹0</h2>
+                <p class="mt-2 text-xs text-slate-500"><span id="expense-count" class="font-semibold">0</span> transactions this month</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Inputs -->
+            <div class="flex flex-col gap-6 lg:col-span-1">
+                
+                <!-- PDF Scanner Tool -->
+                <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl border border-indigo-500 shadow-md p-6 text-white relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 opacity-20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 relative z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Smart PDF Scanner
+                    </h3>
+                    <p class="text-indigo-100 text-sm mb-4 relative z-10">Upload your GPay statement to automatically extract expenses.</p>
+                    
+                    <div class="relative z-10">
+                        <input type="file" id="pdf-upload" accept="application/pdf" class="hidden">
+                        <label for="pdf-upload" id="upload-label" class="cursor-pointer flex items-center justify-center w-full bg-white text-indigo-700 font-medium py-2.5 px-4 rounded-xl transition-transform hover:scale-[1.02] active:scale-95 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Select GPay PDF
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Income Configuration -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Income Sources
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="income-salary" class="block text-sm font-medium text-slate-700 mb-1">Salary (Received on 5th)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-slate-500 sm:text-sm">₹</span>
+                                </div>
+                                <input type="number" id="income-salary" min="0" step="1" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow" placeholder="0">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="income-incentive" class="block text-sm font-medium text-slate-700 mb-1">Incentive (Received on 15th)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-slate-500 sm:text-sm">₹</span>
+                                </div>
+                                <input type="number" id="income-incentive" min="0" step="1" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow" placeholder="0">
+                            </div>
+                        </div>
+                        <button id="save-income-btn" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-4 rounded-xl transition-colors">
+                            Update Income
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Expense Form -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Manual Expense
+                    </h3>
+                    <form id="expense-form" class="space-y-4">
+                        <div>
+                            <label for="expense-desc" class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                            <input type="text" id="expense-desc" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow" placeholder="e.g. Swiggy">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="expense-amount" class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-slate-500 sm:text-sm">₹</span>
+                                    </div>
+                                    <input type="number" id="expense-amount" required min="1" step="1" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow" placeholder="0">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="expense-date" class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                                <input type="date" id="expense-date" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow text-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="expense-category" class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                            <select id="expense-category" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow bg-white text-sm">
+                                <option value="Housing">Housing</option>
+                                <option value="Food">Food & Dining</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Healthcare">Healthcare</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Add Expense
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: Chart & Transactions -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                
+                <!-- Chart Section -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative flex flex-col items-center justify-center" id="chart-container" style="min-h: 300px;">
+                    <!-- Empty State for Chart -->
+                    <div id="chart-empty-state" class="text-center text-slate-400 absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                        </svg>
+                        <p class="text-sm">Add expenses to view visual analysis.</p>
+                    </div>
+
+                    <div class="w-full flex justify-between items-center mb-4 z-20">
+                        <h3 class="text-lg font-semibold text-slate-900">Spending Analysis</h3>
+                        <button onclick="openReportModal()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-4 py-2 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            Generate AI Report
+                        </button>
+                    </div>
+                    
+                    <div class="relative h-56 w-full flex justify-center z-20 opacity-0 transition-opacity duration-300" id="canvas-wrapper">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Transactions List -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col flex-grow min-h-[400px]">
+                    <h3 class="text-lg font-semibold text-slate-900 mb-4 flex justify-between items-center border-b border-slate-100 pb-4">
+                        <span>Recent Transactions</span>
+                        <button onclick="clearAllData()" class="text-sm text-slate-400 hover:text-rose-500 font-normal transition-colors">Clear All</button>
+                    </h3>
+                    
+                    <div class="flex-grow overflow-y-auto custom-scrollbar pr-2" id="expenses-container">
+                        <!-- Expenses injected via JS -->
+                        <div id="empty-state" class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 pt-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p class="text-sm text-center">No expenses recorded yet.<br>Add manually or scan a PDF.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- REPORT MODAL (Hidden by default) -->
+    <div id="report-modal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative">
+            
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-700 p-6 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold">End of Month Report</h2>
+                    <p class="text-indigo-100 text-sm mt-1" id="modal-month-text">Analysis for Current Month</p>
+                </div>
+                <button onclick="closeReportModal()" class="text-white hover:text-indigo-200 transition-colors bg-white/10 p-2 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow space-y-8">
+                
+                <!-- Quick Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Total Saved</p>
+                        <p class="text-2xl font-bold text-emerald-600" id="report-saved">₹0</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Savings Rate</p>
+                        <p class="text-2xl font-bold text-indigo-600" id="report-rate">0%</p>
+                    </div>
+                </div>
+
+                <!-- Category Breakdown Bars -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Where Your Money Went</h3>
+                    <div id="report-bars-container" class="space-y-4">
+                        <!-- Bars injected via JS -->
+                    </div>
+                </div>
+
+                <!-- AI Actionable Insights -->
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Smart Insights & Recommendations</h3>
+                    <div id="report-insights-container" class="space-y-3">
+                        <!-- Insights injected via JS -->
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex justify-end">
+                <button onclick="window.print()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors mr-3">
+                    Print / Save PDF
+                </button>
+                <button onclick="closeReportModal()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                    Close Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span id="toast-msg" class="text-sm font-medium">Action successful</span>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const state = {
+            income: { salary: 0, incentive: 0 },
+            expenses: []
+        };
+        let myChart = null;
+
+        // --- DOM Elements ---
+        const els = {
+            incomeSalary: document.getElementById('income-salary'),
+            incomeIncentive: document.getElementById('income-incentive'),
+            saveIncomeBtn: document.getElementById('save-income-btn'),
+            expenseForm: document.getElementById('expense-form'),
+            expenseDesc: document.getElementById('expense-desc'),
+            expenseAmount: document.getElementById('expense-amount'),
+            expenseDate: document.getElementById('expense-date'),
+            expenseCategory: document.getElementById('expense-category'),
+            totalBalance: document.getElementById('total-balance'),
+            totalIncome: document.getElementById('total-income'),
+            totalExpenses: document.getElementById('total-expenses'),
+            summarySalary: document.getElementById('summary-salary'),
+            summaryIncentive: document.getElementById('summary-incentive'),
+            expenseCount: document.getElementById('expense-count'),
+            balanceProgress: document.getElementById('balance-progress'),
+            balanceStatus: document.getElementById('balance-status'),
+            expensesContainer: document.getElementById('expenses-container'),
+            emptyState: document.getElementById('empty-state'),
+            currentMonthDisplay: document.getElementById('current-month-display'),
+            pdfUpload: document.getElementById('pdf-upload'),
+            uploadLabel: document.getElementById('upload-label'),
+            chartEmptyState: document.getElementById('chart-empty-state'),
+            canvasWrapper: document.getElementById('canvas-wrapper'),
+            
+            // Report Modal Elements
+            reportModal: document.getElementById('report-modal'),
+            modalMonthText: document.getElementById('modal-month-text'),
+            reportSaved: document.getElementById('report-saved'),
+            reportRate: document.getElementById('report-rate'),
+            reportBarsContainer: document.getElementById('report-bars-container'),
+            reportInsightsContainer: document.getElementById('report-insights-container'),
+
+            toast: document.getElementById('toast'),
+            toastMsg: document.getElementById('toast-msg')
+        };
+
+        // --- Formatting & Utilities ---
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency', currency: 'INR', maximumFractionDigits: 0
+            }).format(amount);
+        };
+
+        const formatDate = (dateString) => {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-IN', options);
+        };
+
+        const showToast = (message) => {
+            els.toastMsg.textContent = message;
+            els.toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => els.toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        };
+
+        const getCategoryColor = (category, type = 'class') => {
+            const colors = {
+                'Housing': { class: 'bg-blue-100 text-blue-700', hex: '#3b82f6', bgHex: '#eff6ff' },
+                'Food': { class: 'bg-orange-100 text-orange-700', hex: '#f97316', bgHex: '#fff7ed' },
+                'Transportation': { class: 'bg-cyan-100 text-cyan-700', hex: '#06b6d4', bgHex: '#ecfeff' },
+                'Utilities': { class: 'bg-yellow-100 text-yellow-700', hex: '#eab308', bgHex: '#fefce8' },
+                'Shopping': { class: 'bg-pink-100 text-pink-700', hex: '#ec4899', bgHex: '#fdf2f8' },
+                'Entertainment': { class: 'bg-purple-100 text-purple-700', hex: '#a855f7', bgHex: '#faf5ff' },
+                'Healthcare': { class: 'bg-rose-100 text-rose-700', hex: '#f43f5e', bgHex: '#fff1f2' },
+                'Other': { class: 'bg-slate-100 text-slate-700', hex: '#64748b', bgHex: '#f8fafc' }
+            };
+            return colors[category] ? colors[category][type] : colors['Other'][type];
+        };
+
+        const autoCategorize = (desc) => {
+            const lowerDesc = desc.toLowerCase();
+            if (lowerDesc.match(/zomato|swiggy|restaurant|cafe|food/)) return 'Food';
+            if (lowerDesc.match(/uber|ola|irctc|metro|petrol|fuel/)) return 'Transportation';
+            if (lowerDesc.match(/amazon|flipkart|myntra|mall|shop/)) return 'Shopping';
+            if (lowerDesc.match(/airtel|jio|electricity|bill|recharge/)) return 'Utilities';
+            if (lowerDesc.match(/movie|netflix|spotify|prime/)) return 'Entertainment';
+            if (lowerDesc.match(/hospital|pharmacy|clinic|medical/)) return 'Healthcare';
+            if (lowerDesc.match(/rent|maintenance/)) return 'Housing';
+            return 'Other';
+        };
+
+        // --- Report Generation Algorithm ---
+        const generateFinancialInsights = (totalIncome, totalExpenses, categoryTotals) => {
+            const insights = [];
+            const savings = totalIncome - totalExpenses;
+            const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
+
+            if (totalIncome === 0) {
+                return [{ icon: '⚠️', text: "Please enter your salary and incentive income to get personalized saving advice.", color: 'text-yellow-700', bg: 'bg-yellow-50' }];
+            }
+
+            if (totalExpenses === 0) {
+                return [{ icon: '🌟', text: "Great job! You haven't spent anything yet. Keep up the good work.", color: 'text-emerald-700', bg: 'bg-emerald-50' }];
+            }
+
+            // 1. Savings Rule (50/30/20)
+            if (savings < 0) {
+                insights.push({ icon: '🚨', text: "You are currently spending more than you earn. Review all recent transactions immediately and halt non-essential spending.", color: 'text-rose-700', bg: 'bg-rose-50' });
+            } else if (savingsRate < 20) {
+                insights.push({ icon: '💡', text: "You are saving less than the recommended 20% of your income. Look into reducing discretionary expenses (Shopping, Entertainment) to build your emergency fund.", color: 'text-orange-700', bg: 'bg-orange-50' });
+            } else {
+                insights.push({ icon: '🏆', text: `Excellent! You are saving ${savingsRate.toFixed(1)}% of your income. You are meeting standard financial goals!`, color: 'text-emerald-700', bg: 'bg-emerald-50' });
+            }
+
+            // 2. Food Rule
+            const foodSpend = categoryTotals['Food'] || 0;
+            if (foodSpend > (totalIncome * 0.15)) {
+                insights.push({ icon: '🍔', text: "Your spending on Food & Dining is quite high. Cooking at home or meal prepping for the week can drastically lower this expense.", color: 'text-indigo-700', bg: 'bg-indigo-50' });
+            }
+
+            // 3. Discretionary Spending Rule
+            const funSpend = (categoryTotals['Shopping'] || 0) + (categoryTotals['Entertainment'] || 0);
+            if (funSpend > (totalIncome * 0.20)) {
+                insights.push({ icon: '🛍️', text: "Over 20% of your income is going to Shopping and Entertainment. Setting a strict budget for 'Wants' will help you save more.", color: 'text-purple-700', bg: 'bg-purple-50' });
+            }
+
+            // 4. Transportation Rule
+            const transportSpend = categoryTotals['Transportation'] || 0;
+            if (transportSpend > (totalIncome * 0.15)) {
+                insights.push({ icon: '🚗', text: "Transportation costs are eating up a lot of your budget. Check if carpooling or using public transit can lower this.", color: 'text-cyan-700', bg: 'bg-cyan-50' });
+            }
+
+            // 5. Positive Reinforcement
+            if (insights.length === 1 && savingsRate >= 20) {
+                insights.push({ icon: '📈', text: "Your spending looks well-balanced across all categories. Keep sticking to your budget!", color: 'text-blue-700', bg: 'bg-blue-50' });
+            }
+
+            return insights;
+        };
+
+        window.openReportModal = () => {
+            const totalInc = state.income.salary + state.income.incentive;
+            const totalExp = state.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const savings = totalInc - totalExp;
+            const savingsRate = totalInc > 0 ? (savings / totalInc) * 100 : 0;
+
+            els.reportSaved.textContent = formatCurrency(savings);
+            els.reportSaved.className = savings >= 0 ? "text-2xl font-bold text-emerald-600" : "text-2xl font-bold text-rose-600";
+            els.reportRate.textContent = `${savingsRate.toFixed(1)}%`;
+
+            // Calculate Categories
+            const categoryTotals = state.expenses.reduce((acc, exp) => {
+                acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+                return acc;
+            }, {});
+
+            // Sort categories by highest spend
+            const sortedCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+
+            // Render Category Bars
+            els.reportBarsContainer.innerHTML = '';
+            if (sortedCategories.length === 0) {
+                els.reportBarsContainer.innerHTML = '<p class="text-sm text-slate-500">No expenses to display.</p>';
+            } else {
+                sortedCategories.forEach(([cat, amount]) => {
+                    const pct = totalExp > 0 ? ((amount / totalExp) * 100).toFixed(1) : 0;
+                    const hexColor = getCategoryColor(cat, 'hex');
+                    const bgHexColor = getCategoryColor(cat, 'bgHex');
+                    
+                    els.reportBarsContainer.innerHTML += `
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="font-medium text-slate-700">${cat}</span>
+                                <span class="text-slate-500">${formatCurrency(amount)} (${pct}%)</span>
+                            </div>
+                            <div class="w-full rounded-full h-2.5" style="background-color: ${bgHexColor}">
+                                <div class="h-2.5 rounded-full transition-all duration-1000" style="width: ${pct}%; background-color: ${hexColor}"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Render Insights
+            const insights = generateFinancialInsights(totalInc, totalExp, categoryTotals);
+            els.reportInsightsContainer.innerHTML = insights.map(insight => `
+                <div class="${insight.bg} border border-white/50 p-4 rounded-2xl flex gap-3 shadow-sm">
+                    <div class="text-2xl shrink-0">${insight.icon}</div>
+                    <p class="text-sm ${insight.color} font-medium leading-relaxed">${insight.text}</p>
+                </div>
+            `).join('');
+
+            // Show Modal with Animation
+            els.reportModal.classList.remove('hidden');
+            els.reportModal.firstElementChild.classList.remove('modal-exit');
+            els.reportModal.firstElementChild.classList.add('modal-enter');
+        };
+
+        window.closeReportModal = () => {
+            els.reportModal.firstElementChild.classList.remove('modal-enter');
+            els.reportModal.firstElementChild.classList.add('modal-exit');
+            setTimeout(() => {
+                els.reportModal.classList.add('hidden');
+            }, 200); // match animation duration
+        };
+
+        // --- Chart & Standard Logic ---
+        const updateChart = () => {
+            if (state.expenses.length === 0) {
+                els.chartEmptyState.style.display = 'flex';
+                els.canvasWrapper.style.opacity = '0';
+                return;
+            }
+            els.chartEmptyState.style.display = 'none';
+            els.canvasWrapper.style.opacity = '1';
+
+            const categoryTotals = state.expenses.reduce((acc, exp) => {
+                acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+                return acc;
+            }, {});
+
+            const labels = Object.keys(categoryTotals);
+            const dataValues = Object.values(categoryTotals);
+            const bgColors = labels.map(cat => getCategoryColor(cat, 'hex'));
+
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            
+            if (myChart) {
+                myChart.data.labels = labels;
+                myChart.data.datasets[0].data = dataValues;
+                myChart.data.datasets[0].backgroundColor = bgColors;
+                myChart.update();
+            } else {
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: dataValues, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '70%',
+                        plugins: { legend: { position: 'right', labels: { usePointStyle: true, padding: 15, font: { family: "'Inter', sans-serif", size: 12 } } } }
+                    }
+                });
+            }
+        };
+
+        const calculateDashboard = () => {
+            const totalInc = state.income.salary + state.income.incentive;
+            const totalExp = state.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const balance = totalInc - totalExp;
+
+            els.totalIncome.textContent = formatCurrency(totalInc);
+            els.summarySalary.textContent = formatCurrency(state.income.salary);
+            els.summaryIncentive.textContent = formatCurrency(state.income.incentive);
+            els.totalExpenses.textContent = formatCurrency(totalExp);
+            els.expenseCount.textContent = state.expenses.length;
+            
+            els.totalBalance.textContent = formatCurrency(balance);
+            if (balance < 0) els.totalBalance.classList.replace('text-slate-900', 'text-rose-600');
+            else els.totalBalance.classList.replace('text-rose-600', 'text-slate-900');
+
+            let percentage = totalInc > 0 ? Math.min((totalExp / totalInc) * 100, 100) : 0;
+            els.balanceProgress.style.width = `${percentage}%`;
+            
+            if (percentage > 90) els.balanceProgress.className = 'bg-rose-500 h-2 rounded-full transition-all duration-500';
+            else if (percentage > 70) els.balanceProgress.className = 'bg-yellow-500 h-2 rounded-full transition-all duration-500';
+            else els.balanceProgress.className = 'bg-indigo-500 h-2 rounded-full transition-all duration-500';
+
+            els.balanceStatus.textContent = totalInc > 0 ? `${percentage.toFixed(1)}% of income spent` : 'Enter income to see spending ratio';
+            
+            updateChart();
+        };
+
+        const renderExpenses = () => {
+            if (state.expenses.length === 0) {
+                els.emptyState.style.display = 'flex';
+                Array.from(els.expensesContainer.children).forEach(child => { if (child.id !== 'empty-state') child.remove(); });
+                return;
+            }
+
+            els.emptyState.style.display = 'none';
+            Array.from(els.expensesContainer.children).forEach(child => { if (child.id !== 'empty-state') child.remove(); });
+
+            const sortedExpenses = [...state.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedExpenses.forEach(exp => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-4 border border-slate-100 rounded-xl mb-3 hover:bg-slate-50 transition-colors group bg-white';
+                item.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${getCategoryColor(exp.category, 'class')}">
+                            ${exp.category.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-800 text-sm">${exp.description}</p>
+                            <p class="text-xs text-slate-500">${formatDate(exp.date)} &bull; ${exp.category}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-bold text-slate-800">-${formatCurrency(exp.amount)}</span>
+                        <button onclick="deleteExpense('${exp.id}')" class="text-slate-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100" title="Delete Expense">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                `;
+                els.expensesContainer.appendChild(item);
+            });
+        };
+
+        window.deleteExpense = (id) => {
+            state.expenses = state.expenses.filter(exp => exp.id !== id);
+            calculateDashboard(); renderExpenses(); showToast('Expense removed');
+        };
+
+        window.clearAllData = () => {
+            state.expenses = [];
+            calculateDashboard(); renderExpenses(); showToast('All transactions cleared');
+        };
+
+        // --- PDF Scanner Logic ---
+        els.pdfUpload.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            els.uploadLabel.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Scanning...`;
+            els.uploadLabel.classList.add('opacity-75', 'cursor-not-allowed');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                let newExpenses = [];
+                let today = new Date().toISOString().split('T')[0];
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const items = textContent.items.map(item => item.str);
+                    
+                    for (let j = 0; j < items.length; j++) {
+                        const str = items[j].trim();
+                        if (str.includes('₹') || (str.match(/^[0-9,]+\.[0-9]{2}$/) && !str.includes(':'))) {
+                            let amountStr = str.replace(/[^\d.]/g, '');
+                            let amount = parseFloat(amountStr);
+                            
+                            if (amount > 0 && amount < 1000000) {
+                                let desc = "GPay Scanned Transaction";
+                                if (j > 0 && items[j-1].trim().length > 2 && !items[j-1].includes('₹')) desc = items[j-1].trim();
+                                else if (j > 1 && items[j-2].trim().length > 2) desc = items[j-2].trim();
+                                
+                                newExpenses.push({
+                                    id: 'pdf-' + Date.now() + Math.random(),
+                                    description: desc, amount: amount, date: today, category: autoCategorize(desc)
+                                });
+                            }
+                        }
+                    }
+                }
+
+                if (newExpenses.length > 0) {
+                    state.expenses = [...state.expenses, ...newExpenses];
+                    calculateDashboard(); renderExpenses(); showToast(`Scanned & added ${newExpenses.length} transactions!`);
+                } else {
+                    showToast('No recognizable ₹ amounts found in PDF.');
+                }
+            } catch (error) {
+                console.error("PDF Parsing Error:", error); showToast('Failed to read PDF. Ensure it is a valid document.');
+            } finally {
+                els.uploadLabel.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Select GPay PDF`;
+                els.uploadLabel.classList.remove('opacity-75', 'cursor-not-allowed');
+                event.target.value = ''; 
+            }
+        });
+
+        // --- Event Listeners ---
+        els.saveIncomeBtn.addEventListener('click', () => {
+            state.income.salary = parseFloat(els.incomeSalary.value) || 0;
+            state.income.incentive = parseFloat(els.incomeIncentive.value) || 0;
+            calculateDashboard(); showToast('Income updated successfully');
+        });
+
+        els.expenseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const desc = els.expenseDesc.value, amount = parseFloat(els.expenseAmount.value), date = els.expenseDate.value, category = els.expenseCategory.value;
+            if (!desc || !amount || !date || !category) return;
+
+            state.expenses.push({ id: 'id-' + new Date().getTime(), description: desc, amount: amount, date: date, category: category });
+            els.expenseForm.reset(); els.expenseDate.valueAsDate = new Date();
+            calculateDashboard(); renderExpenses(); showToast('Expense added');
+        });
+
+        // Close modal on outside click
+        els.reportModal.addEventListener('click', (e) => {
+            if (e.target === els.reportModal) closeReportModal();
+        });
+
+        // --- Initialization ---
+        const init = () => {
+            const currentMonthStr = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            els.currentMonthDisplay.textContent = currentMonthStr;
+            els.modalMonthText.textContent = `Analysis for ${currentMonthStr}`;
+            els.expenseDate.valueAsDate = new Date();
+            calculateDashboard(); renderExpenses();
+        };
+
+        init();
+
+    </script>
+</body>
+</html>
+
+
