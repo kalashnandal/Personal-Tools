@@ -24,10 +24,10 @@
             getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, setDoc, onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Integrated the Gemini API Key from your snippet
+        // Gemini API Key
         const GEMINI_API_KEY = "AIzaSyDyaMmqlZ2NG4qqUyhLnPV3ykhKlHYGNtI"; 
 
-        // Integrated the Firebase Config from your snippet
+        // Firebase Config
         const myFirebaseConfig = {
             apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
             authDomain: "financeflow-89cc0.firebaseapp.com",
@@ -80,7 +80,7 @@
         progress::-webkit-progress-bar { background-color: #e2e8f0; border-radius: 9999px; }
         progress::-webkit-progress-value { background-color: #4f46e5; border-radius: 9999px; transition: width 0.5s ease; }
 
-        /* AI Report */
+        /* AI Report HTML Formatting */
         .ai-report-content h3 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-top: 1.5rem; margin-bottom: 0.75rem; letter-spacing: -0.025em; }
         .ai-report-content p { color: #475569; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
         .ai-report-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; color: #475569; font-size: 0.95rem; font-weight: 500; }
@@ -194,7 +194,6 @@
             
             <!-- ================= VIEW: DASHBOARD ================= -->
             <div id="view-dashboard" class="view-section active space-y-8 max-w-7xl mx-auto pb-24">
-                
                 <!-- Macro Metric Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100 relative overflow-hidden group">
@@ -363,7 +362,7 @@
                                 <input type="number" id="trk-tenure" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
                             </div>
                         </div>
-                        <button type="submit" class="bg-slate-900 hover:bg-indigo-600 text-white font-extrabold py-3.5 px-8 rounded-2xl transition-all shadow-lg">Save Tracker</button>
+                        <button type="submit" class="bg-slate-900 hover:bg-indigo-600 text-white font-extrabold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-slate-900/20">Save Tracker</button>
                     </form>
                 </div>
 
@@ -380,9 +379,6 @@
                             <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Full Ledger</h2>
                             <p class="text-sm text-slate-500 font-semibold mt-2" id="ledger-count">0 transactions</p>
                         </div>
-                        <button onclick="window.openTxModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-sm font-bold transition-all">
-                            + Transaction
-                        </button>
                     </div>
                     <div class="flex-1 overflow-y-auto p-4 md:p-8" id="full-ledger-container">
                         <!-- Populated by JS -->
@@ -419,6 +415,7 @@
                         <div id="report-output-card" class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 p-8 flex-1 overflow-y-auto custom-scrollbar hidden min-h-[500px]">
                             <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                 <h3 class="font-extrabold text-slate-900 text-xl tracking-tight">Executive Report</h3>
+                                <button onclick="document.getElementById('report-output-card').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
                             </div>
                             <div id="report-content" class="ai-report-content text-slate-700">
                                 <!-- Populated by AI -->
@@ -446,11 +443,11 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Amount (₹)</label>
-                    <input type="number" id="modal-tx-amount" required min="1" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-bold text-lg">
+                    <input type="number" id="modal-tx-amount" required min="1" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-bold text-lg text-slate-900">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
-                    <input type="text" id="modal-tx-desc" required placeholder="e.g. Swiggy" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-medium">
+                    <input type="text" id="modal-tx-desc" required placeholder="e.g. Swiggy, Salary" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-medium">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -519,7 +516,6 @@
         </div>
     </div>
 
-
     <!-- ================= STICKY AI CHAT WIDGET ================= -->
     <div id="ai-widget" class="fixed bottom-8 right-8 z-[60] flex flex-col items-end">
         <div id="chat-panel" class="chat-closed glass-card rounded-[2.5rem] premium-shadow w-80 sm:w-[26rem] h-[550px] flex flex-col mb-6 transition-all duration-400 origin-bottom-right">
@@ -537,7 +533,7 @@
             <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
                 <div class="flex gap-3">
                     <div class="bg-indigo-50 border border-indigo-100 text-indigo-900 text-sm p-4 rounded-[1.5rem] rounded-tl-sm max-w-[85%] font-medium shadow-sm">
-                        Hi! I see your full wealth portfolio, loans, and monthly spending. How can I assist you?
+                        Hi! I analyze your loans, EMIs, and monthly spending. How can I help you optimize your wealth today?
                     </div>
                 </div>
             </div>
@@ -578,9 +574,21 @@
             getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, setDoc, onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const GEMINI_API_KEY = ""; 
+        // Gemini API Key
+        const GEMINI_API_KEY = "AIzaSyDyaMmqlZ2NG4qqUyhLnPV3ykhKlHYGNtI"; 
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "dummy", authDomain: "dummy", projectId: "dummy" };
+        // Firebase Config
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
+            authDomain: "financeflow-89cc0.firebaseapp.com",
+            projectId: "financeflow-89cc0",
+            storageBucket: "financeflow-89cc0.firebasestorage.app",
+            messagingSenderId: "123998162746",
+            appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03",
+            measurementId: "G-QVMJW4KSWP"
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-v4';
 
         let app, auth, db;
@@ -710,6 +718,11 @@
                 document.getElementById('trk-total').required = isLoan; document.getElementById('trk-tenure').required = isLoan;
             };
 
+            // --- SIDEBAR TOGGLES ---
+            document.getElementById('mobile-menu-btn')?.addEventListener('click', () => { UI.sidebar?.classList.remove('-translate-x-full'); UI.sidebarOverlay?.classList.remove('hidden'); });
+            document.getElementById('close-sidebar')?.addEventListener('click', () => { UI.sidebar?.classList.add('-translate-x-full'); UI.sidebarOverlay?.classList.add('hidden'); });
+            UI.sidebarOverlay?.addEventListener('click', () => { UI.sidebar?.classList.add('-translate-x-full'); UI.sidebarOverlay?.classList.add('hidden'); });
+
             // --- DASHBOARD LOGIC ---
             const updateModalCategoryDropdown = () => {
                 const type = UI.modalTxType.value;
@@ -745,11 +758,10 @@
                 const net = inc - exp;
                 if(UI.sumBalance) {
                     UI.sumBalance.textContent = formatMoney(net);
-                    UI.sumBalance.className = `text-4xl font-extrabold tracking-tight relative z-10 ${net < 0 ? 'text-rose-600' : 'text-slate-900'}`;
+                    UI.sumBalance.className = `text-4xl font-extrabold tracking-tight mt-1 relative z-10 ${net < 0 ? 'text-rose-600' : 'text-slate-900'}`;
                 }
                 if(UI.sumCC) UI.sumCC.textContent = formatMoney(ccPaid);
 
-                // Net worth = Portfolio Savings + Invests - Portfolio Debt
                 const nw = (state.portfolio.savings + state.portfolio.invests) - state.portfolio.debt;
                 if(UI.dashNetWorth) UI.dashNetWorth.textContent = formatMoney(nw);
 
@@ -785,7 +797,6 @@
             const renderLedgers = () => {
                 const sorted = [...state.monthTransactions].sort((a,b) => new Date(b.date) - new Date(a.date));
                 
-                // Dash Recent
                 if(UI.dashRecentTxs) {
                     const recent = sorted.slice(0, 4);
                     if(recent.length === 0) UI.dashRecentTxs.innerHTML = `<p class="text-sm text-slate-400 text-center py-4 font-semibold">No recent activity.</p>`;
@@ -799,7 +810,6 @@
                     }
                 }
 
-                // Full Ledger
                 if(!UI.ledgerCount || !UI.fullLedger) return;
                 UI.ledgerCount.textContent = `${state.monthTransactions.length} transactions in selected month`;
                 
@@ -933,12 +943,15 @@
             };
 
             const updatePortfolioForm = () => {
-                document.getElementById('port-savings').value = state.portfolio.savings || '';
-                document.getElementById('port-invests').value = state.portfolio.invests || '';
-                document.getElementById('port-debt').value = state.portfolio.debt || '';
+                const save = document.getElementById('port-savings');
+                const inv = document.getElementById('port-invests');
+                const debt = document.getElementById('port-debt');
+                if(save) save.value = state.portfolio.savings || '';
+                if(inv) inv.value = state.portfolio.invests || '';
+                if(debt) debt.value = state.portfolio.debt || '';
             };
 
-            // --- FIREBASE CRUD ---
+            // --- FIREBASE CRUD LOGIC ---
             const filterDataByMonth = () => {
                 if(!UI.monthSelect) return;
                 const selected = UI.monthSelect.value;
@@ -1079,16 +1092,24 @@
             const getContextData = () => {
                 const exp = state.monthTransactions.filter(t => t.type === 'expense').reduce((s,t)=>s+t.amount,0);
                 const inc = state.monthTransactions.filter(t => t.type === 'income').reduce((s,t)=>s+t.amount,0);
-                return `Income: ₹${inc}, Exp: ₹${exp}. Net Worth details - Savings: ₹${state.portfolio.savings}, Invests: ₹${state.portfolio.invests}, Debt: ₹${state.portfolio.debt}. Credit Cards details: ${JSON.stringify(state.creditCards.map(c=>c.name+": Billed ₹"+c.billAmount))}. Top Txs: ${JSON.stringify(state.monthTransactions.slice(0,5).map(t=>t.description+":₹"+t.amount))}. Loans/Subs: ${JSON.stringify(state.trackers.map(t=>t.name+":₹"+t.emi))}. Provide actionable wealth advice.`;
+                return `Income: ₹${inc}, Exp: ₹${exp}. Top Txs: ${JSON.stringify(state.monthTransactions.slice(0,8).map(t=>t.description+":₹"+t.amount))}. Loans/Subs: ${JSON.stringify(state.trackers.map(t=>t.name+":₹"+t.emi))}. Provide actionable wealth advice.`;
             };
 
+            // --- AI REPORT GENERATOR LOGIC ---
             UI.btnReport?.addEventListener('click', async () => {
                 if (!UI.btnReport || !UI.reportContent || !UI.reportCard) return;
-                UI.btnReport.disabled = true; UI.btnReport.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Generating...`; lucide.createIcons();
+                
+                UI.btnReport.disabled = true;
+                UI.btnReport.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Generating...`;
+                lucide.createIcons();
 
                 if (state.monthTransactions.length === 0 && state.trackers.length === 0) {
-                    UI.reportContent.innerHTML = "<p class='text-slate-500 font-semibold'>Not enough data to generate a report. Add some transactions.</p>";
-                    UI.reportCard.classList.remove('hidden'); UI.btnReport.disabled = false; UI.btnReport.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report`; lucide.createIcons(); return;
+                    UI.reportContent.innerHTML = "<p class='text-slate-500 font-semibold'>Not enough data to generate a report for this period. Add some transactions or loans.</p>";
+                    UI.reportCard.classList.remove('hidden');
+                    UI.btnReport.disabled = false;
+                    UI.btnReport.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report`;
+                    lucide.createIcons();
+                    return;
                 }
 
                 const payload = {
@@ -1097,26 +1118,41 @@
                 };
 
                 try {
-                    const reportHTML = await callGemini(payload); UI.reportContent.innerHTML = reportHTML.replace(/```html|```/g, '').trim(); UI.reportCard.classList.remove('hidden');
+                    const reportHTML = await callGemini(payload);
+                    const cleanedHTML = reportHTML.replace(/```html|```/g, '').trim();
+                    UI.reportContent.innerHTML = cleanedHTML;
+                    UI.reportCard.classList.remove('hidden');
                 } catch (err) {
-                    UI.reportContent.innerHTML = `<p class="text-rose-500 font-bold">Failed to generate report. ${err.message === 'NO_API_KEY' ? 'Configure Gemini API.' : 'Error.'}</p>`; UI.reportCard.classList.remove('hidden');
+                    UI.reportContent.innerHTML = `<p class="text-rose-500 font-bold">Failed to generate report. ${err.message === 'NO_API_KEY' ? 'Please configure your Gemini API key.' : 'Network error.'}</p>`;
+                    UI.reportCard.classList.remove('hidden');
                 }
-                UI.btnReport.disabled = false; UI.btnReport.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report`; lucide.createIcons();
+
+                UI.btnReport.disabled = false;
+                UI.btnReport.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report`;
+                lucide.createIcons();
             });
 
             const appendChat = (text, sender) => {
                 if(!UI.chatMessages) return;
                 const div = document.createElement('div'); div.className = 'flex gap-3 ' + (sender === 'user' ? 'justify-end' : '');
-                const bubble = document.createElement('div'); bubble.className = `text-sm p-4 rounded-[1.5rem] max-w-[85%] font-bold ${sender === 'user' ? 'bg-slate-900 text-white rounded-tr-sm shadow-md' : 'bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-tl-sm shadow-sm'}`;
+                const bubble = document.createElement('div'); 
+                bubble.className = `text-sm p-4 rounded-[1.5rem] max-w-[85%] font-bold ${sender === 'user' ? 'bg-slate-900 text-white rounded-tr-sm shadow-md' : 'bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-tl-sm shadow-sm'}`;
                 bubble.innerHTML = text; div.appendChild(bubble); UI.chatMessages.appendChild(div); UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
             };
 
             UI.chatForm?.addEventListener('submit', async (e) => {
-                e.preventDefault(); if(!UI.chatInput || !UI.btnSendChat) return;
-                const text = UI.chatInput.value.trim(); if(!text) return;
-                appendChat(text, 'user'); UI.chatInput.value = ''; UI.btnSendChat.disabled = true;
+                e.preventDefault(); 
+                if(!UI.chatInput || !UI.btnSendChat) return;
+                
+                const text = UI.chatInput.value.trim(); 
+                if(!text) return;
+                
+                appendChat(text, 'user'); 
+                UI.chatInput.value = ''; 
+                UI.btnSendChat.disabled = true;
 
-                state.chatHistory.push({ role: 'user', parts: [{ text }] }); if(state.chatHistory.length > 6) state.chatHistory = state.chatHistory.slice(-6);
+                state.chatHistory.push({ role: 'user', parts: [{ text }] });
+                if(state.chatHistory.length > 6) state.chatHistory = state.chatHistory.slice(-6);
 
                 const payload = {
                     contents: [ { role: 'user', parts: [{ text: `[Context: ${getContextData()}]` }] }, { role: 'model', parts: [{ text: "Got it." }] }, ...state.chatHistory ],
@@ -1124,33 +1160,51 @@
                 };
 
                 try {
-                    const response = await callGemini(payload); appendChat(response, 'ai'); state.chatHistory.push({ role: 'model', parts: [{ text: response }] });
-                } catch (err) { appendChat(err.message === 'NO_API_KEY' ? "Configure API Key." : "Error.", 'ai'); state.chatHistory.pop(); }
+                    const response = await callGemini(payload);
+                    appendChat(response, 'ai'); state.chatHistory.push({ role: 'model', parts: [{ text: response }] });
+                } catch (err) {
+                    appendChat(err.message === 'NO_API_KEY' ? "Configure Gemini API Key in code." : "Network Error.", 'ai'); state.chatHistory.pop();
+                }
                 UI.btnSendChat.disabled = false; UI.chatInput.focus();
             });
 
-            // --- AUTH LOGIC ---
+            // --- INIT & AUTH FLOW ---
             document.getElementById('btn-logout')?.addEventListener('click', () => { if(auth) signOut(auth); });
             UI.monthSelect?.addEventListener('change', filterDataByMonth);
 
+            // Google Login
             document.getElementById('btn-google-login')?.addEventListener('click', async () => {
-                if(!auth || !UI.authStatus) return; UI.authStatus.textContent = "Connecting to Google...";
-                try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
-                catch(e) { console.error("Google Auth Error:", e); let msg = e.message; if(e.code === 'auth/unauthorized-domain') msg = "Domain not authorized in Firebase Console. Use 'Continue as Guest'."; UI.authStatus.innerHTML = `<span class="text-rose-400 leading-tight block">${msg}</span>`; }
+                if(!auth || !UI.authStatus) return;
+                UI.authStatus.textContent = "Connecting to Google...";
+                try { 
+                    await signInWithPopup(auth, new GoogleAuthProvider()); 
+                } catch(e) { 
+                    console.error("Google Auth Error:", e);
+                    let msg = e.message;
+                    if(e.code === 'auth/unauthorized-domain') msg = "Google Login blocked: Domain not authorized in Firebase Console. Use 'Continue as Guest'.";
+                    UI.authStatus.innerHTML = `<span class="text-rose-400 leading-tight block">${msg}</span>`; 
+                }
             });
 
+            // Guest Login Fallback
             document.getElementById('btn-guest-login')?.addEventListener('click', async () => {
-                if(!auth || !UI.authStatus) return; UI.authStatus.textContent = "Signing in securely as Guest...";
-                try { await signInAnonymously(auth); } catch(e) { console.error("Guest Auth Error:", e); UI.authStatus.textContent = e.message; }
+                if(!auth || !UI.authStatus) return;
+                UI.authStatus.textContent = "Signing in securely as Guest...";
+                try { await signInAnonymously(auth); } 
+                catch(e) { console.error("Guest Auth Error:", e); UI.authStatus.textContent = e.message; }
             });
 
-            // Startup Config
+            // Run Startup
             const now = new Date(); 
             if(UI.monthSelect) UI.monthSelect.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            if(document.getElementById('modal-tx-date')) document.getElementById('modal-tx-date').valueAsDate = now; 
+            if(document.getElementById('trk-date')) document.getElementById('trk-date').valueAsDate = now; 
             
-            updateModalCategoryDropdown(); window.toggleTrackerFields();
+            updateModalCategoryDropdown(); 
+            window.toggleTrackerFields();
 
             if (!auth) return;
+
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 if(UI.authStatus) UI.authStatus.textContent = "Authenticating secure session...";
                 try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { console.error(e); }
@@ -1159,14 +1213,25 @@
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     state.user = user; initDataListeners();
-                    const userNameEl = document.getElementById('user-name'); const userAvatarEl = document.getElementById('user-avatar');
+                    
+                    const userNameEl = document.getElementById('user-name');
+                    const userAvatarEl = document.getElementById('user-avatar');
                     if(userNameEl) userNameEl.textContent = user.displayName || 'Guest User';
                     if(userAvatarEl && user.photoURL) userAvatarEl.src = user.photoURL;
                     
-                    if(UI.authOverlay) { UI.authOverlay.style.opacity = '0'; setTimeout(() => { UI.authOverlay.classList.add('hidden'); if(UI.authStatus) UI.authStatus.textContent = ''; }, 500); }
+                    if(UI.authOverlay) {
+                        UI.authOverlay.style.opacity = '0'; 
+                        setTimeout(() => { 
+                            UI.authOverlay.classList.add('hidden'); 
+                            if(UI.authStatus) UI.authStatus.textContent = ''; 
+                        }, 500);
+                    }
                 } else {
                     state.unsubs.forEach(u => u()); state.unsubs = []; state.allTransactions = []; state.trackers = []; state.creditCards = []; state.portfolio = { savings: 0, invests: 0, debt: 0 };
-                    if(UI.authOverlay) { UI.authOverlay.classList.remove('hidden'); setTimeout(() => UI.authOverlay.style.opacity = '1', 50); }
+                    if(UI.authOverlay) {
+                        UI.authOverlay.classList.remove('hidden'); 
+                        setTimeout(() => UI.authOverlay.style.opacity = '1', 50);
+                    }
                 }
             });
         });
