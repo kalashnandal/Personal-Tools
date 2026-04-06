@@ -36,7 +36,7 @@
         // =====================================================================
         
         // 1. Put your Gemini API Key here
-        const GEMINI_API_KEY = "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4"; 
+        const GEMINI_API_KEY = "AIzaSyBgmRntn4oOai_KZEb_-tbZWs62g6iGQoc"; 
 
         // 2. Your Firebase Config
         const myFirebaseConfig = {
@@ -908,7 +908,7 @@
 
         // FIX #2 — Gemini call with model fallback chain
         const callGeminiWithFallback = async (payload) => {
-            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4";
+            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyBgmRntn4oOai_KZEb_-tbZWs62g6iGQoc";
             if (!apiKey) throw new Error('NO_API_KEY');
 
             for (const model of GEMINI_MODELS) {
@@ -935,7 +935,7 @@
             const text = els.chatInput.value.trim();
             if (!text) return;
 
-            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4";
+            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyBgmRntn4oOai_KZEb_-tbZWs62g6iGQoc";
             if (!apiKey) {
                 renderChatMessage(text, 'user');
                 els.chatInput.value = '';
@@ -1047,7 +1047,7 @@ Rules:
             els.reportInsightsContainer.innerHTML = els.aiLoading.outerHTML;
             els.reportInsightsContainer.querySelector('#ai-loading').style.display = 'flex';
 
-            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4";
+            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyBgmRntn4oOai_KZEb_-tbZWs62g6iGQoc";
             if (!apiKey) {
                 els.reportInsightsContainer.innerHTML = `
                     <div class="bg-yellow-50 p-4 rounded-2xl flex gap-3 text-sm text-yellow-700">
