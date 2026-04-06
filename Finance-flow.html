@@ -466,9 +466,9 @@
 
         // Gemini model fallback chain (FIX #2)
         const GEMINI_MODELS = [
-                'gemini-1.5-flash-latest',
-    'gemini-1.5-pro-latest',
-    'gemini-pro'
+                'gemini-2.5-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-flash-exp'
         ];
 
         // -----------------------------------------------------------
@@ -908,7 +908,7 @@
 
         // FIX #2 — Gemini call with model fallback chain
         const callGeminiWithFallback = async (payload) => {
-            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
+            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4";
             if (!apiKey) throw new Error('NO_API_KEY');
 
             for (const model of GEMINI_MODELS) {
@@ -935,7 +935,7 @@
             const text = els.chatInput.value.trim();
             if (!text) return;
 
-            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
+            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4";
             if (!apiKey) {
                 renderChatMessage(text, 'user');
                 els.chatInput.value = '';
@@ -1047,7 +1047,7 @@ Rules:
             els.reportInsightsContainer.innerHTML = els.aiLoading.outerHTML;
             els.reportInsightsContainer.querySelector('#ai-loading').style.display = 'flex';
 
-            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
+            const apiKey = window.firebaseUtils?.activeGeminiKey || "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4";
             if (!apiKey) {
                 els.reportInsightsContainer.innerHTML = `
                     <div class="bg-yellow-50 p-4 rounded-2xl flex gap-3 text-sm text-yellow-700">
