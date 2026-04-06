@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinanceFlow Premium | Wealth & EMIs</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -24,9 +24,9 @@
             getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const GEMINI_API_KEY = ""; // Injected at runtime
+        const GEMINI_API_KEY = ""; // Automatically injected at runtime
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "dummy", authDomain: "dummy", projectId: "dummy" };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-v1';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-v2';
 
         let app, auth, db;
         try {
@@ -43,25 +43,25 @@
     </script>
 
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f7fc; color: #0f172a; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.5); }
-        .premium-shadow { box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.6); }
+        .premium-shadow { box-shadow: 0 12px 40px -12px rgba(0,0,0,0.1); }
         
         .view-section { display: none; animation: fadeIn 0.4s ease-out forwards; }
         .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Floating Chat Animations */
         .chat-open { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
-        .chat-closed { transform: scale(0.95) translateY(10px); opacity: 0; pointer-events: none; }
+        .chat-closed { transform: scale(0.95) translateY(20px); opacity: 0; pointer-events: none; }
         
         /* Progress Bar */
-        progress::-webkit-progress-bar { background-color: #f1f5f9; border-radius: 9999px; }
-        progress::-webkit-progress-value { background-color: #4f46e5; border-radius: 9999px; }
+        progress::-webkit-progress-bar { background-color: #e2e8f0; border-radius: 9999px; }
+        progress::-webkit-progress-value { background-color: #4f46e5; border-radius: 9999px; transition: width 0.5s ease; }
     </style>
 </head>
 <body class="antialiased h-screen overflow-hidden flex">
@@ -69,22 +69,27 @@
     <!-- Auth Overlay -->
     <div id="auth-overlay" class="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500">
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute -top-[30%] -left-[10%] w-[70%] h-[70%] rounded-full bg-indigo-600/20 blur-[120px]"></div>
-            <div class="absolute -bottom-[30%] -right-[10%] w-[70%] h-[70%] rounded-full bg-blue-600/20 blur-[120px]"></div>
+            <div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-indigo-600/20 blur-[120px]"></div>
+            <div class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-blue-600/20 blur-[120px]"></div>
         </div>
         
-        <div class="bg-white/10 backdrop-blur-xl border border-white/20 p-10 rounded-[2rem] shadow-2xl max-w-md w-full text-center relative z-10">
-            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <i data-lucide="gem" class="text-indigo-600 w-8 h-8"></i>
+        <div class="bg-white/10 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center relative z-10 mx-4">
+            <div class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <i data-lucide="gem" class="text-indigo-600 w-10 h-10"></i>
             </div>
-            <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">FinanceFlow</h1>
-            <p class="text-indigo-200 text-sm mb-8 font-medium">Premium Wealth & EMI Tracker</p>
+            <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">FinanceFlow</h1>
+            <p class="text-indigo-200 text-sm mb-8 font-medium">Premium Wealth & EMI Engine</p>
             
-            <button id="btn-google-login" class="w-full bg-white hover:bg-slate-50 text-slate-900 font-bold py-3.5 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-3">
-                <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                Continue with Google
-            </button>
-            <p id="auth-status" class="text-indigo-300 text-xs mt-4 h-4"></p>
+            <div class="space-y-4">
+                <button id="btn-google-login" class="w-full bg-white hover:bg-slate-50 text-slate-900 font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-3">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                    Continue with Google
+                </button>
+                <button id="btn-guest-login" class="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-3">
+                    <i data-lucide="user" class="w-5 h-5"></i> Continue as Guest
+                </button>
+            </div>
+            <div id="auth-status" class="text-rose-300 text-xs mt-6 h-10 font-medium"></div>
         </div>
     </div>
 
@@ -92,36 +97,36 @@
     <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 shrink-0 absolute md:relative z-40 h-full -translate-x-full md:translate-x-0">
         <div class="h-24 flex items-center px-8 border-b border-slate-800/50">
             <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl text-white shadow-lg">
+                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl text-white shadow-lg">
                     <i data-lucide="gem" class="w-5 h-5"></i>
                 </div>
-                <h1 class="text-xl font-bold text-white tracking-tight">FinanceFlow</h1>
+                <h1 class="text-xl font-extrabold text-white tracking-tight">FinanceFlow</h1>
             </div>
         </div>
         
         <nav class="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-            <p class="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Main Menu</p>
+            <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Main Menu</p>
             <button onclick="switchView('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all text-white bg-indigo-600/20 shadow-inner" data-view="dashboard">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> <span class="font-medium">Dashboard</span>
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> <span class="font-bold text-sm">Dashboard</span>
             </button>
             <button onclick="switchView('ledger')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:bg-slate-800 hover:text-white text-slate-400" data-view="ledger">
-                <i data-lucide="scroll-text" class="w-5 h-5"></i> <span class="font-medium">Transactions</span>
+                <i data-lucide="scroll-text" class="w-5 h-5"></i> <span class="font-bold text-sm">Transactions</span>
             </button>
             <button onclick="switchView('loans')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:bg-slate-800 hover:text-white text-slate-400" data-view="loans">
-                <i data-lucide="landmark" class="w-5 h-5"></i> <span class="font-medium">Loans & EMIs</span>
+                <i data-lucide="landmark" class="w-5 h-5"></i> <span class="font-bold text-sm">Loans & EMIs</span>
             </button>
         </nav>
 
         <div class="p-6 border-t border-slate-800/50">
-            <div class="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+            <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <img id="user-avatar" src="https://ui-avatars.com/api/?name=U&background=4f46e5&color=fff" class="w-10 h-10 rounded-full border border-slate-600">
+                    <img id="user-avatar" src="https://ui-avatars.com/api/?name=G&background=4f46e5&color=fff" class="w-10 h-10 rounded-full border-2 border-slate-600">
                     <div class="overflow-hidden">
-                        <p id="user-name" class="text-sm font-bold text-white truncate">User</p>
-                        <p class="text-[10px] text-emerald-400 font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Synced</p>
+                        <p id="user-name" class="text-sm font-bold text-white truncate">Guest</p>
+                        <p class="text-[10px] text-emerald-400 font-bold flex items-center gap-1 uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Synced</p>
                     </div>
                 </div>
-                <button id="btn-logout" class="text-slate-400 hover:text-rose-400 transition-colors bg-slate-700/50 p-2 rounded-xl" title="Sign Out">
+                <button id="btn-logout" class="text-slate-400 hover:text-rose-400 transition-colors bg-slate-800 p-2 rounded-xl" title="Sign Out">
                     <i data-lucide="log-out" class="w-4 h-4"></i>
                 </button>
             </div>
@@ -133,9 +138,9 @@
     <!-- Main Content -->
     <main class="flex-1 flex flex-col h-full relative w-full overflow-hidden">
         
-        <header class="h-24 bg-transparent flex items-center justify-between px-8 shrink-0 z-20">
+        <header class="h-24 bg-transparent flex items-center justify-between px-6 md:px-10 shrink-0 z-20">
             <div class="flex items-center gap-4">
-                <button id="mobile-menu-btn" class="md:hidden text-slate-600 bg-white shadow-sm p-2.5 rounded-xl">
+                <button id="mobile-menu-btn" class="md:hidden text-slate-600 bg-white shadow-sm p-2.5 rounded-xl border border-slate-200">
                     <i data-lucide="menu" class="w-5 h-5"></i>
                 </button>
                 <div>
@@ -145,12 +150,12 @@
             </div>
 
             <div class="flex items-center gap-3 bg-white premium-shadow px-4 py-2.5 rounded-2xl border border-slate-100">
-                <div class="bg-indigo-50 p-1.5 rounded-lg"><i data-lucide="calendar" class="w-4 h-4 text-indigo-600"></i></div>
-                <input type="month" id="month-selector" class="border-none bg-transparent outline-none text-slate-800 font-bold cursor-pointer text-sm focus:ring-0">
+                <div class="bg-indigo-50 p-2 rounded-xl"><i data-lucide="calendar" class="w-4 h-4 text-indigo-600"></i></div>
+                <input type="month" id="month-selector" class="border-none bg-transparent outline-none text-slate-800 font-extrabold cursor-pointer text-sm focus:ring-0">
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 pt-0" id="views-container">
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-10 pt-0" id="views-container">
             
             <!-- ================= VIEW: DASHBOARD ================= -->
             <div id="view-dashboard" class="view-section active space-y-8 max-w-7xl mx-auto pb-24">
@@ -158,30 +163,30 @@
                 <!-- Metric Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100 relative overflow-hidden group">
-                        <div class="absolute -right-6 -top-6 bg-slate-50 w-24 h-24 rounded-full group-hover:scale-110 transition-transform"></div>
-                        <p class="text-slate-500 text-sm font-semibold mb-1">Net Balance</p>
+                        <div class="absolute -right-6 -top-6 bg-slate-50 w-24 h-24 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Net Balance</p>
                         <h3 class="text-4xl font-extrabold text-slate-900 tracking-tight" id="sum-balance">₹0</h3>
-                        <p class="text-xs text-slate-400 mt-2 font-medium">Income minus Expenses</p>
+                        <p class="text-xs text-slate-400 mt-2 font-semibold">Income minus Expenses</p>
                     </div>
                     <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100">
                         <div class="flex justify-between items-start mb-2">
-                            <p class="text-slate-500 text-sm font-semibold">Total Income</p>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Income</p>
                             <div class="bg-emerald-50 text-emerald-600 p-2 rounded-xl"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
                         </div>
                         <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="sum-income">₹0</h3>
                     </div>
                     <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100">
                         <div class="flex justify-between items-start mb-2">
-                            <p class="text-slate-500 text-sm font-semibold">Total Expenses</p>
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Expenses</p>
                             <div class="bg-rose-50 text-rose-600 p-2 rounded-xl"><i data-lucide="trending-down" class="w-4 h-4"></i></div>
                         </div>
                         <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="sum-expense">₹0</h3>
                     </div>
                     <div class="bg-gradient-to-br from-indigo-600 to-purple-700 premium-shadow rounded-[2rem] p-6 text-white relative overflow-hidden">
                         <i data-lucide="credit-card" class="absolute -right-4 -bottom-4 w-24 h-24 text-white opacity-10"></i>
-                        <p class="text-indigo-100 text-sm font-semibold mb-2 relative z-10">Credit Bills Paid</p>
+                        <p class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">Credit Bills Paid</p>
                         <h3 class="text-3xl font-extrabold tracking-tight relative z-10" id="sum-cc-bills">₹0</h3>
-                        <p class="text-xs text-indigo-200 mt-2 font-medium relative z-10">Cleared this month</p>
+                        <p class="text-xs text-indigo-100 mt-2 font-semibold relative z-10">Cleared this month</p>
                     </div>
                 </div>
 
@@ -190,30 +195,30 @@
                     <div class="lg:col-span-1 flex flex-col gap-8">
                         
                         <!-- Entry Form -->
-                        <div class="bg-white rounded-[2rem] premium-shadow border border-slate-100 p-8">
-                            <h2 class="text-xl font-bold text-slate-900 mb-6 tracking-tight">Record Transaction</h2>
+                        <div class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 p-8">
+                            <h2 class="text-xl font-extrabold text-slate-900 mb-6 tracking-tight">Record Transaction</h2>
                             <form id="tx-form" class="space-y-5">
                                 <div class="flex p-1.5 bg-slate-100 rounded-2xl">
-                                    <button type="button" id="btn-type-expense" class="flex-1 py-2 text-sm font-bold rounded-xl bg-white shadow-sm text-slate-900 transition-all">Expense</button>
-                                    <button type="button" id="btn-type-income" class="flex-1 py-2 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all">Income</button>
+                                    <button type="button" id="btn-type-expense" class="flex-1 py-2.5 text-sm font-bold rounded-xl bg-white shadow-sm text-slate-900 transition-all">Expense</button>
+                                    <button type="button" id="btn-type-income" class="flex-1 py-2.5 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all">Income</button>
                                     <input type="hidden" id="tx-type" value="expense">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Amount (₹)</label>
-                                    <input type="number" id="tx-amount" required min="1" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-semibold">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Amount (₹)</label>
+                                    <input type="number" id="tx-amount" required min="1" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-bold text-lg text-slate-900">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
-                                    <input type="text" id="tx-desc" required placeholder="e.g. Swiggy, Salary" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500 focus:bg-white transition-colors">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
+                                    <input type="text" id="tx-desc" required placeholder="e.g. Swiggy, Salary" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-medium">
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Date</label>
-                                        <input type="date" id="tx-date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-medium">
+                                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
+                                        <input type="date" id="tx-date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-bold">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Method</label>
-                                        <select id="tx-method" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-medium">
+                                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Method</label>
+                                        <select id="tx-method" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-bold">
                                             <option value="UPI">UPI</option>
                                             <option value="Debit/NetBanking">Bank</option>
                                             <option value="Credit Card">Credit Card</option>
@@ -222,28 +227,28 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
-                                    <select id="tx-category" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-medium">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category</label>
+                                    <select id="tx-category" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-bold">
                                         <!-- Populated via JS -->
                                     </select>
                                 </div>
-                                <button type="submit" class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-bold py-3.5 rounded-2xl transition-colors mt-4 shadow-md">
+                                <button type="submit" class="w-full bg-slate-900 hover:bg-indigo-600 text-white font-extrabold py-4 rounded-2xl transition-colors mt-4 shadow-lg shadow-indigo-900/20">
                                     Save Record
                                 </button>
                             </form>
                         </div>
 
                         <!-- PDF Scan -->
-                        <div class="bg-white premium-shadow border border-indigo-100 rounded-[2rem] p-6 relative overflow-hidden">
-                            <div class="flex items-center gap-4 mb-4 relative z-10">
-                                <div class="bg-indigo-50 p-3 rounded-2xl text-indigo-600"><i data-lucide="scan-line" class="w-6 h-6"></i></div>
+                        <div class="bg-white premium-shadow border border-indigo-100 rounded-[2.5rem] p-6 relative overflow-hidden">
+                            <div class="flex items-center gap-4 mb-5 relative z-10">
+                                <div class="bg-indigo-50 p-3.5 rounded-2xl text-indigo-600"><i data-lucide="scan-line" class="w-6 h-6"></i></div>
                                 <div>
-                                    <h2 class="text-lg font-bold text-slate-900">PDF Scanner</h2>
-                                    <p class="text-xs text-slate-500 font-medium">Auto-extract bank statements.</p>
+                                    <h2 class="text-lg font-extrabold text-slate-900">PDF Scanner</h2>
+                                    <p class="text-xs text-slate-500 font-semibold mt-0.5">Auto-extract bank statements.</p>
                                 </div>
                             </div>
                             <input type="file" id="pdf-upload" accept="application/pdf" class="hidden">
-                            <label for="pdf-upload" id="pdf-label" class="cursor-pointer w-full flex justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-3 rounded-2xl transition-colors text-sm font-bold">
+                            <label for="pdf-upload" id="pdf-label" class="cursor-pointer w-full flex justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-3.5 rounded-2xl transition-colors text-sm font-extrabold">
                                 Upload Statement
                             </label>
                             <p id="pdf-status" class="text-xs text-indigo-600 mt-2 hidden text-center font-bold">Scanning Document...</p>
@@ -252,11 +257,11 @@
 
                     <!-- Right: Chart -->
                     <div class="lg:col-span-2 space-y-8 flex flex-col">
-                        <div class="bg-white rounded-[2rem] premium-shadow border border-slate-100 p-8 flex-1 flex flex-col min-h-[400px]">
-                            <h2 class="text-lg font-bold text-slate-900 mb-6 tracking-tight">Analytics Breakdown</h2>
-                            <div class="relative flex-1 w-full flex justify-center items-center min-h-[300px]">
+                        <div class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 p-8 flex-1 flex flex-col min-h-[400px]">
+                            <h2 class="text-xl font-extrabold text-slate-900 mb-8 tracking-tight">Analytics Breakdown</h2>
+                            <div class="relative flex-1 w-full flex justify-center items-center min-h-[350px]">
                                 <canvas id="expenseChart"></canvas>
-                                <p id="chart-empty" class="absolute text-slate-400 text-sm font-medium hidden">No data available for this period.</p>
+                                <p id="chart-empty" class="absolute text-slate-400 text-sm font-semibold hidden">No data available for this period.</p>
                             </div>
                         </div>
                     </div>
@@ -264,69 +269,69 @@
             </div>
 
             <!-- ================= VIEW: LOANS & EMIs ================= -->
-            <div id="view-loans" class="view-section space-y-8 max-w-6xl mx-auto pb-24">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-2">
+            <div id="view-loans" class="view-section space-y-8 max-w-7xl mx-auto pb-24">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-4">
                     <div>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Loans & Subscriptions</h2>
-                        <p class="text-slate-500 font-medium mt-1">Track tenures, progress, and monthly dues.</p>
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Loans & EMIs</h2>
+                        <p class="text-slate-500 font-semibold mt-2">Track your debt payoff progress automatically.</p>
                     </div>
-                    <button onclick="document.getElementById('add-loan-form').classList.toggle('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-colors shadow-md flex items-center gap-2">
+                    <button onclick="document.getElementById('add-loan-form').classList.toggle('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2">
                         <i data-lucide="plus" class="w-4 h-4"></i> Add New Tracker
                     </button>
                 </div>
 
                 <!-- Add Tracker Form -->
-                <div id="add-loan-form" class="hidden bg-white p-8 rounded-[2rem] premium-shadow border border-slate-100">
+                <div id="add-loan-form" class="hidden bg-white p-8 rounded-[2.5rem] premium-shadow border border-slate-100">
                     <form id="loan-form" class="space-y-6">
-                        <div class="flex gap-4 p-1.5 bg-slate-50 rounded-2xl border border-slate-100 w-fit">
-                            <label class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:checked]:text-indigo-600 text-slate-500 font-bold text-sm transition-all">
+                        <div class="flex gap-4 p-1.5 bg-slate-50 rounded-2xl border border-slate-200 w-fit">
+                            <label class="cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl has-[:checked]:bg-white has-[:checked]:shadow-md has-[:checked]:text-indigo-600 text-slate-500 font-bold text-sm transition-all">
                                 <input type="radio" name="trackerType" value="loan" class="hidden" checked onchange="toggleTrackerFields()"> Loan / EMI
                             </label>
-                            <label class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl has-[:checked]:bg-white has-[:checked]:shadow-sm has-[:checked]:text-indigo-600 text-slate-500 font-bold text-sm transition-all">
+                            <label class="cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl has-[:checked]:bg-white has-[:checked]:shadow-md has-[:checked]:text-indigo-600 text-slate-500 font-bold text-sm transition-all">
                                 <input type="radio" name="trackerType" value="sub" class="hidden" onchange="toggleTrackerFields()"> Subscription
                             </label>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Name</label>
-                                <input type="text" id="trk-name" required placeholder="e.g. Car Loan, Netflix" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Name</label>
+                                <input type="text" id="trk-name" required placeholder="e.g. Car Loan, Netflix" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-semibold">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Monthly EMI/Cost (₹)</label>
-                                <input type="number" id="trk-emi" required placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Monthly EMI/Cost (₹)</label>
+                                <input type="number" id="trk-emi" required placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Start / Next Due Date</label>
-                                <input type="date" id="trk-date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Start / Next Due Date</label>
+                                <input type="date" id="trk-date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-sm">
                             </div>
                             
                             <!-- Loan Specific -->
                             <div class="loan-field">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Total Loan Amt (₹)</label>
-                                <input type="number" id="trk-total" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Loan Amt (₹)</label>
+                                <input type="number" id="trk-total" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
                             </div>
                             <div class="loan-field lg:col-span-1">
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tenure (Months)</label>
-                                <input type="number" id="trk-tenure" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-indigo-500">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tenure (Months)</label>
+                                <input type="number" id="trk-tenure" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
                             </div>
                         </div>
-                        <button type="submit" class="bg-slate-900 hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded-2xl transition-colors shadow-md">Create Tracker</button>
+                        <button type="submit" class="bg-slate-900 hover:bg-indigo-600 text-white font-extrabold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-slate-900/20">Create Tracker</button>
                     </form>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="loans-container">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="loans-container">
                     <!-- Populated by JS -->
                 </div>
             </div>
 
             <!-- ================= VIEW: LEDGER ================= -->
             <div id="view-ledger" class="view-section space-y-6 max-w-6xl mx-auto pb-24">
-                <div class="bg-white rounded-[2rem] premium-shadow border border-slate-100 flex flex-col overflow-hidden min-h-[600px]">
+                <div class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 flex flex-col overflow-hidden min-h-[600px]">
                     <div class="p-8 border-b border-slate-100 flex justify-between items-end bg-slate-50/50">
                         <div>
                             <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Full Ledger</h2>
-                            <p class="text-sm text-slate-500 font-medium mt-1" id="ledger-count">0 transactions</p>
+                            <p class="text-sm text-slate-500 font-semibold mt-2" id="ledger-count">0 transactions</p>
                         </div>
                     </div>
                     <div class="flex-1 overflow-y-auto p-4 md:p-8" id="full-ledger-container">
@@ -339,36 +344,36 @@
     </main>
 
     <!-- ================= STICKY AI CHAT WIDGET ================= -->
-    <div id="ai-widget" class="fixed bottom-6 right-6 z-[60] flex flex-col items-end">
+    <div id="ai-widget" class="fixed bottom-8 right-8 z-[60] flex flex-col items-end">
         
         <!-- Chat Panel -->
-        <div id="chat-panel" class="chat-closed glass-card rounded-[2rem] premium-shadow w-80 sm:w-96 h-[500px] flex flex-col mb-4 transition-all duration-300 origin-bottom-right">
+        <div id="chat-panel" class="chat-closed glass-card rounded-[2.5rem] premium-shadow w-80 sm:w-96 h-[550px] flex flex-col mb-6 transition-all duration-400 origin-bottom-right">
             <!-- Header -->
-            <div class="p-5 border-b border-slate-100/50 flex items-center justify-between bg-white/50 rounded-t-[2rem]">
-                <div class="flex items-center gap-3">
-                    <div class="bg-indigo-100 p-2 rounded-xl text-indigo-600"><i data-lucide="bot" class="w-5 h-5"></i></div>
+            <div class="p-6 border-b border-slate-200/50 flex items-center justify-between bg-white/60 rounded-t-[2.5rem]">
+                <div class="flex items-center gap-4">
+                    <div class="bg-indigo-600 p-2.5 rounded-2xl text-white shadow-md shadow-indigo-600/30"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
                     <div>
-                        <h3 class="font-bold text-slate-900">Finance AI</h3>
-                        <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Online</p>
+                        <h3 class="font-extrabold text-slate-900">Finance AI</h3>
+                        <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-widest flex items-center gap-1 mt-0.5"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Online</p>
                     </div>
                 </div>
-                <button onclick="toggleChat()" class="text-slate-400 hover:text-slate-600 p-1 bg-slate-100 rounded-lg"><i data-lucide="x" class="w-4 h-4"></i></button>
+                <button onclick="toggleChat()" class="text-slate-400 hover:text-slate-900 p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"><i data-lucide="chevron-down" class="w-5 h-5"></i></button>
             </div>
             
             <!-- Messages -->
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
                 <div class="flex gap-3">
-                    <div class="bg-indigo-50 text-indigo-900 border border-indigo-100 text-sm p-3.5 rounded-2xl rounded-tl-sm max-w-[85%] font-medium">
+                    <div class="bg-indigo-50 border border-indigo-100 text-indigo-900 text-sm p-4 rounded-[1.5rem] rounded-tl-sm max-w-[85%] font-medium shadow-sm">
                         Hi! I analyze your loans, EMIs, and monthly spending. How can I help you optimize your wealth today?
                     </div>
                 </div>
             </div>
 
             <!-- Input -->
-            <div class="p-4 bg-white/50 border-t border-slate-100/50 rounded-b-[2rem]">
-                <form id="chat-form" class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl p-1.5 pr-2 shadow-sm focus-within:border-indigo-500 transition-colors">
-                    <input type="text" id="chat-input" class="flex-1 bg-transparent px-3 py-2 text-sm outline-none font-medium placeholder:font-normal" placeholder="Ask for advice...">
-                    <button type="submit" id="btn-send-chat" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-xl transition-colors shadow-sm">
+            <div class="p-5 bg-white/60 border-t border-slate-200/50 rounded-b-[2.5rem]">
+                <form id="chat-form" class="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-2 shadow-sm focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all">
+                    <input type="text" id="chat-input" class="flex-1 bg-transparent px-3 py-2 text-sm outline-none font-semibold placeholder:font-medium placeholder:text-slate-400" placeholder="Ask for advice...">
+                    <button type="submit" id="btn-send-chat" class="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-all shadow-md">
                         <i data-lucide="send" class="w-4 h-4"></i>
                     </button>
                 </form>
@@ -376,8 +381,8 @@
         </div>
 
         <!-- Floating Button -->
-        <button onclick="toggleChat()" id="chat-fab" class="bg-slate-900 hover:bg-indigo-600 text-white w-14 h-14 rounded-full premium-shadow flex items-center justify-center transition-all hover:scale-110 relative group">
-            <i data-lucide="sparkles" class="w-6 h-6 group-hover:animate-pulse text-yellow-300"></i>
+        <button onclick="toggleChat()" id="chat-fab" class="bg-slate-900 hover:bg-indigo-600 text-white w-16 h-16 rounded-[2rem] premium-shadow flex items-center justify-center transition-all duration-300 hover:scale-110 relative group border-2 border-white/10">
+            <i data-lucide="bot" class="w-7 h-7 group-hover:scale-110 transition-transform"></i>
             <span class="absolute -top-1 -right-1 flex h-4 w-4">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-500 border-2 border-white"></span>
@@ -386,7 +391,7 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white px-6 py-3.5 rounded-2xl premium-shadow flex items-center gap-3 z-[100]">
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 transform translate-y-24 opacity-0 transition-all duration-400 bg-slate-900 text-white px-8 py-4 rounded-2xl premium-shadow flex items-center gap-3 z-[100] border border-slate-700">
         <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
         <span id="toast-msg" class="text-sm font-bold">Action successful</span>
     </div>
@@ -454,8 +459,8 @@
         const formatMoney = (amt) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt);
         const showToast = (msg) => {
             UI.toastMsg.textContent = msg;
-            UI.toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => UI.toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+            UI.toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => UI.toast.classList.add('translate-y-24', 'opacity-0'), 3500);
         };
 
         // --- NAVIGATION & UI ---
@@ -549,7 +554,7 @@
         const renderLedger = () => {
             UI.ledgerCount.textContent = `${state.monthTransactions.length} transactions in selected month`;
             if(state.monthTransactions.length === 0) {
-                UI.fullLedger.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-20"><div class="bg-slate-100 p-4 rounded-full mb-4"><i data-lucide="receipt" class="w-8 h-8 opacity-50"></i></div><p class="font-medium text-sm">No transactions found.</p></div>`;
+                UI.fullLedger.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-20"><div class="bg-slate-50 p-6 rounded-3xl mb-4"><i data-lucide="receipt" class="w-10 h-10 opacity-50"></i></div><p class="font-bold text-sm">No transactions found.</p></div>`;
                 lucide.createIcons(); return;
             }
 
@@ -557,19 +562,19 @@
             UI.fullLedger.innerHTML = sorted.map(t => {
                 const isInc = t.type === 'income'; const isCC = t.category === 'Credit Card Bill'; const isLoan = t.category === 'Loan EMI';
                 return `
-                <div class="flex items-center justify-between p-5 mb-3 border border-slate-100 rounded-2xl hover:border-indigo-100 hover:shadow-sm transition-all group bg-white">
+                <div class="flex items-center justify-between p-5 mb-4 border border-slate-100 rounded-[1.5rem] hover:border-indigo-100 hover:shadow-md transition-all group bg-white">
                     <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center ${isInc ? 'bg-emerald-50 text-emerald-600' : (isCC || isLoan) ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-600'}">
-                            <i data-lucide="${isInc ? 'arrow-down-left' : isCC ? 'credit-card' : isLoan ? 'landmark' : 'arrow-up-right'}" class="w-5 h-5"></i>
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center ${isInc ? 'bg-emerald-50 text-emerald-600' : (isCC || isLoan) ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-600'}">
+                            <i data-lucide="${isInc ? 'arrow-down-left' : isCC ? 'credit-card' : isLoan ? 'landmark' : 'arrow-up-right'}" class="w-6 h-6"></i>
                         </div>
                         <div>
-                            <p class="font-bold text-slate-900">${t.description}</p>
-                            <p class="text-[11px] uppercase tracking-wider font-bold text-slate-400 mt-1">${new Date(t.date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})} &bull; ${t.category} &bull; ${t.method}</p>
+                            <p class="font-extrabold text-slate-900 text-lg">${t.description}</p>
+                            <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mt-1">${new Date(t.date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})} &bull; ${t.category} &bull; ${t.method}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
-                        <span class="font-extrabold ${isInc ? 'text-emerald-600' : 'text-slate-900'}">${isInc ? '+' : '-'}${formatMoney(t.amount)}</span>
-                        <button onclick="deleteTx('${t.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-50 p-2 rounded-xl"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <div class="flex items-center gap-5">
+                        <span class="font-extrabold text-lg ${isInc ? 'text-emerald-600' : 'text-slate-900'}">${isInc ? '+' : '-'}${formatMoney(t.amount)}</span>
+                        <button onclick="deleteTx('${t.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity bg-rose-50 p-2.5 rounded-xl"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 </div>`;
             }).join('');
@@ -580,74 +585,73 @@
         window.toggleTrackerFields = () => {
             const isLoan = document.querySelector('input[name="trackerType"]:checked').value === 'loan';
             document.querySelectorAll('.loan-field').forEach(el => el.style.display = isLoan ? 'block' : 'none');
-            // Make inputs required based on type
             document.getElementById('trk-total').required = isLoan;
             document.getElementById('trk-tenure').required = isLoan;
         };
 
         const renderTrackers = () => {
             if(state.trackers.length === 0) {
-                UI.loansContainer.innerHTML = `<div class="col-span-full p-12 bg-white rounded-[2rem] border border-slate-100 text-center text-slate-400 premium-shadow"><div class="bg-slate-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"><i data-lucide="landmark" class="w-8 h-8 opacity-50"></i></div><p class="font-bold text-slate-600">No active trackers.</p><p class="text-sm mt-1">Add a loan or subscription to manage due dates.</p></div>`;
+                document.getElementById('loans-container').innerHTML = `<div class="col-span-full p-16 bg-white rounded-[2.5rem] border border-slate-100 text-center text-slate-400 premium-shadow"><div class="bg-slate-50 w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><i data-lucide="landmark" class="w-10 h-10 opacity-50"></i></div><p class="font-extrabold text-lg text-slate-700">No active trackers.</p><p class="text-sm mt-2 font-medium">Add a loan or subscription to manage due dates.</p></div>`;
                 lucide.createIcons(); return;
             }
 
             const now = new Date();
-            UI.loansContainer.innerHTML = state.trackers.sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).map(trk => {
+            document.getElementById('loans-container').innerHTML = state.trackers.sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).map(trk => {
                 const isLoan = trk.type === 'loan';
                 const dueDate = new Date(trk.startDate);
                 let overDue = dueDate < now;
                 
                 let loanHTML = '';
                 if(isLoan) {
-                    // Calc Logic
                     let start = new Date(trk.originalStartDate);
                     let monthsDiff = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-                    // If current day is past start day, add 1 to paid emis (rough approx for visual tracking)
                     if(now.getDate() >= start.getDate()) monthsDiff += 1;
                     
                     let emisPaid = Math.max(0, Math.min(monthsDiff, trk.tenure));
                     let amountPaid = emisPaid * trk.emi;
-                    let remaining = Math.max(0, trk.total - amountPaid);
+                    let remainingAmount = Math.max(0, trk.total - amountPaid);
+                    let remainingEmis = Math.max(0, trk.tenure - emisPaid);
                     let progress = (amountPaid / trk.total) * 100;
                     if(progress > 100) progress = 100;
 
                     loanHTML = `
-                        <div class="mt-5 space-y-2">
-                            <div class="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                <span>Paid: ${formatMoney(amountPaid)}</span>
-                                <span>Left: ${formatMoney(remaining)}</span>
+                        <div class="mt-8 space-y-3">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <span>Paid: ${emisPaid} EMIs</span>
+                                <span>Left: ${remainingEmis} EMIs</span>
                             </div>
-                            <progress value="${progress}" max="100" class="w-full h-2.5"></progress>
-                            <p class="text-[11px] font-bold text-slate-400 text-center mt-1">${emisPaid} of ${trk.tenure} EMIs paid</p>
+                            <progress value="${progress}" max="100" class="w-full h-3 overflow-hidden"></progress>
+                            <div class="flex justify-between text-xs font-bold text-slate-900 mt-1">
+                                <span>₹${formatMoney(amountPaid)}</span>
+                                <span>₹${formatMoney(remainingAmount)}</span>
+                            </div>
                         </div>
                     `;
                 }
 
                 return `
-                <div class="bg-white p-6 rounded-[2rem] premium-shadow border border-slate-100 flex flex-col relative overflow-hidden group">
-                    ${isLoan && (progress === 100) ? '<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center"><span class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl font-bold border border-emerald-200 shadow-sm transform -rotate-12 text-lg">Fully Paid</span></div>' : ''}
-                    
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="${isLoan ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600'} p-3 rounded-2xl"><i data-lucide="${isLoan ? 'landmark' : 'repeat'}" class="w-5 h-5"></i></div>
-                        <button onclick="deleteTracker('${trk.id}')" class="text-slate-300 hover:text-rose-500 bg-slate-50 p-2 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                <div class="bg-white p-8 rounded-[2.5rem] premium-shadow border border-slate-100 flex flex-col relative overflow-hidden group">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="${isLoan ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600'} p-4 rounded-2xl"><i data-lucide="${isLoan ? 'landmark' : 'repeat'}" class="w-6 h-6"></i></div>
+                        <button onclick="deleteTracker('${trk.id}')" class="text-slate-300 hover:text-rose-500 bg-slate-50 p-2.5 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                     
                     <div class="flex items-end justify-between">
                         <div>
-                            <h3 class="font-extrabold text-slate-900 text-xl tracking-tight">${trk.name}</h3>
-                            <p class="text-[11px] uppercase tracking-wider font-bold text-slate-400 mt-1">${isLoan ? 'Loan Tracker' : 'Subscription'}</p>
+                            <h3 class="font-extrabold text-slate-900 text-2xl tracking-tight">${trk.name}</h3>
+                            <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-1.5">${isLoan ? 'Loan Tracker' : 'Subscription'}</p>
                         </div>
-                        <p class="font-extrabold text-xl text-slate-900">${formatMoney(trk.emi)}<span class="text-xs text-slate-500 font-medium">/mo</span></p>
+                        <p class="font-extrabold text-2xl text-slate-900">${formatMoney(trk.emi)}<span class="text-xs text-slate-400 font-bold">/mo</span></p>
                     </div>
 
                     ${loanHTML}
 
-                    <div class="mt-6 flex justify-between items-center border-t border-slate-100 pt-5">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="calendar-clock" class="w-4 h-4 ${overDue ? 'text-rose-500' : 'text-slate-400'}"></i>
-                            <p class="text-xs font-bold ${overDue ? 'text-rose-600' : 'text-slate-500'}">${overDue ? 'Overdue:' : 'Next Due:'} ${dueDate.toLocaleDateString('en-IN', {day:'numeric', month:'short'})}</p>
+                    <div class="mt-8 flex justify-between items-center border-t border-slate-100 pt-6">
+                        <div class="flex items-center gap-2.5">
+                            <i data-lucide="calendar-clock" class="w-5 h-5 ${overDue ? 'text-rose-500' : 'text-slate-400'}"></i>
+                            <p class="text-xs font-bold ${overDue ? 'text-rose-600' : 'text-slate-500'}">${overDue ? 'OVERDUE:' : 'NEXT DUE:'} ${dueDate.toLocaleDateString('en-IN', {day:'numeric', month:'short'})}</p>
                         </div>
-                        <button onclick="markTrackerPaid('${trk.id}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-md">Record Payment</button>
+                        <button onclick="markTrackerPaid('${trk.id}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-md">Record Payment</button>
                     </div>
                 </div>`;
             }).join('');
@@ -696,7 +700,7 @@
             const type = document.querySelector('input[name="trackerType"]:checked').value;
             const data = {
                 type: type, name: document.getElementById('trk-name').value, emi: parseFloat(document.getElementById('trk-emi').value),
-                startDate: document.getElementById('trk-date').value, originalStartDate: document.getElementById('trk-date').value, // save original to calculate progress
+                startDate: document.getElementById('trk-date').value, originalStartDate: document.getElementById('trk-date').value,
             };
             if(type === 'loan') {
                 data.total = parseFloat(document.getElementById('trk-total').value);
@@ -719,12 +723,10 @@
             if(!state.user) return; const trk = state.trackers.find(r => r.id === id); if(!trk) return;
             const { db, appId, collection, addDoc, updateDoc, doc } = window.fbUtils;
             try {
-                // Add Expense
                 await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'transactions'), {
                     type: 'expense', amount: trk.emi, description: `${trk.name} (${trk.type==='loan'?'EMI':'Sub'})`,
-                    date: new Date().toISOString().split('T')[0], method: 'Bank / Debit', category: trk.type === 'loan' ? 'Loan EMI' : 'Other', timestamp: Date.now()
+                    date: new Date().toISOString().split('T')[0], method: 'Bank', category: trk.type === 'loan' ? 'Loan EMI' : 'Other', timestamp: Date.now()
                 });
-                // Increment Date +1 month
                 let date = new Date(trk.startDate); date.setMonth(date.getMonth() + 1);
                 await updateDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'trackers', id), { startDate: date.toISOString().split('T')[0] });
                 showToast("Payment recorded!");
@@ -746,7 +748,7 @@
                             if (amt > 0 && amt < 500000) {
                                 let desc = 'Scanned Transaction';
                                 for(let k=1; k<=3; k++){ if(items[j-k] && items[j-k].length > 3 && !items[j-k].match(/^[0-9]/)) { desc = items[j-k].trim(); break; } }
-                                found.push({ type: 'expense', amount: amt, description: `[PDF] ${desc}`, date: today, method: 'Bank / Debit', category: 'Other', timestamp: Date.now() });
+                                found.push({ type: 'expense', amount: amt, description: `[PDF] ${desc}`, date: today, method: 'Bank', category: 'Other', timestamp: Date.now() });
                             }
                         }
                     }
@@ -784,7 +786,7 @@
         const appendChat = (text, sender) => {
             const div = document.createElement('div'); div.className = 'flex gap-3 ' + (sender === 'user' ? 'justify-end' : '');
             const bubble = document.createElement('div'); 
-            bubble.className = `text-sm p-4 rounded-[1.5rem] max-w-[85%] font-medium ${sender === 'user' ? 'bg-slate-900 text-white rounded-tr-sm shadow-md' : 'bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-tl-sm shadow-sm'}`;
+            bubble.className = `text-sm p-4 rounded-[1.5rem] max-w-[85%] font-bold ${sender === 'user' ? 'bg-slate-900 text-white rounded-tr-sm shadow-md' : 'bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-tl-sm shadow-sm'}`;
             bubble.innerHTML = text; div.appendChild(bubble); UI.chatMessages.appendChild(div); UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
         };
 
@@ -809,16 +811,33 @@
             UI.btnSendChat.disabled = false; UI.chatInput.focus();
         });
 
-        // --- INIT & AUTH ---
+        // --- INIT & AUTH FLOW ---
         document.getElementById('btn-logout').addEventListener('click', () => { if(window.fbUtils) window.fbUtils.signOut(window.fbUtils.auth); });
         UI.monthSelect.addEventListener('change', filterDataByMonth);
 
+        // Google Login
         document.getElementById('btn-google-login').addEventListener('click', async () => {
             if(!window.fbUtils) return;
             UI.authStatus.textContent = "Connecting to Google...";
             const { auth, GoogleAuthProvider, signInWithPopup } = window.fbUtils;
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
-            catch(e) { console.error(e); UI.authStatus.textContent = "Login cancelled or failed."; }
+            try { 
+                await signInWithPopup(auth, new GoogleAuthProvider()); 
+            } catch(e) { 
+                console.error("Google Auth Error:", e);
+                // Specifically format Firebase domain errors to be helpful to the user
+                let msg = e.message;
+                if(e.code === 'auth/unauthorized-domain') msg = "Google Login blocked: This domain isn't authorized in your Firebase Console. Please add it to Authentication > Settings > Authorized Domains. Or, click 'Continue as Guest'.";
+                UI.authStatus.innerHTML = `<span class="text-rose-400 leading-tight block">${msg}</span>`; 
+            }
+        });
+
+        // Guest Login Fallback
+        document.getElementById('btn-guest-login').addEventListener('click', async () => {
+            if(!window.fbUtils) return;
+            UI.authStatus.textContent = "Signing in securely as Guest...";
+            const { auth, signInAnonymously } = window.fbUtils;
+            try { await signInAnonymously(auth); } 
+            catch(e) { console.error("Guest Auth Error:", e); UI.authStatus.textContent = e.message; }
         });
 
         const initApp = async () => {
@@ -828,16 +847,16 @@
             if (!window.fbUtils) return;
             const { auth, onAuthStateChanged, signInWithCustomToken } = window.fbUtils;
 
-            // Environment logic
+            // Environment logic: Auto-login if custom token is provided by environment
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                UI.authStatus.textContent = "Logging in securely...";
-                await signInWithCustomToken(auth, __initial_auth_token).catch(e => console.error(e));
+                UI.authStatus.textContent = "Authenticating secure session...";
+                try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { console.error(e); }
             }
 
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     state.user = user; initDataListeners();
-                    document.getElementById('user-name').textContent = user.displayName || 'Anonymous User';
+                    document.getElementById('user-name').textContent = user.displayName || 'Guest User';
                     if(user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
                     
                     UI.authOverlay.style.opacity = '0'; setTimeout(() => { UI.authOverlay.classList.add('hidden'); UI.authStatus.textContent = ''; }, 500);
