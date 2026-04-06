@@ -24,8 +24,21 @@
             getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, setDoc, onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const GEMINI_API_KEY = ""; // Injected at runtime
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { apiKey: "dummy", authDomain: "dummy", projectId: "dummy" };
+        // Integrated the Gemini API Key from your snippet
+        const GEMINI_API_KEY = "AIzaSyDyaMmqlZ2NG4qqUyhLnPV3ykhKlHYGNtI"; 
+
+        // Integrated the Firebase Config from your snippet
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
+            authDomain: "financeflow-89cc0.firebaseapp.com",
+            projectId: "financeflow-89cc0",
+            storageBucket: "financeflow-89cc0.firebasestorage.app",
+            messagingSenderId: "123998162746",
+            appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03",
+            measurementId: "G-QVMJW4KSWP"
+        };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-v4';
 
         let app, auth, db;
