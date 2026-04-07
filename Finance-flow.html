@@ -488,8 +488,11 @@
                     <!-- History Transactions -->
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-2 max-h-[500px] overflow-y-auto custom-scrollbar">
                         <div id="hist-container" class="space-y-2">
-                            <!-- Injected -->
-                        </div>
+    <div id="empty-state-placeholder" class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 pt-10 hidden">
+        <p class="text-sm text-center">No expenses in this date range.</p>
+    </div>
+</div>
+
                     </div>
                 </div>
             </div>
