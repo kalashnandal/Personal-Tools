@@ -64,6 +64,7 @@
             console.warn("Firebase config missing or invalid.", e);
         }
 
+        // Expose to window so our main script can access it reliably
         window.firebaseUtils = {
             db, auth, appId, activeGeminiKey, GoogleAuthProvider, signInWithPopup,
             setPersistence, browserLocalPersistence, signOut, onAuthStateChanged,
@@ -621,7 +622,7 @@
         </div>
     </div>
 
-    <!-- AI REPORT MODAL (Existing) -->
+    <!-- AI REPORT MODAL -->
     <div id="report-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative">
             <div class="bg-gradient-to-r from-indigo-700 to-purple-800 p-6 text-white flex justify-between items-center shrink-0">
@@ -701,7 +702,7 @@
         const GEMINI_MODELS = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro'];
 
         // -----------------------------------------------------------
-        // HELPERS
+        // UI HELPERS
         // -----------------------------------------------------------
         const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
         const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -731,6 +732,34 @@
                 'Other':         { class: 'bg-slate-100 text-slate-700',  hex: '#64748b', bgHex: '#f8fafc' }
             };
             return (colors[category] || colors['Other'])[type];
+        };
+
+        // UI View Managers
+        const showApp = (user) => {
+            document.getElementById('user-name').textContent = user.displayName || 'User';
+            if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+            
+            const overlay = document.getElementById('login-overlay');
+            const appContent = document.getElementById('app-content');
+            
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                setTimeout(() => appContent.style.opacity = '1', 50);
+            }, 300);
+        };
+
+        const showLogin = () => {
+            const overlay = document.getElementById('login-overlay');
+            const appContent = document.getElementById('app-content');
+            
+            appContent.style.opacity = '0';
+            setTimeout(() => {
+                appContent.classList.add('hidden');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.style.opacity = '1', 50);
+            }, 300);
         };
 
         // -----------------------------------------------------------
@@ -1162,9 +1191,15 @@
         const initHistoryDates = () => {
             const now = new Date();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const formatDateStr = (d) => d.toISOString().split('T')[0];
-            document.getElementById('hist-from').value = formatDateStr(firstDay);
-            document.getElementById('hist-to').value = formatDateStr(now);
+            
+            // Adjust to local timezone to avoid UTC shift
+            const formatLocal = (d) => {
+                const offset = d.getTimezoneOffset() * 60000;
+                return new Date(d.getTime() - offset).toISOString().split('T')[0];
+            };
+
+            document.getElementById('hist-from').value = formatLocal(firstDay);
+            document.getElementById('hist-to').value = formatLocal(now);
         };
 
         // -----------------------------------------------------------
@@ -1342,50 +1377,72 @@
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatSend(); });
 
         // -----------------------------------------------------------
-        // AUTH INIT
+        // AUTH INIT & RACE CONDITION FIX
         // -----------------------------------------------------------
-        const initializeAppFlow = async () => {
+        const startApp = () => {
+            // Polling prevents the race condition between the type="module" script loading and this execution.
+            if (!window.firebaseUtils || !window.firebaseUtils.auth) {
+                setTimeout(startApp, 100);
+                return;
+            }
+
+            const { auth, onAuthStateChanged, signInWithCustomToken } = window.firebaseUtils;
+            
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    authUserId = user.uid;
+                    showApp(user);
+                    loadDataFromCloud();
+                } else {
+                    showLogin();
+                }
+            });
+
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
+            }
+        };
+
+        window.onload = () => {
             document.getElementById('current-month-display').textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
             initHistoryDates();
-
-            if (window.firebaseUtils?.auth) {
-                const { auth, onAuthStateChanged, signInWithCustomToken } = window.firebaseUtils;
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        authUserId = user.uid;
-                        document.getElementById('user-name').textContent = user.displayName || 'User';
-                        if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
-                        document.getElementById('login-overlay').classList.add('hidden');
-                        document.getElementById('app-content').classList.remove('hidden');
-                        setTimeout(() => document.getElementById('app-content').style.opacity = '1', 50);
-                        loadDataFromCloud();
-                    } else {
-                        document.getElementById('app-content').classList.add('hidden');
-                        document.getElementById('login-overlay').classList.remove('hidden');
-                        document.getElementById('login-overlay').style.opacity = '1';
-                    }
-                });
-            }
+            startApp();
         };
 
         // Login / Logout Buttons
         document.getElementById('btn-google-login').addEventListener('click', async () => {
-            const btn = document.getElementById('btn-google-login'); btn.disabled = true; document.getElementById('login-loading').classList.remove('hidden');
+            if (!window.firebaseUtils?.auth) {
+                showToast("Still connecting to server, please wait a second...");
+                return;
+            }
+
+            const btn = document.getElementById('btn-google-login'); 
+            btn.disabled = true; 
+            document.getElementById('login-loading').classList.remove('hidden');
+            
+            const { auth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence } = window.firebaseUtils;
+            
             try {
-                await window.firebaseUtils.setPersistence(window.firebaseUtils.auth, window.firebaseUtils.browserLocalPersistence);
-                await window.firebaseUtils.signInWithPopup(window.firebaseUtils.auth, new window.firebaseUtils.GoogleAuthProvider());
-            } catch (err) { btn.disabled = false; document.getElementById('login-loading').classList.add('hidden'); }
+                await setPersistence(auth, browserLocalPersistence);
+                await signInWithPopup(auth, new GoogleAuthProvider());
+                // Once successful, onAuthStateChanged handles the screen switch automatically
+            } catch (err) { 
+                console.error("Login Error:", err);
+                showToast("Login cancelled or blocked. Please try again.");
+                btn.disabled = false; 
+                document.getElementById('login-loading').classList.add('hidden'); 
+            }
         });
 
         document.getElementById('btn-logout').addEventListener('click', () => {
             window.firebaseUtils.signOut(window.firebaseUtils.auth).then(() => {
-                authUserId = null; state.expenses = []; state.emis = []; state.creditCards = []; state.income = { salary: 0, incentive: 0, other: 0 }; state.accounts = { bank: 0, cash: 0 };
+                authUserId = null; 
+                state.expenses = []; state.emis = []; state.creditCards = []; 
+                state.income = { salary: 0, incentive: 0, other: 0 }; 
+                state.accounts = { bank: 0, cash: 0 };
                 window.location.reload();
             });
         });
-
-        window.onload = initializeAppFlow;
     </script>
 </body>
 </html>
