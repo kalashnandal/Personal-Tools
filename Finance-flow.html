@@ -3,31 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceFlow Premium | Comprehensive Wealth Manager</title>
+    <title>AI Finance Tracker (Multi-User + Chat)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- PDF.js -->
+    
+    <!-- PDF.js for scanning GPay Statements -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';</script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    </script>
 
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
-            getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously, signOut,
-            GoogleAuthProvider, signInWithPopup 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithCustomToken, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            setPersistence, 
+            browserLocalPersistence,
+            signOut
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, setDoc, onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Gemini API Key
-        const GEMINI_API_KEY = "AIzaSyDyaMmqlZ2NG4qqUyhLnPV3ykhKlHYGNtI"; 
+        // =====================================================================
+        // 🛑 CONFIGURATION AREA 🛑
+        // =====================================================================
+        
+        // 1. Put your Gemini API Key here
+        const GEMINI_API_KEY = "AIzaSyC6hA0fYIxA3XOPtPtNdjbafwrOCL7MMn4"; 
 
-        // Firebase Config
+        // 2. Your Firebase Config
         const myFirebaseConfig = {
             apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
             authDomain: "financeflow-89cc0.firebaseapp.com",
@@ -37,1204 +48,1095 @@
             appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03",
             measurementId: "G-QVMJW4KSWP"
         };
+        // =====================================================================
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-v4';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'github-finance-app';
+        const activeGeminiKey = GEMINI_API_KEY || "";
 
         let app, auth, db;
         try {
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             db = getFirestore(app);
-        } catch (e) { console.error("Firebase init error:", e); }
+        } catch (e) {
+            console.warn("Firebase config missing or invalid.", e);
+        }
 
-        window.fbUtils = {
-            db, auth, appId, GEMINI_API_KEY, onAuthStateChanged,
-            signInWithCustomToken, signInAnonymously, signOut, GoogleAuthProvider, signInWithPopup,
-            collection, addDoc, deleteDoc, updateDoc, doc, setDoc, onSnapshot
+        window.firebaseUtils = {
+            db, auth, appId, activeGeminiKey, GoogleAuthProvider, signInWithPopup,
+            setPersistence, browserLocalPersistence, signOut, onAuthStateChanged,
+            signInWithCustomToken, doc, setDoc, getDoc
         };
     </script>
 
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f7fc; color: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .modal-enter { animation: modalFadeIn 0.3s ease-out forwards; }
+        .modal-exit { animation: modalFadeOut 0.2s ease-in forwards; }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes modalFadeOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.95) translateY(10px); } }
         
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.6); }
-        .premium-shadow { box-shadow: 0 12px 40px -12px rgba(0,0,0,0.1); }
-        .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
-        
-        .view-section { display: none; animation: fadeIn 0.4s ease-out forwards; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .modal-enter { animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-        /* Floating Chat */
-        .chat-open { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
-        .chat-closed { transform: scale(0.95) translateY(20px); opacity: 0; pointer-events: none; }
-        
-        /* Progress Bar */
-        progress::-webkit-progress-bar { background-color: #e2e8f0; border-radius: 9999px; }
-        progress::-webkit-progress-value { background-color: #4f46e5; border-radius: 9999px; transition: width 0.5s ease; }
-
-        /* AI Report HTML Formatting */
-        .ai-report-content h3 { font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-top: 1.5rem; margin-bottom: 0.75rem; letter-spacing: -0.025em; }
-        .ai-report-content p { color: #475569; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6; font-weight: 500; }
-        .ai-report-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1.25rem; color: #475569; font-size: 0.95rem; font-weight: 500; }
-        .ai-report-content li { margin-bottom: 0.5rem; }
+        /* Chat Typing Indicator */
+        .typing-dot { animation: typing 1.4s infinite ease-in-out; fill: #94a3b8; }
+        .typing-dot:nth-child(1) { animation-delay: 0s; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
     </style>
 </head>
-<body class="antialiased h-screen overflow-hidden flex">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col relative overflow-x-hidden">
 
-    <!-- Auth Overlay -->
-    <div id="auth-overlay" class="fixed inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-indigo-600/20 blur-[120px]"></div>
-            <div class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] rounded-full bg-emerald-600/20 blur-[120px]"></div>
-        </div>
-        
-        <div class="bg-white/10 backdrop-blur-2xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center relative z-10 mx-4">
-            <div class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <i data-lucide="gem" class="text-indigo-600 w-10 h-10"></i>
-            </div>
-            <h1 class="text-3xl font-extrabold text-white mb-2 tracking-tight">FinanceFlow</h1>
-            <p class="text-indigo-200 text-sm mb-8 font-medium">Comprehensive Wealth Manager</p>
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay" class="fixed inset-0 z-50 bg-slate-50 flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 max-w-md w-full text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-indigo-50 rounded-full opacity-50"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-50 rounded-full opacity-50"></div>
             
-            <div class="space-y-4">
-                <button id="btn-google-login" class="w-full bg-white hover:bg-slate-50 text-slate-900 font-bold py-3.5 px-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-3">
-                    <svg class="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                    Continue with Google
-                </button>
-                <button id="btn-guest-login" class="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold py-3.5 px-4 rounded-2xl transition-all flex items-center justify-center gap-3">
-                    <i data-lucide="user" class="w-5 h-5"></i> Continue as Guest
-                </button>
+            <div class="bg-indigo-600 p-4 rounded-2xl text-white shadow-md inline-block mb-6 relative z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
             </div>
-            <div id="auth-status" class="text-rose-300 text-xs mt-6 h-10 font-medium"></div>
+            <h1 class="text-3xl font-bold text-slate-900 mb-2 relative z-10">FinanceFlow AI</h1>
+            <p class="text-slate-500 mb-8 relative z-10">Sign in to sync your finances securely across devices. We'll remember you.</p>
+            
+            <button id="btn-google-login" class="relative z-10 w-full flex items-center justify-center gap-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-all shadow-sm">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+            </button>
+            <div id="login-loading" class="hidden mt-4 text-sm text-indigo-600 font-medium animate-pulse">Authenticating securely...</div>
         </div>
     </div>
 
-    <!-- Sidebar -->
-    <aside id="sidebar" class="w-64 bg-slate-900 text-slate-300 flex flex-col transition-transform duration-300 shrink-0 absolute md:relative z-40 h-full -translate-x-full md:translate-x-0">
-        <div class="h-24 flex items-center px-8 border-b border-slate-800/50">
-            <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-br from-indigo-500 to-emerald-500 p-2.5 rounded-xl text-white shadow-lg">
-                    <i data-lucide="gem" class="w-5 h-5"></i>
-                </div>
-                <h1 class="text-xl font-extrabold text-white tracking-tight">FinanceFlow</h1>
-            </div>
-        </div>
-        
-        <nav class="flex-1 py-8 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-            <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Main Menu</p>
-            <button onclick="window.switchView('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all text-white bg-indigo-600/20 shadow-inner" data-view="dashboard">
-                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> <span class="font-bold text-sm">Dashboard</span>
-            </button>
-            <button onclick="window.switchView('ledger')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:bg-slate-800 hover:text-white text-slate-400" data-view="ledger">
-                <i data-lucide="scroll-text" class="w-5 h-5"></i> <span class="font-bold text-sm">Transactions</span>
-            </button>
-            <button onclick="window.switchView('wealth')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:bg-slate-800 hover:text-white text-slate-400" data-view="wealth">
-                <i data-lucide="wallet" class="w-5 h-5"></i> <span class="font-bold text-sm">Wealth & Cards</span>
-            </button>
-            <button onclick="window.switchView('loans')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:bg-slate-800 hover:text-white text-slate-400" data-view="loans">
-                <i data-lucide="landmark" class="w-5 h-5"></i> <span class="font-bold text-sm">Loans & EMIs</span>
-            </button>
-            <button onclick="window.switchView('reports')" class="nav-btn w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all hover:bg-slate-800 hover:text-white text-slate-400" data-view="reports">
-                <i data-lucide="file-bar-chart-2" class="w-5 h-5"></i> <span class="font-bold text-sm">AI Reports</span>
-            </button>
-        </nav>
-
-        <div class="p-6 border-t border-slate-800/50">
-            <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex items-center justify-between">
+    <!-- MAIN APP DASHBOARD -->
+    <div id="app-content" class="flex-grow flex flex-col hidden opacity-0 transition-opacity duration-500 relative">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <img id="user-avatar" src="https://ui-avatars.com/api/?name=G&background=4f46e5&color=fff" class="w-10 h-10 rounded-full border-2 border-slate-600">
-                    <div class="overflow-hidden">
-                        <p id="user-name" class="text-sm font-bold text-white truncate">Guest</p>
-                        <p class="text-[10px] text-emerald-400 font-bold flex items-center gap-1 uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Synced</p>
+                    <div class="bg-indigo-600 p-1.5 rounded-lg text-white shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                     </div>
+                    <h1 class="text-lg font-bold text-slate-900 tracking-tight hidden sm:block">FinanceFlow</h1>
                 </div>
-                <button id="btn-logout" class="text-slate-400 hover:text-rose-400 transition-colors bg-slate-800 p-2 rounded-xl" title="Sign Out">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                </button>
-            </div>
-        </div>
-    </aside>
-
-    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden md:hidden"></div>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-full relative w-full overflow-hidden">
-        
-        <header class="h-24 bg-transparent flex items-center justify-between px-6 md:px-10 shrink-0 z-20">
-            <div class="flex items-center gap-4">
-                <button id="mobile-menu-btn" class="md:hidden text-slate-600 bg-white shadow-sm p-2.5 rounded-xl border border-slate-200">
-                    <i data-lucide="menu" class="w-5 h-5"></i>
-                </button>
-                <div>
-                    <h2 class="text-2xl font-extrabold text-slate-900 hidden sm:block tracking-tight" id="page-title">Overview</h2>
-                    <p class="text-sm text-slate-500 hidden sm:block font-medium">Welcome back to your portfolio.</p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <button onclick="window.openTxModal()" class="bg-slate-900 hover:bg-indigo-600 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg flex items-center gap-2">
-                    <i data-lucide="plus" class="w-4 h-4"></i> <span class="hidden sm:inline">Transaction</span>
-                </button>
-
-                <div class="flex items-center gap-3 bg-white premium-shadow px-4 py-2.5 rounded-2xl border border-slate-100">
-                    <div class="bg-indigo-50 p-2 rounded-xl"><i data-lucide="calendar" class="w-4 h-4 text-indigo-600"></i></div>
-                    <input type="month" id="month-selector" class="border-none bg-transparent outline-none text-slate-800 font-extrabold cursor-pointer text-sm focus:ring-0">
+                
+                <div class="flex items-center gap-6">
+                    <span id="sync-status" class="text-xs font-medium text-slate-400 flex items-center gap-1">
+                        <div class="w-2 h-2 rounded-full bg-slate-300"></div> Connected
+                    </span>
+                    <div class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full hidden md:block" id="current-month-display">
+                        Loading...
+                    </div>
+                    <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
+                        <div class="flex flex-col items-end hidden sm:flex">
+                            <span id="user-name" class="text-sm font-semibold text-slate-800 leading-tight">User</span>
+                            <button id="btn-logout" class="text-xs text-slate-400 hover:text-rose-500 transition-colors">Sign Out</button>
+                        </div>
+                        <img id="user-avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='%23cbd5e1'/></svg>" alt="Profile" class="h-9 w-9 rounded-full object-cover border border-slate-200 shadow-sm">
+                    </div>
                 </div>
             </div>
         </header>
 
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-10 pt-0" id="views-container">
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col gap-8 pb-32">
             
-            <!-- ================= VIEW: DASHBOARD ================= -->
-            <div id="view-dashboard" class="view-section active space-y-8 max-w-7xl mx-auto pb-24">
-                <!-- Macro Metric Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100 relative overflow-hidden group">
-                        <div class="absolute -right-6 -top-6 bg-slate-50 w-24 h-24 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-                        <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 relative z-10">Net Balance (Month)</p>
-                        <h3 class="text-4xl font-extrabold text-slate-900 tracking-tight relative z-10" id="sum-balance">₹0</h3>
-                        <p class="text-xs text-slate-400 mt-2 font-semibold relative z-10">Income minus Expenses</p>
+            <!-- Top Dashboard Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute -right-6 -top-6 bg-indigo-50 w-24 h-24 rounded-full opacity-50"></div>
+                    <p class="text-sm font-medium text-slate-500 mb-1 relative z-10">Available Balance</p>
+                    <h2 class="text-4xl font-bold text-slate-900 relative z-10" id="total-balance">₹0</h2>
+                    <div class="mt-4 w-full bg-slate-100 rounded-full h-2 relative z-10">
+                        <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" id="balance-progress" style="width: 0%"></div>
                     </div>
-                    <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100">
-                        <div class="flex justify-between items-start mb-2">
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Income</p>
-                            <div class="bg-emerald-50 text-emerald-600 p-2 rounded-xl"><i data-lucide="trending-up" class="w-4 h-4"></i></div>
-                        </div>
-                        <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="sum-income">₹0</h3>
+                    <p class="text-xs text-slate-400 mt-2 relative z-10" id="balance-status">0% of income spent</p>
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-sm font-medium text-slate-500">Monthly Income</p>
+                        <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" /></svg>
+                        </span>
                     </div>
-                    <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100">
-                        <div class="flex justify-between items-start mb-2">
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Expenses</p>
-                            <div class="bg-rose-50 text-rose-600 p-2 rounded-xl"><i data-lucide="trending-down" class="w-4 h-4"></i></div>
-                        </div>
-                        <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="sum-expense">₹0</h3>
-                    </div>
-                    <div class="bg-white premium-shadow rounded-[2rem] p-6 border border-slate-100">
-                        <div class="flex justify-between items-start mb-2">
-                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Net Worth</p>
-                            <div class="bg-indigo-50 text-indigo-600 p-2 rounded-xl"><i data-lucide="pie-chart" class="w-4 h-4"></i></div>
-                        </div>
-                        <h3 class="text-2xl font-extrabold text-indigo-600 tracking-tight" id="dash-net-worth">₹0</h3>
-                        <p class="text-xs text-slate-400 mt-2 font-semibold">From Wealth Portfolio</p>
+                    <h2 class="text-3xl font-bold text-emerald-600" id="total-income">₹0</h2>
+                    <div class="mt-2 text-xs text-slate-500 flex justify-between">
+                        <span>5th: <span id="summary-salary" class="font-semibold">₹0</span></span>
+                        <span>15th: <span id="summary-incentive" class="font-semibold">₹0</span></span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Left: Analytics -->
-                    <div class="lg:col-span-2 flex flex-col gap-8">
-                        <div class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 p-8 flex-1 flex flex-col min-h-[400px]">
-                            <h2 class="text-xl font-extrabold text-slate-900 mb-8 tracking-tight">Expense Breakdown</h2>
-                            <div class="relative flex-1 w-full flex justify-center items-center min-h-[300px]">
-                                <canvas id="expenseChart"></canvas>
-                                <p id="chart-empty" class="absolute text-slate-400 text-sm font-semibold hidden">No data available for this period.</p>
-                            </div>
-                        </div>
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-sm font-medium text-slate-500">Total Expenses</p>
+                        <span class="bg-rose-100 text-rose-700 p-1.5 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5-5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd" /></svg>
+                        </span>
                     </div>
+                    <h2 class="text-3xl font-bold text-rose-600" id="total-expenses">₹0</h2>
+                    <p class="mt-2 text-xs text-slate-500"><span id="expense-count" class="font-semibold">0</span> transactions this month</p>
+                </div>
+            </div>
 
-                    <!-- Right: Quick Tools -->
-                    <div class="lg:col-span-1 space-y-8">
-                        <div class="bg-gradient-to-br from-slate-900 to-indigo-950 rounded-[2.5rem] premium-shadow p-8 text-white relative overflow-hidden">
-                            <i data-lucide="scan-line" class="absolute -right-4 -bottom-4 w-32 h-32 text-white opacity-5"></i>
-                            <h2 class="text-xl font-extrabold mb-3 relative z-10">Smart Scanner</h2>
-                            <p class="text-slate-300 text-sm font-medium mb-6 relative z-10">Upload Bank or GPay PDF statements. We auto-extract and log your transactions.</p>
-                            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column: Inputs -->
+                <div class="flex flex-col gap-6 lg:col-span-1">
+                    <!-- PDF Scanner -->
+                    <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl border border-indigo-500 shadow-md p-6 text-white relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 opacity-20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg> Smart PDF Scanner
+                        </h3>
+                        <p class="text-indigo-100 text-sm mb-4 relative z-10">Upload GPay statement to auto-fill.</p>
+                        <div class="relative z-10">
                             <input type="file" id="pdf-upload" accept="application/pdf" class="hidden">
-                            <label for="pdf-upload" id="pdf-label" class="cursor-pointer w-full flex justify-center items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white py-4 rounded-2xl transition-colors text-sm font-bold shadow-lg relative z-10">
-                                <i data-lucide="upload-cloud" class="w-5 h-5"></i> Upload PDF
-                            </label>
-                            <p id="pdf-status" class="text-xs text-indigo-300 mt-3 hidden text-center font-bold relative z-10">Scanning Document...</p>
-                        </div>
-
-                        <div class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 p-8">
-                            <h2 class="text-lg font-extrabold text-slate-900 mb-4 tracking-tight">Recent Activity</h2>
-                            <div id="dash-recent-txs" class="space-y-4">
-                                <!-- Populated via JS -->
-                                <p class="text-sm text-slate-400 text-center py-4">No recent activity.</p>
-                            </div>
-                            <button onclick="window.switchView('ledger')" class="w-full mt-6 bg-slate-50 hover:bg-slate-100 text-indigo-600 font-bold py-3 rounded-xl transition-colors text-sm">View All</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ================= VIEW: WEALTH & CARDS ================= -->
-            <div id="view-wealth" class="view-section space-y-8 max-w-7xl mx-auto pb-24">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-4">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Wealth & Portfolio</h2>
-                        <p class="text-slate-500 font-semibold mt-2">Manage your net worth and track credit card bills.</p>
-                    </div>
-                </div>
-
-                <!-- Portfolio Form -->
-                <div class="bg-white p-8 rounded-[2.5rem] premium-shadow border border-slate-100 mb-8">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="bg-emerald-50 p-2 rounded-xl text-emerald-600"><i data-lucide="pie-chart" class="w-5 h-5"></i></div>
-                        <h3 class="text-xl font-extrabold text-slate-900">Net Worth Snapshot</h3>
-                    </div>
-                    <form id="portfolio-form" class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Savings (₹)</label>
-                            <input type="number" id="port-savings" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-emerald-600">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Investments (₹)</label>
-                            <input type="number" id="port-invests" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-indigo-600">
-                        </div>
-                        <div class="flex gap-4 items-end">
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Outside Debt (₹)</label>
-                                <input type="number" id="port-debt" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-rose-500">
-                            </div>
-                            <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-3.5 px-6 rounded-2xl transition-all shadow-md">Update</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Credit Cards Header -->
-                <div class="flex justify-between items-end mb-4 border-t border-slate-200 pt-8">
-                    <div>
-                        <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight">Credit Cards</h3>
-                        <p class="text-slate-500 font-semibold mt-1">Manage cycles and payments.</p>
-                    </div>
-                    <button onclick="window.openCardModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add Card
-                    </button>
-                </div>
-
-                <!-- Credit Cards Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="cards-container">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- ================= VIEW: LOANS & EMIs ================= -->
-            <div id="view-loans" class="view-section space-y-8 max-w-7xl mx-auto pb-24">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-4">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Loans & EMIs</h2>
-                        <p class="text-slate-500 font-semibold mt-2">Track your debt payoff progress automatically.</p>
-                    </div>
-                    <button onclick="document.getElementById('add-loan-form').classList.toggle('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3.5 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Add Tracker
-                    </button>
-                </div>
-
-                <!-- Add Tracker Form -->
-                <div id="add-loan-form" class="hidden bg-white p-8 rounded-[2.5rem] premium-shadow border border-slate-100">
-                    <form id="loan-form" class="space-y-6">
-                        <div class="flex gap-4 p-1.5 bg-slate-50 rounded-2xl border border-slate-200 w-fit">
-                            <label class="cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl has-[:checked]:bg-white has-[:checked]:shadow-md has-[:checked]:text-indigo-600 text-slate-500 font-bold text-sm transition-all">
-                                <input type="radio" name="trackerType" value="loan" class="hidden" checked onchange="window.toggleTrackerFields()"> Loan / EMI
-                            </label>
-                            <label class="cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl has-[:checked]:bg-white has-[:checked]:shadow-md has-[:checked]:text-indigo-600 text-slate-500 font-bold text-sm transition-all">
-                                <input type="radio" name="trackerType" value="sub" class="hidden" onchange="window.toggleTrackerFields()"> Subscription
+                            <label for="pdf-upload" id="upload-label" class="cursor-pointer flex items-center justify-center w-full bg-white text-indigo-700 font-medium py-2.5 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02]">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg> Upload Statement
                             </label>
                         </div>
+                    </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Income Config -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg> Income Settings
+                        </h3>
+                        <div class="space-y-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Name</label>
-                                <input type="text" id="trk-name" required placeholder="e.g. Car Loan, Netflix" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-semibold">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Salary (5th)</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                    <input type="number" id="income-salary" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                                </div>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Monthly Cost (₹)</label>
-                                <input type="number" id="trk-emi" required placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Incentive (15th)</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                    <input type="number" id="income-incentive" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Start Date</label>
-                                <input type="date" id="trk-date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-sm">
-                            </div>
-                            
-                            <div class="loan-field">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Total Loan (₹)</label>
-                                <input type="number" id="trk-total" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
-                            </div>
-                            <div class="loan-field lg:col-span-1">
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tenure (Months)</label>
-                                <input type="number" id="trk-tenure" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
-                            </div>
-                        </div>
-                        <button type="submit" class="bg-slate-900 hover:bg-indigo-600 text-white font-extrabold py-3.5 px-8 rounded-2xl transition-all shadow-lg shadow-slate-900/20">Save Tracker</button>
-                    </form>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="loans-container">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
-            <!-- ================= VIEW: LEDGER ================= -->
-            <div id="view-ledger" class="view-section space-y-6 max-w-6xl mx-auto pb-24">
-                <div class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 flex flex-col overflow-hidden min-h-[600px]">
-                    <div class="p-8 border-b border-slate-100 flex justify-between items-end bg-slate-50/50">
-                        <div>
-                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Full Ledger</h2>
-                            <p class="text-sm text-slate-500 font-semibold mt-2" id="ledger-count">0 transactions</p>
+                            <button id="save-income-btn" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-xl transition-colors">Save Income</button>
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-4 md:p-8" id="full-ledger-container">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </div>
 
-            <!-- ================= VIEW: AI REPORTS ================= -->
-            <div id="view-reports" class="view-section space-y-8 max-w-7xl mx-auto pb-24">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-4">
-                    <div>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Smart AI Reports</h2>
-                        <p class="text-slate-500 font-semibold mt-2">Comprehensive monthly summaries and financial insights.</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Report Generator Card -->
-                    <div class="lg:col-span-1 flex flex-col gap-6">
-                        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2.5rem] premium-shadow p-8 text-white shrink-0">
-                            <div class="flex items-center gap-4 mb-6">
-                                <div class="bg-white/20 p-3 rounded-2xl backdrop-blur-sm"><i data-lucide="file-text" class="w-6 h-6 text-white"></i></div>
-                                <h2 class="text-xl font-extrabold tracking-tight">Month Analysis</h2>
+                    <!-- Expense Form -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg> Add Expense
+                        </h3>
+                        <form id="expense-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                                <input type="text" id="expense-desc" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Groceries">
                             </div>
-                            <p class="text-indigo-100 text-sm mb-8 leading-relaxed font-medium">Generate a comprehensive summary of this month's finances, including spending patterns, EMI progress, and actionable recommendations.</p>
-                            <button id="btn-generate-report" class="w-full bg-white text-indigo-700 hover:bg-slate-50 font-extrabold py-4 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2">
-                                <i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                        <input type="number" id="expense-amount" required min="1" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                                    <input type="date" id="expense-date" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                                <select id="expense-category" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                                    <option value="Housing">Housing</option>
+                                    <option value="Food">Food & Dining</option>
+                                    <option value="Transportation">Transportation</option>
+                                    <option value="Utilities">Utilities</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Healthcare">Healthcare</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg> Add
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Chart & Transactions -->
+                <div class="lg:col-span-2 flex flex-col gap-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative flex flex-col items-center justify-center" id="chart-container" style="min-height: 300px;">
+                        <div id="chart-empty-state" class="text-center text-slate-400 absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                            </svg>
+                            <p class="text-sm">Add expenses to view analysis.</p>
+                        </div>
+                        <div class="w-full flex justify-between items-center mb-4 z-20">
+                            <h3 class="text-lg font-semibold text-slate-900">Spending Analysis</h3>
+                            <button onclick="openReportModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                                </svg>
+                                Generate AI Report
                             </button>
                         </div>
+                        <div class="relative h-56 w-full flex justify-center z-20 opacity-0 transition-opacity duration-300" id="canvas-wrapper">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
                     </div>
 
-                    <!-- Report Output -->
-                    <div class="lg:col-span-2 flex flex-col">
-                        <div id="report-output-card" class="bg-white rounded-[2.5rem] premium-shadow border border-slate-100 p-8 flex-1 overflow-y-auto custom-scrollbar hidden min-h-[500px]">
-                            <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                                <h3 class="font-extrabold text-slate-900 text-xl tracking-tight">Executive Report</h3>
-                                <button onclick="document.getElementById('report-output-card').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-xl transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
-                            </div>
-                            <div id="report-content" class="ai-report-content text-slate-700">
-                                <!-- Populated by AI -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col flex-grow min-h-[400px]">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4 flex justify-between items-center border-b border-slate-100 pb-4">
+                            <span>Recent Transactions</span>
+                            <button onclick="clearAllData()" class="text-sm text-slate-400 hover:text-rose-500 transition-colors">Clear All</button>
+                        </h3>
+                        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2" id="expenses-container">
+                            <div id="empty-state" class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 pt-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                <p class="text-sm text-center">No expenses recorded yet.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </main>
 
-        </div>
-    </main>
-
-    <!-- ================= UNIVERSAL TRANSACTION MODAL ================= -->
-    <div id="tx-modal" class="fixed inset-0 z-[80] modal-overlay hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden modal-enter border border-slate-100">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="font-extrabold text-slate-900 text-xl tracking-tight">Add Transaction</h3>
-                <button onclick="window.closeTxModal()" class="text-slate-400 hover:text-slate-600 bg-white p-2 rounded-xl shadow-sm border border-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
-            <form id="modal-tx-form" class="p-8 space-y-5">
-                <div class="flex p-1.5 bg-slate-100 rounded-2xl">
-                    <button type="button" id="modal-btn-type-expense" class="flex-1 py-2.5 text-sm font-bold rounded-xl bg-white shadow-sm text-slate-900 transition-all">Expense</button>
-                    <button type="button" id="modal-btn-type-income" class="flex-1 py-2.5 text-sm font-bold rounded-xl text-slate-500 hover:text-slate-700 transition-all">Income</button>
-                    <input type="hidden" id="modal-tx-type" value="expense">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Amount (₹)</label>
-                    <input type="number" id="modal-tx-amount" required min="1" placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-bold text-lg text-slate-900">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Description</label>
-                    <input type="text" id="modal-tx-desc" required placeholder="e.g. Swiggy, Salary" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors font-medium">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Date</label>
-                        <input type="date" id="modal-tx-date" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Method</label>
-                        <select id="modal-tx-method" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-bold">
-                            <option value="UPI">UPI</option>
-                            <option value="Debit/NetBanking">Bank</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="Cash">Cash</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category</label>
-                    <select id="modal-tx-category" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 focus:bg-white transition-colors text-sm font-bold">
-                        <!-- Populated via JS -->
-                    </select>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-2xl transition-colors mt-4 shadow-lg shadow-indigo-600/30">
-                    Save Record
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= CREDIT CARD MODAL ================= -->
-    <div id="cc-modal" class="fixed inset-0 z-[80] modal-overlay hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md overflow-hidden modal-enter border border-slate-100">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="font-extrabold text-slate-900 text-xl tracking-tight">Credit Card</h3>
-                <button onclick="window.closeCardModal()" class="text-slate-400 hover:text-slate-600 bg-white p-2 rounded-xl shadow-sm border border-slate-100"><i data-lucide="x" class="w-4 h-4"></i></button>
-            </div>
-            <form id="cc-form" class="p-8 space-y-5">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Card Name / Bank</label>
-                    <input type="text" id="cc-name" required placeholder="e.g. SBI SimplyClick" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cycle Start Date</label>
-                        <input type="date" id="cc-start" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 text-sm font-bold">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Due Date</label>
-                        <input type="date" id="cc-due" required class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 text-sm font-bold">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Billed Amount (₹)</label>
-                        <input type="number" id="cc-bill" required placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-rose-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Amount Paid (₹)</label>
-                        <input type="number" id="cc-paid" required placeholder="0" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 outline-none focus:border-indigo-500 font-bold text-emerald-600">
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-4 rounded-2xl transition-colors mt-4 shadow-lg shadow-slate-900/20">
-                    Save Card
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- ================= STICKY AI CHAT WIDGET ================= -->
-    <div id="ai-widget" class="fixed bottom-8 right-8 z-[60] flex flex-col items-end">
-        <div id="chat-panel" class="chat-closed glass-card rounded-[2.5rem] premium-shadow w-80 sm:w-[26rem] h-[550px] flex flex-col mb-6 transition-all duration-400 origin-bottom-right">
-            <div class="p-6 border-b border-slate-200/50 flex items-center justify-between bg-white/60 rounded-t-[2.5rem]">
-                <div class="flex items-center gap-4">
-                    <div class="bg-indigo-600 p-2.5 rounded-2xl text-white shadow-md shadow-indigo-600/30"><i data-lucide="sparkles" class="w-5 h-5"></i></div>
-                    <div>
-                        <h3 class="font-extrabold text-slate-900">Finance AI</h3>
-                        <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-widest flex items-center gap-1 mt-0.5"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> Online</p>
-                    </div>
-                </div>
-                <button onclick="window.toggleChat()" class="text-slate-400 hover:text-slate-900 p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"><i data-lucide="chevron-down" class="w-5 h-5"></i></button>
-            </div>
+        <!-- FLOATING CHAT WIDGET -->
+        <div id="chat-widget" class="fixed bottom-6 right-6 z-40 flex flex-col items-end">
             
-            <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-5 custom-scrollbar">
-                <div class="flex gap-3">
-                    <div class="bg-indigo-50 border border-indigo-100 text-indigo-900 text-sm p-4 rounded-[1.5rem] rounded-tl-sm max-w-[85%] font-medium shadow-sm">
-                        Hi! I analyze your loans, EMIs, and monthly spending. How can I help you optimize your wealth today?
+            <!-- Chat Window -->
+            <div id="chat-window" class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-80 sm:w-96 h-[500px] max-h-[80vh] flex flex-col mb-4 hidden transform transition-all origin-bottom-right scale-95 opacity-0">
+                <!-- Chat Header -->
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                        </svg>
+                        <h3 class="font-semibold text-sm">Gemini Finance Assistant</h3>
                     </div>
+                    <button onclick="toggleChat()" class="text-indigo-100 hover:text-white transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Chat Messages Area -->
+                <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
+                    <div class="flex flex-col gap-1 items-start">
+                        <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">
+                            Hi! I'm your AI financial assistant. I have read your dashboard data. Ask me anything about your spending or budget!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Area -->
+                <div class="p-3 bg-white border-t border-slate-100 rounded-b-2xl flex items-center gap-2 shrink-0">
+                    <input type="text" id="chat-input" class="flex-grow bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm rounded-xl px-4 py-2.5 outline-none transition-all" placeholder="Ask about your finances...">
+                    <button id="chat-send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl transition-colors shrink-0 disabled:opacity-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 
-            <div class="p-5 bg-white/60 border-t border-slate-200/50 rounded-b-[2.5rem]">
-                <form id="chat-form" class="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl p-2 shadow-sm focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/10 transition-all">
-                    <input type="text" id="chat-input" class="flex-1 bg-transparent px-3 py-2 text-sm outline-none font-semibold placeholder:font-medium placeholder:text-slate-400" placeholder="Ask for advice...">
-                    <button type="submit" id="btn-send-chat" class="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-all shadow-md">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                    </button>
-                </form>
+            <!-- Floating Button -->
+            <button onclick="toggleChat()" id="chat-toggle-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl p-4 rounded-full transition-all transform hover:-translate-y-1 flex items-center justify-center relative">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <span class="absolute top-0 right-0 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400 border-2 border-indigo-600"></span>
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- AI REPORT MODAL -->
+    <div id="report-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative">
+            <div class="bg-gradient-to-r from-indigo-700 to-purple-800 p-6 text-white flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                        </svg> Gemini AI Report
+                    </h2>
+                    <p class="text-indigo-200 text-sm mt-1">Personalized Financial Analysis</p>
+                </div>
+                <button onclick="closeReportModal()" class="text-white hover:text-indigo-200 bg-white/10 p-2 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow space-y-8">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Total Saved</p>
+                        <p class="text-2xl font-bold text-emerald-600" id="report-saved">₹0</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <p class="text-sm text-slate-500 font-medium">Savings Rate</p>
+                        <p class="text-2xl font-bold text-indigo-600" id="report-rate">0%</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Category Breakdown</h3>
+                    <div id="report-bars-container" class="space-y-4"></div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">
+                        <span class="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Smart Insights</span>
+                    </h3>
+                    <div id="report-insights-container" class="space-y-3">
+                        <div id="ai-loading" class="flex flex-col items-center justify-center py-6 text-slate-400">
+                            <svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p class="text-sm font-medium">Analyzing spending patterns...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex justify-end">
+                <button onclick="window.print()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 px-5 py-2.5 rounded-xl text-sm font-semibold mr-3">Print / PDF</button>
+                <button onclick="closeReportModal()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-5 py-2.5 rounded-xl text-sm font-semibold">Close</button>
             </div>
         </div>
-
-        <button onclick="window.toggleChat()" id="chat-fab" class="bg-slate-900 hover:bg-indigo-600 text-white w-16 h-16 rounded-[2rem] premium-shadow flex items-center justify-center transition-all duration-300 hover:scale-110 relative group border-2 border-white/10">
-            <i data-lucide="bot" class="w-7 h-7 group-hover:scale-110 transition-transform"></i>
-            <span class="absolute -top-1 -right-1 flex h-4 w-4">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-4 w-4 bg-indigo-500 border-2 border-white"></span>
-            </span>
-        </button>
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 transform translate-y-24 opacity-0 transition-all duration-400 bg-slate-900 text-white px-8 py-4 rounded-2xl premium-shadow flex items-center gap-3 z-[100] border border-slate-700">
-        <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
-        <span id="toast-msg" class="text-sm font-bold">Action successful</span>
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-800 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <span id="toast-msg" class="text-sm font-medium">Action successful</span>
     </div>
 
-    <!-- ================= LOGIC ================= -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously, signOut,
-            GoogleAuthProvider, signInWithPopup 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, setDoc, onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Gemini API Key
-        const GEMINI_API_KEY = "AIzaSyDyaMmqlZ2NG4qqUyhLnPV3ykhKlHYGNtI"; 
-
-        // Firebase Config
-        const myFirebaseConfig = {
-            apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
-            authDomain: "financeflow-89cc0.firebaseapp.com",
-            projectId: "financeflow-89cc0",
-            storageBucket: "financeflow-89cc0.firebasestorage.app",
-            messagingSenderId: "123998162746",
-            appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03",
-            measurementId: "G-QVMJW4KSWP"
-        };
-
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-v4';
-
-        let app, auth, db;
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-        } catch (e) { console.error("Firebase init error:", e); }
-
-        // --- STATE ---
-        const state = {
-            user: null,
-            allTransactions: [], 
-            monthTransactions: [], 
-            trackers: [], // Loans & Subs
-            creditCards: [],
-            portfolio: { savings: 0, invests: 0, debt: 0 },
-            chatHistory: [],
-            unsubs: []
-        };
-
-        const CATEGORIES = {
-            expense: ["Food & Dining", "Housing & Rent", "Credit Card Bill", "Loan EMI", "Transportation", "Utilities", "Shopping", "Entertainment", "Investment", "Other"],
-            income: ["Salary", "Business", "Investment Return", "Other"]
-        };
-
+    <!-- ============================================================
+         CORE LOGIC — SINGLE CLEAN SCRIPT (all bugs fixed)
+         ============================================================ -->
+    <script>
+        // -----------------------------------------------------------
+        // STATE
+        // -----------------------------------------------------------
+        const state = { income: { salary: 0, incentive: 0 }, expenses: [] };
         let myChart = null;
+        let authUserId = null;
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
+        // FIX #3 — Chat history capped at MAX_HISTORY turns to avoid token bloat
+        let chatHistory = [];
+        const MAX_CHAT_HISTORY = 10;
 
-            const UI = {
-                authOverlay: document.getElementById('auth-overlay'),
-                authStatus: document.getElementById('auth-status'),
-                monthSelect: document.getElementById('month-selector'),
-                sumBalance: document.getElementById('sum-balance'),
-                sumIncome: document.getElementById('sum-income'),
-                sumExpense: document.getElementById('sum-expense'),
-                sumCC: document.getElementById('sum-cc-bills'),
-                dashNetWorth: document.getElementById('dash-net-worth'),
-                
-                // Modal Form
-                txModal: document.getElementById('tx-modal'),
-                modalForm: document.getElementById('modal-tx-form'),
-                modalBtnExp: document.getElementById('modal-btn-type-expense'),
-                modalBtnInc: document.getElementById('modal-btn-type-income'),
-                modalTxType: document.getElementById('modal-tx-type'),
-                modalTxCat: document.getElementById('modal-tx-category'),
-                
-                ledgerCount: document.getElementById('ledger-count'),
-                fullLedger: document.getElementById('full-ledger-container'),
-                chartEmpty: document.getElementById('chart-empty'),
-                dashRecentTxs: document.getElementById('dash-recent-txs'),
-                
-                loanForm: document.getElementById('loan-form'),
-                loansContainer: document.getElementById('loans-container'),
-                
-                portForm: document.getElementById('portfolio-form'),
-                ccModal: document.getElementById('cc-modal'),
-                ccForm: document.getElementById('cc-form'),
-                cardsContainer: document.getElementById('cards-container'),
+        // Gemini model fallback chain (FIX #2)
+        const GEMINI_MODELS = [
+                'gemini-1.5-flash-latest',
+    'gemini-1.5-pro-latest',
+    'gemini-pro'
+        ];
 
-                pdfUpload: document.getElementById('pdf-upload'),
-                pdfStatus: document.getElementById('pdf-status'),
-                pdfLabel: document.getElementById('pdf-label'),
-                
-                chatPanel: document.getElementById('chat-panel'),
-                chatForm: document.getElementById('chat-form'),
-                chatInput: document.getElementById('chat-input'),
-                chatMessages: document.getElementById('chat-messages'),
-                btnSendChat: document.getElementById('btn-send-chat'),
-                
-                btnReport: document.getElementById('btn-generate-report'),
-                reportCard: document.getElementById('report-output-card'),
-                reportContent: document.getElementById('report-content'),
-                
-                toast: document.getElementById('toast'),
-                toastMsg: document.getElementById('toast-msg'),
-                sidebar: document.getElementById('sidebar'),
-                sidebarOverlay: document.getElementById('sidebar-overlay'),
-                pageTitle: document.getElementById('page-title')
+        // -----------------------------------------------------------
+        // DOM ELEMENT REFERENCES
+        // -----------------------------------------------------------
+        const els = {
+            loginOverlay:         document.getElementById('login-overlay'),
+            appContent:           document.getElementById('app-content'),
+            btnGoogleLogin:       document.getElementById('btn-google-login'),
+            btnLogout:            document.getElementById('btn-logout'),
+            userName:             document.getElementById('user-name'),
+            userAvatar:           document.getElementById('user-avatar'),
+            loginLoading:         document.getElementById('login-loading'),
+            totalBalance:         document.getElementById('total-balance'),
+            totalIncome:          document.getElementById('total-income'),
+            totalExpenses:        document.getElementById('total-expenses'),
+            summarySalary:        document.getElementById('summary-salary'),
+            summaryIncentive:     document.getElementById('summary-incentive'),
+            expenseCount:         document.getElementById('expense-count'),
+            balanceProgress:      document.getElementById('balance-progress'),
+            balanceStatus:        document.getElementById('balance-status'),
+            incomeSalary:         document.getElementById('income-salary'),
+            incomeIncentive:      document.getElementById('income-incentive'),
+            saveIncomeBtn:        document.getElementById('save-income-btn'),
+            expenseForm:          document.getElementById('expense-form'),
+            expenseDesc:          document.getElementById('expense-desc'),
+            expenseAmount:        document.getElementById('expense-amount'),
+            expenseDate:          document.getElementById('expense-date'),
+            expenseCategory:      document.getElementById('expense-category'),
+            expensesContainer:    document.getElementById('expenses-container'),
+            emptyState:           document.getElementById('empty-state'),
+            currentMonthDisplay:  document.getElementById('current-month-display'),
+            pdfUpload:            document.getElementById('pdf-upload'),
+            uploadLabel:          document.getElementById('upload-label'),
+            chartEmptyState:      document.getElementById('chart-empty-state'),
+            canvasWrapper:        document.getElementById('canvas-wrapper'),
+            reportModal:          document.getElementById('report-modal'),
+            reportSaved:          document.getElementById('report-saved'),
+            reportRate:           document.getElementById('report-rate'),
+            reportBarsContainer:  document.getElementById('report-bars-container'),
+            reportInsightsContainer: document.getElementById('report-insights-container'),
+            aiLoading:            document.getElementById('ai-loading'),
+            toast:                document.getElementById('toast'),
+            toastMsg:             document.getElementById('toast-msg'),
+            syncStatus:           document.getElementById('sync-status'),
+            chatWindow:           document.getElementById('chat-window'),
+            chatToggleBtn:        document.getElementById('chat-toggle-btn'),
+            chatMessages:         document.getElementById('chat-messages'),
+            chatInput:            document.getElementById('chat-input'),
+            chatSendBtn:          document.getElementById('chat-send-btn')
+        };
+
+        // -----------------------------------------------------------
+        // HELPERS
+        // -----------------------------------------------------------
+        const formatCurrency = (amount) =>
+            new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+
+        const formatDate = (dateString) =>
+            new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const showToast = (msg) => {
+            els.toastMsg.textContent = msg;
+            els.toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => els.toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+        };
+
+        const getCategoryColor = (category, type = 'class') => {
+            const colors = {
+                'Housing':       { class: 'bg-blue-100 text-blue-700',   hex: '#3b82f6', bgHex: '#eff6ff' },
+                'Food':          { class: 'bg-orange-100 text-orange-700', hex: '#f97316', bgHex: '#fff7ed' },
+                'Transportation':{ class: 'bg-cyan-100 text-cyan-700',    hex: '#06b6d4', bgHex: '#ecfeff' },
+                'Utilities':     { class: 'bg-yellow-100 text-yellow-700', hex: '#eab308', bgHex: '#fefce8' },
+                'Shopping':      { class: 'bg-pink-100 text-pink-700',    hex: '#ec4899', bgHex: '#fdf2f8' },
+                'Entertainment': { class: 'bg-purple-100 text-purple-700', hex: '#a855f7', bgHex: '#faf5ff' },
+                'Healthcare':    { class: 'bg-rose-100 text-rose-700',    hex: '#f43f5e', bgHex: '#fff1f2' },
+                'Other':         { class: 'bg-slate-100 text-slate-700',  hex: '#64748b', bgHex: '#f8fafc' }
             };
+            return (colors[category] || colors['Other'])[type];
+        };
 
-            const formatMoney = (amt) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amt || 0);
-            const showToast = (msg) => {
-                if(!UI.toastMsg || !UI.toast) return;
-                UI.toastMsg.textContent = msg;
-                UI.toast.classList.remove('translate-y-24', 'opacity-0');
-                setTimeout(() => UI.toast.classList.add('translate-y-24', 'opacity-0'), 3500);
-            };
+        // -----------------------------------------------------------
+        // AUTH & UI
+        // -----------------------------------------------------------
+        const showApp = (user) => {
+            els.userName.textContent = user.displayName || 'User';
+            if (user.photoURL) els.userAvatar.src = user.photoURL;
+            els.loginOverlay.style.opacity = '0';
+            setTimeout(() => {
+                els.loginOverlay.classList.add('hidden');
+                els.appContent.classList.remove('hidden');
+                setTimeout(() => els.appContent.style.opacity = '1', 50);
+            }, 500);
+        };
 
-            // --- GLOBALS ---
-            window.switchView = (viewId) => {
-                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-                document.getElementById(`view-${viewId}`)?.classList.add('active');
-                
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    if (btn.dataset.view === viewId) {
-                        btn.classList.add('bg-indigo-600/20', 'text-white', 'shadow-inner');
-                        btn.classList.remove('hover:bg-slate-800', 'text-slate-400');
-                    } else {
-                        btn.classList.remove('bg-indigo-600/20', 'text-white', 'shadow-inner');
-                        btn.classList.add('hover:bg-slate-800', 'text-slate-400');
+        const showLogin = () => {
+            els.appContent.style.opacity = '0';
+            setTimeout(() => {
+                els.appContent.classList.add('hidden');
+                els.loginOverlay.classList.remove('hidden');
+                setTimeout(() => els.loginOverlay.style.opacity = '1', 50);
+            }, 500);
+        };
+
+        // -----------------------------------------------------------
+        // FIREBASE SYNC
+        // -----------------------------------------------------------
+        const syncDataToCloud = async () => {
+            if (!authUserId || !window.firebaseUtils?.db) return;
+            const { db, doc, setDoc, appId } = window.firebaseUtils;
+            try {
+                els.syncStatus.innerHTML = `<div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div> Syncing...`;
+                await setDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'currentMonth'), state);
+                els.syncStatus.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-400"></div> Saved`;
+            } catch (error) {
+                els.syncStatus.innerHTML = `<div class="w-2 h-2 rounded-full bg-rose-400"></div> Sync Error`;
+            }
+        };
+
+        const loadDataFromCloud = async () => {
+            if (!authUserId || !window.firebaseUtils?.db) return;
+            const { db, doc, getDoc, appId } = window.firebaseUtils;
+            try {
+                const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'currentMonth'));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    state.income   = data.income   || { salary: 0, incentive: 0 };
+                    state.expenses = data.expenses || [];
+                    els.incomeSalary.value    = state.income.salary    || '';
+                    els.incomeIncentive.value = state.income.incentive || '';
+                    calculateDashboard();
+                    renderExpenses();
+                    showToast('Cloud data synchronized!');
+                }
+            } catch (error) {
+                console.error("Firebase load error:", error);
+            }
+        };
+
+        // -----------------------------------------------------------
+        // DASHBOARD CALCULATIONS & RENDERING
+        // -----------------------------------------------------------
+        const updateChart = () => {
+            if (state.expenses.length === 0) {
+                els.chartEmptyState.style.display = 'flex';
+                els.canvasWrapper.style.opacity   = '0';
+                return;
+            }
+            els.chartEmptyState.style.display = 'none';
+            els.canvasWrapper.style.opacity   = '1';
+
+            const catTotals = state.expenses.reduce((acc, exp) => {
+                acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+                return acc;
+            }, {});
+
+            const labels    = Object.keys(catTotals);
+            const dataVals  = Object.values(catTotals);
+            const bgColors  = labels.map(c => getCategoryColor(c, 'hex'));
+            const ctx       = document.getElementById('expenseChart').getContext('2d');
+
+            if (myChart) {
+                myChart.data.labels                    = labels;
+                myChart.data.datasets[0].data          = dataVals;
+                myChart.data.datasets[0].backgroundColor = bgColors;
+                myChart.update();
+            } else {
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 4 }] },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '70%',
+                        plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: { family: "'Inter', sans-serif" } } } }
                     }
                 });
+            }
+        };
 
-                const titles = { 'dashboard': 'Overview', 'ledger': 'Ledger', 'wealth': 'Wealth & Cards', 'loans': 'Loans & Subs', 'reports': 'AI Reports' };
-                if(UI.pageTitle) UI.pageTitle.textContent = titles[viewId];
-                UI.sidebar?.classList.add('-translate-x-full'); UI.sidebarOverlay?.classList.add('hidden');
-            };
+        const calculateDashboard = () => {
+            const totalInc = state.income.salary + state.income.incentive;
+            const totalExp = state.expenses.reduce((s, e) => s + e.amount, 0);
+            const balance  = totalInc - totalExp;
 
-            window.toggleChat = () => {
-                if(!UI.chatPanel) return;
-                if(UI.chatPanel.classList.contains('chat-closed')) UI.chatPanel.classList.replace('chat-closed', 'chat-open');
-                else UI.chatPanel.classList.replace('chat-open', 'chat-closed');
-            };
+            els.totalIncome.textContent      = formatCurrency(totalInc);
+            els.summarySalary.textContent    = formatCurrency(state.income.salary);
+            els.summaryIncentive.textContent = formatCurrency(state.income.incentive);
+            els.totalExpenses.textContent    = formatCurrency(totalExp);
+            els.expenseCount.textContent     = state.expenses.length;
+            els.totalBalance.textContent     = formatCurrency(balance);
+            els.totalBalance.className       = balance < 0
+                ? "text-4xl font-bold text-rose-600 relative z-10"
+                : "text-4xl font-bold text-slate-900 relative z-10";
 
-            window.openTxModal = () => { UI.modalForm.reset(); document.getElementById('modal-tx-date').valueAsDate = new Date(); UI.txModal.classList.remove('hidden'); updateModalCategoryDropdown(); };
-            window.closeTxModal = () => { UI.txModal.classList.add('hidden'); };
-            
-            window.openCardModal = () => { UI.ccForm.reset(); document.getElementById('cc-start').valueAsDate = new Date(); document.getElementById('cc-due').valueAsDate = new Date(); UI.ccModal.classList.remove('hidden'); };
-            window.closeCardModal = () => { UI.ccModal.classList.add('hidden'); };
+            const pct = totalInc > 0 ? Math.min((totalExp / totalInc) * 100, 100) : 0;
+            els.balanceProgress.style.width   = `${pct}%`;
+            els.balanceProgress.className     = `h-2 rounded-full transition-all duration-500 ${pct > 90 ? 'bg-rose-500' : pct > 70 ? 'bg-yellow-500' : 'bg-indigo-500'}`;
+            els.balanceStatus.textContent     = totalInc > 0
+                ? `${pct.toFixed(1)}% of income spent`
+                : 'Enter income to see spending ratio';
 
-            window.toggleTrackerFields = () => {
-                const isLoan = document.querySelector('input[name="trackerType"]:checked')?.value === 'loan';
-                document.querySelectorAll('.loan-field').forEach(el => el.style.display = isLoan ? 'block' : 'none');
-                document.getElementById('trk-total').required = isLoan; document.getElementById('trk-tenure').required = isLoan;
-            };
+            updateChart();
+        };
 
-            // --- SIDEBAR TOGGLES ---
-            document.getElementById('mobile-menu-btn')?.addEventListener('click', () => { UI.sidebar?.classList.remove('-translate-x-full'); UI.sidebarOverlay?.classList.remove('hidden'); });
-            document.getElementById('close-sidebar')?.addEventListener('click', () => { UI.sidebar?.classList.add('-translate-x-full'); UI.sidebarOverlay?.classList.add('hidden'); });
-            UI.sidebarOverlay?.addEventListener('click', () => { UI.sidebar?.classList.add('-translate-x-full'); UI.sidebarOverlay?.classList.add('hidden'); });
-
-            // --- DASHBOARD LOGIC ---
-            const updateModalCategoryDropdown = () => {
-                const type = UI.modalTxType.value;
-                UI.modalTxCat.innerHTML = CATEGORIES[type].map(c => `<option value="${c}">${c}</option>`).join('');
-                
-                if(type === 'expense') {
-                    UI.modalBtnExp.classList.replace('text-slate-500', 'text-slate-900'); UI.modalBtnExp.classList.add('bg-white', 'shadow-sm');
-                    UI.modalBtnInc.classList.replace('text-slate-900', 'text-slate-500'); UI.modalBtnInc.classList.remove('bg-white', 'shadow-sm');
-                } else {
-                    UI.modalBtnInc.classList.replace('text-slate-500', 'text-slate-900'); UI.modalBtnInc.classList.add('bg-white', 'shadow-sm');
-                    UI.modalBtnExp.classList.replace('text-slate-900', 'text-slate-500'); UI.modalBtnExp.classList.remove('bg-white', 'shadow-sm');
-                }
-            };
-            UI.modalBtnExp?.addEventListener('click', () => { UI.modalTxType.value = 'expense'; updateModalCategoryDropdown(); });
-            UI.modalBtnInc?.addEventListener('click', () => { UI.modalTxType.value = 'income'; updateModalCategoryDropdown(); });
-
-            const calculateDashboard = () => {
-                let inc = 0, exp = 0, ccPaid = 0;
-                const categoryTotals = {};
-
-                state.monthTransactions.forEach(t => {
-                    if(t.type === 'income') { inc += t.amount; } 
-                    else {
-                        exp += t.amount;
-                        categoryTotals[t.category] = (categoryTotals[t.category] || 0) + t.amount;
-                        if(t.category === 'Credit Card Bill') ccPaid += t.amount;
-                    }
-                });
-
-                if(UI.sumIncome) UI.sumIncome.textContent = formatMoney(inc); 
-                if(UI.sumExpense) UI.sumExpense.textContent = formatMoney(exp);
-                
-                const net = inc - exp;
-                if(UI.sumBalance) {
-                    UI.sumBalance.textContent = formatMoney(net);
-                    UI.sumBalance.className = `text-4xl font-extrabold tracking-tight mt-1 relative z-10 ${net < 0 ? 'text-rose-600' : 'text-slate-900'}`;
-                }
-                if(UI.sumCC) UI.sumCC.textContent = formatMoney(ccPaid);
-
-                const nw = (state.portfolio.savings + state.portfolio.invests) - state.portfolio.debt;
-                if(UI.dashNetWorth) UI.dashNetWorth.textContent = formatMoney(nw);
-
-                updateChart(categoryTotals); 
-                renderLedgers();
-            };
-
-            const updateChart = (catTotals) => {
-                if(!UI.chartEmpty) return;
-                const labels = Object.keys(catTotals); const data = Object.values(catTotals);
-                
-                if(labels.length === 0) { 
-                    UI.chartEmpty.classList.remove('hidden'); 
-                    if(myChart) { myChart.destroy(); myChart = null; } 
-                    return; 
-                }
-                
-                UI.chartEmpty.classList.add('hidden');
-                const ctx = document.getElementById('expenseChart')?.getContext('2d');
-                if(!ctx) return;
-
-                if(myChart) { 
-                    myChart.data.labels = labels; myChart.data.datasets[0].data = data; myChart.update(); 
-                } else {
-                    myChart = new Chart(ctx, {
-                        type: 'doughnut',
-                        data: { labels, datasets: [{ data, backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#e11d48', '#8b5cf6', '#ec4899', '#64748b'], borderWidth: 0 }] },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: {family: 'Plus Jakarta Sans', weight: 'bold', size: 12} } } }, cutout: '75%' }
-                    });
-                }
-            };
-
-            const renderLedgers = () => {
-                const sorted = [...state.monthTransactions].sort((a,b) => new Date(b.date) - new Date(a.date));
-                
-                if(UI.dashRecentTxs) {
-                    const recent = sorted.slice(0, 4);
-                    if(recent.length === 0) UI.dashRecentTxs.innerHTML = `<p class="text-sm text-slate-400 text-center py-4 font-semibold">No recent activity.</p>`;
-                    else {
-                        UI.dashRecentTxs.innerHTML = recent.map(t => `
-                            <div class="flex justify-between items-center bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                                <div><p class="font-bold text-sm text-slate-900">${t.description}</p><p class="text-[10px] uppercase font-bold text-slate-400">${t.category}</p></div>
-                                <span class="font-bold text-sm ${t.type==='income'?'text-emerald-600':'text-slate-900'}">${t.type==='income'?'+':'-'}${formatMoney(t.amount)}</span>
-                            </div>
-                        `).join('');
-                    }
-                }
-
-                if(!UI.ledgerCount || !UI.fullLedger) return;
-                UI.ledgerCount.textContent = `${state.monthTransactions.length} transactions in selected month`;
-                
-                if(state.monthTransactions.length === 0) {
-                    UI.fullLedger.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 py-20"><div class="bg-slate-50 p-6 rounded-3xl mb-4"><i data-lucide="receipt" class="w-10 h-10 opacity-50"></i></div><p class="font-bold text-sm">No transactions found.</p></div>`;
-                    lucide.createIcons(); return;
-                }
-
-                UI.fullLedger.innerHTML = sorted.map(t => {
-                    const isInc = t.type === 'income'; const isCC = t.category === 'Credit Card Bill'; const isLoan = t.category === 'Loan EMI';
-                    return `
-                    <div class="flex items-center justify-between p-5 mb-4 border border-slate-100 rounded-[1.5rem] hover:border-indigo-100 hover:shadow-md transition-all group bg-white">
+        const renderExpenses = () => {
+            els.expensesContainer.innerHTML = '';
+            if (state.expenses.length === 0) {
+                els.expensesContainer.appendChild(els.emptyState);
+                els.emptyState.style.display = 'flex';
+                return;
+            }
+            els.emptyState.style.display = 'none';
+            [...state.expenses]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .forEach(exp => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between p-4 border border-slate-100 rounded-xl mb-3 hover:bg-slate-50 transition-colors group bg-white';
+                    item.innerHTML = `
                         <div class="flex items-center gap-4">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center ${isInc ? 'bg-emerald-50 text-emerald-600' : (isCC || isLoan) ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-600'}">
-                                <i data-lucide="${isInc ? 'arrow-down-left' : isCC ? 'credit-card' : isLoan ? 'landmark' : 'arrow-up-right'}" class="w-6 h-6"></i>
-                            </div>
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${getCategoryColor(exp.category)}">${exp.category.substring(0, 2).toUpperCase()}</div>
                             <div>
-                                <p class="font-extrabold text-slate-900 text-lg">${t.description}</p>
-                                <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400 mt-1">${new Date(t.date).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'})} &bull; ${t.category} &bull; ${t.method}</p>
+                                <p class="font-semibold text-slate-800 text-sm">${exp.description}</p>
+                                <p class="text-xs text-slate-500">${formatDate(exp.date)} &bull; ${exp.category}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-5">
-                            <span class="font-extrabold text-lg ${isInc ? 'text-emerald-600' : 'text-slate-900'}">${isInc ? '+' : '-'}${formatMoney(t.amount)}</span>
-                            <button onclick="window.deleteTx('${t.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity bg-rose-50 p-2.5 rounded-xl"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>`;
-                }).join('');
-                lucide.createIcons();
-            };
+                        <div class="flex items-center gap-4">
+                            <span class="font-bold text-slate-800">-${formatCurrency(exp.amount)}</span>
+                            <button onclick="deleteExpense('${exp.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>`;
+                    els.expensesContainer.appendChild(item);
+                });
+        };
 
-            const renderTrackers = () => {
-                if(!UI.loansContainer) return;
-                if(state.trackers.length === 0) {
-                    UI.loansContainer.innerHTML = `<div class="col-span-full p-16 bg-white rounded-[2.5rem] border border-slate-100 text-center text-slate-400 premium-shadow"><div class="bg-slate-50 w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6"><i data-lucide="landmark" class="w-10 h-10 opacity-50"></i></div><p class="font-extrabold text-lg text-slate-700">No active trackers.</p><p class="text-sm mt-2 font-medium">Add a loan or subscription to manage due dates.</p></div>`;
-                    lucide.createIcons(); return;
-                }
+        // -----------------------------------------------------------
+        // EXPENSE ACTIONS
+        // -----------------------------------------------------------
+        window.deleteExpense = (id) => {
+            state.expenses = state.expenses.filter(e => e.id !== id);
+            calculateDashboard();
+            renderExpenses();
+            syncDataToCloud();
+            showToast('Expense removed');
+            // FIX #3 — reset chat history when data changes so AI has fresh context
+            chatHistory = [];
+        };
 
-                const now = new Date();
-                UI.loansContainer.innerHTML = state.trackers.sort((a,b) => new Date(a.startDate) - new Date(b.startDate)).map(trk => {
-                    const isLoan = trk.type === 'loan';
-                    const dueDate = new Date(trk.startDate);
-                    let overDue = dueDate < now;
-                    
-                    let loanHTML = '';
-                    let progress = 0;
+        // FIX #5 — "Clear All" now also resets income fields
+        window.clearAllData = () => {
+            state.expenses          = [];
+            state.income.salary     = 0;
+            state.income.incentive  = 0;
+            els.incomeSalary.value    = '';
+            els.incomeIncentive.value = '';
+            calculateDashboard();
+            renderExpenses();
+            syncDataToCloud();
+            showToast('All data cleared');
+            chatHistory = [];
+        };
 
-                    if(isLoan) {
-                        let start = new Date(trk.originalStartDate);
-                        let monthsDiff = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-                        if(now.getDate() >= start.getDate()) monthsDiff += 1;
-                        
-                        let emisPaid = Math.max(0, Math.min(monthsDiff, trk.tenure));
-                        let amountPaid = emisPaid * trk.emi;
-                        let remainingAmount = Math.max(0, trk.total - amountPaid);
-                        let remainingEmis = Math.max(0, trk.tenure - emisPaid);
-                        progress = (amountPaid / trk.total) * 100;
-                        if(progress > 100) progress = 100;
+        // -----------------------------------------------------------
+        // EVENT LISTENERS
+        // -----------------------------------------------------------
+        els.saveIncomeBtn.addEventListener('click', () => {
+            state.income.salary    = parseFloat(els.incomeSalary.value)    || 0;
+            state.income.incentive = parseFloat(els.incomeIncentive.value) || 0;
+            calculateDashboard();
+            syncDataToCloud();
+            showToast('Income saved');
+            // Reset chat history so next question reflects updated income
+            chatHistory = [];
+        });
 
-                        loanHTML = `
-                            <div class="mt-8 space-y-3">
-                                <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                    <span>Paid: ${emisPaid} EMIs</span>
-                                    <span>Left: ${remainingEmis} EMIs</span>
-                                </div>
-                                <progress value="${progress}" max="100" class="w-full h-3 overflow-hidden"></progress>
-                                <div class="flex justify-between text-xs font-bold text-slate-900 mt-1">
-                                    <span>₹${formatMoney(amountPaid)}</span>
-                                    <span>₹${formatMoney(remainingAmount)}</span>
-                                </div>
-                            </div>
-                        `;
+        els.expenseForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const desc     = els.expenseDesc.value;
+            const amount   = parseFloat(els.expenseAmount.value);
+            const date     = els.expenseDate.value;
+            const category = els.expenseCategory.value;
+            if (!desc || !amount || !date || !category) return;
+
+            state.expenses.push({ id: 'id-' + Date.now(), description: desc, amount, date, category });
+            els.expenseForm.reset();
+            els.expenseDate.valueAsDate = new Date();
+            calculateDashboard();
+            renderExpenses();
+            syncDataToCloud();
+            showToast('Expense added');
+            // Reset chat history so AI sees fresh data on next question
+            chatHistory = [];
+        });
+
+        // Auth
+        els.btnGoogleLogin.addEventListener('click', async () => {
+            if (!window.firebaseUtils?.auth) return alert("Firebase not configured!");
+            els.btnGoogleLogin.disabled = true;
+            els.loginLoading.classList.remove('hidden');
+            const { auth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence } = window.firebaseUtils;
+            try {
+                await setPersistence(auth, browserLocalPersistence);
+                await signInWithPopup(auth, new GoogleAuthProvider());
+            } catch (err) {
+                console.error("Login failed:", err);
+                showToast("Login cancelled or failed.");
+                els.btnGoogleLogin.disabled = false;
+                els.loginLoading.classList.add('hidden');
+            }
+        });
+
+        els.btnLogout.addEventListener('click', () => {
+            if (window.firebaseUtils?.auth) {
+                window.firebaseUtils.signOut(window.firebaseUtils.auth).then(() => {
+                    authUserId     = null;
+                    state.expenses = [];
+                    state.income   = { salary: 0, incentive: 0 };
+                    chatHistory    = [];
+                    showLogin();
+                });
+            }
+        });
+
+        // -----------------------------------------------------------
+        // PDF SCANNER — FIX #4: look back up to 3 tokens for merchant name
+        // -----------------------------------------------------------
+        els.pdfUpload.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            els.uploadLabel.innerHTML = 'Scanning...';
+            els.uploadLabel.classList.add('opacity-75');
+
+            try {
+                const pdf    = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                let newExp   = [];
+                const today  = new Date().toISOString().split('T')[0];
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const items = (await (await pdf.getPage(i)).getTextContent()).items.map(item => item.str);
+
+                    for (let j = 0; j < items.length; j++) {
+                        const str = items[j].trim();
+                        // Detect ₹ amount or a plain decimal that looks like a currency value
+                        if (str.includes('₹') || (str.match(/^[0-9,]+\.[0-9]{2}$/) && !str.includes(':'))) {
+                            const amt = parseFloat(str.replace(/[^\d.]/g, ''));
+                            if (amt > 0 && amt < 1000000) {
+                                // FIX #4: look back up to 3 tokens for a meaningful description
+                                let desc = 'Scanned Transaction';
+                                for (let k = 1; k <= 3; k++) {
+                                    const candidate = (items[j - k] || '').trim();
+                                    if (candidate.length > 2 && !candidate.includes('₹') && !/^[0-9,]+(\.[0-9]+)?$/.test(candidate)) {
+                                        desc = candidate;
+                                        break;
+                                    }
+                                }
+                                newExp.push({
+                                    id: 'pdf-' + Date.now() + Math.random(),
+                                    description: desc,
+                                    amount: amt,
+                                    date: today,
+                                    category: 'Other'
+                                });
+                            }
+                        }
                     }
+                }
 
-                    return `
-                    <div class="bg-white p-8 rounded-[2.5rem] premium-shadow border border-slate-100 flex flex-col relative overflow-hidden group">
-                        ${isLoan && (progress === 100) ? '<div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center"><span class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl font-bold border border-emerald-200 shadow-sm transform -rotate-12 text-lg">Fully Paid</span></div>' : ''}
-                        
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="${isLoan ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600'} p-4 rounded-2xl"><i data-lucide="${isLoan ? 'landmark' : 'repeat'}" class="w-6 h-6"></i></div>
-                            <button onclick="window.deleteTracker('${trk.id}')" class="text-slate-300 hover:text-rose-500 bg-slate-50 p-2.5 rounded-xl transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                if (newExp.length > 0) {
+                    state.expenses.push(...newExp);
+                    calculateDashboard();
+                    renderExpenses();
+                    syncDataToCloud();
+                    showToast(`Added ${newExp.length} transactions`);
+                    chatHistory = [];
+                } else {
+                    showToast('No ₹ amounts found in PDF.');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('PDF read error. Please try another file.');
+            }
+
+            els.uploadLabel.innerHTML = 'Upload Statement';
+            els.uploadLabel.classList.remove('opacity-75');
+            e.target.value = '';
+        });
+
+        // -----------------------------------------------------------
+        // CHAT WIDGET — FIX #1 (single definition) + FIX #2 (model fallback)
+        // -----------------------------------------------------------
+        window.toggleChat = () => {
+            const isHidden = els.chatWindow.classList.contains('hidden');
+            if (isHidden) {
+                els.chatWindow.classList.remove('hidden');
+                const pingEl = els.chatToggleBtn.querySelector('.animate-ping');
+                if (pingEl) pingEl.parentElement.remove();
+                setTimeout(() => els.chatWindow.classList.remove('scale-95', 'opacity-0'), 10);
+            } else {
+                els.chatWindow.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => els.chatWindow.classList.add('hidden'), 150);
+            }
+        };
+
+        const renderChatMessage = (text, sender) => {
+            const div         = document.createElement('div');
+            div.className     = 'flex flex-col gap-1 w-full ' + (sender === 'user' ? 'items-end' : 'items-start');
+            const bubbleClass = sender === 'user'
+                ? 'bg-indigo-600 text-white rounded-tr-sm'
+                : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm';
+            div.innerHTML = `<div class="text-sm p-3 rounded-2xl shadow-sm max-w-[85%] ${bubbleClass}">${text}</div>`;
+            els.chatMessages.appendChild(div);
+            els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+        };
+
+        const showTypingIndicator = () => {
+            const div     = document.createElement('div');
+            div.id        = 'typing-indicator';
+            div.className = 'flex flex-col gap-1 items-start w-full';
+            div.innerHTML = `
+                <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] flex items-center gap-1 h-10">
+                    <svg height="8" width="32" class="opacity-70">
+                        <circle class="typing-dot" cx="4"  cy="4" r="3" />
+                        <circle class="typing-dot" cx="16" cy="4" r="3" />
+                        <circle class="typing-dot" cx="28" cy="4" r="3" />
+                    </svg>
+                </div>`;
+            els.chatMessages.appendChild(div);
+            els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+        };
+
+        const removeTypingIndicator = () => {
+            const ind = document.getElementById('typing-indicator');
+            if (ind) ind.remove();
+        };
+
+        // FIX #2 — Gemini call with model fallback chain
+        const callGeminiWithFallback = async (payload) => {
+            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
+            if (!apiKey) throw new Error('NO_API_KEY');
+
+            for (const model of GEMINI_MODELS) {
+                try {
+                    const res = await fetch(
+                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
+                    );
+                    const data = await res.json();
+                    if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        return data.candidates[0].content.parts[0].text;
+                    }
+                    // If quota or model error, try next
+                    console.warn(`Model ${model} returned no candidates:`, data);
+                } catch (err) {
+                    console.warn(`Model ${model} failed:`, err);
+                }
+            }
+            throw new Error('ALL_MODELS_FAILED');
+        };
+
+        // FIX #1 — Single, clean handleChatSend definition
+        const handleChatSend = async () => {
+            const text = els.chatInput.value.trim();
+            if (!text) return;
+
+            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
+            if (!apiKey) {
+                renderChatMessage(text, 'user');
+                els.chatInput.value = '';
+                setTimeout(() => renderChatMessage('Please add your Gemini API Key in the configuration section.', 'bot'), 500);
+                return;
+            }
+
+            els.chatInput.value       = '';
+            els.chatSendBtn.disabled  = true;
+            renderChatMessage(text, 'user');
+            showTypingIndicator();
+
+            // FIX #3 — Cap history to last MAX_CHAT_HISTORY messages
+            chatHistory.push({ role: 'user', parts: [{ text }] });
+            if (chatHistory.length > MAX_CHAT_HISTORY * 2) {
+                chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY * 2);
+            }
+
+            // Always rebuild fresh context from current state
+            const totalInc   = state.income.salary + state.income.incentive;
+            const contextData = `Monthly income: ₹${totalInc}. Expenses: ${JSON.stringify(
+                state.expenses.map(e => ({ desc: e.description, amt: e.amount, cat: e.category, date: e.date }))
+            )}`;
+
+            const payload = {
+                systemInstruction: {
+                    parts: [{
+                        text: `You are FinanceFlow, an AI financial assistant embedded in a personal finance dashboard.
+The user's CURRENT live financial data is:
+${contextData}
+
+Rules:
+- Answer questions briefly and kindly based strictly on this data.
+- Format all currencies in INR (₹).
+- Keep answers concise — 2-4 sentences max unless a detailed breakdown is needed.
+- If the user asks about something not in the data, say so politely.`
+                    }]
+                },
+                contents: chatHistory
+            };
+
+            try {
+                const aiText = await callGeminiWithFallback(payload);
+                removeTypingIndicator();
+                chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
+                renderChatMessage(aiText, 'bot');
+            } catch (err) {
+                removeTypingIndicator();
+                if (err.message === 'NO_API_KEY') {
+                    renderChatMessage('Please add your Gemini API Key in the configuration section at the top of the file.', 'bot');
+                } else if (err.message === 'ALL_MODELS_FAILED') {
+                    renderChatMessage('All Gemini models are temporarily unavailable. Please check your API key and quota.', 'bot');
+                } else {
+                    renderChatMessage('Network error. Please check your connection and try again.', 'bot');
+                }
+                // Remove the user message from history if AI failed to respond
+                chatHistory.pop();
+            }
+
+            els.chatSendBtn.disabled = false;
+            els.chatInput.focus();
+        };
+
+        els.chatSendBtn.addEventListener('click', handleChatSend);
+        els.chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatSend(); });
+
+        // -----------------------------------------------------------
+        // AI REPORT MODAL
+        // -----------------------------------------------------------
+        window.openReportModal = async () => {
+            const totalInc = state.income.salary + state.income.incentive;
+            const totalExp = state.expenses.reduce((s, e) => s + e.amount, 0);
+            const saved    = totalInc - totalExp;
+            const rate     = totalInc > 0 ? ((saved / totalInc) * 100).toFixed(1) : 0;
+
+            els.reportSaved.textContent  = formatCurrency(saved);
+            els.reportSaved.className    = saved >= 0
+                ? "text-2xl font-bold text-emerald-600"
+                : "text-2xl font-bold text-rose-600";
+            els.reportRate.textContent   = `${rate}%`;
+
+            // Category breakdown bars
+            const categoryTotals = state.expenses.reduce((acc, exp) => {
+                acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+                return acc;
+            }, {});
+
+            els.reportBarsContainer.innerHTML = '';
+            Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).forEach(([cat, amt]) => {
+                const pct = totalExp > 0 ? ((amt / totalExp) * 100).toFixed(1) : 0;
+                els.reportBarsContainer.innerHTML += `
+                    <div class="mb-3">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium text-slate-700">${cat}</span>
+                            <span class="text-slate-500">${formatCurrency(amt)} (${pct}%)</span>
                         </div>
-                        
-                        <div class="flex items-end justify-between">
-                            <div>
-                                <h3 class="font-extrabold text-slate-900 text-2xl tracking-tight">${trk.name}</h3>
-                                <p class="text-[10px] uppercase tracking-widest font-bold text-slate-400 mt-1.5">${isLoan ? 'Loan Tracker' : 'Subscription'}</p>
-                            </div>
-                            <p class="font-extrabold text-2xl text-slate-900">${formatMoney(trk.emi)}<span class="text-xs text-slate-400 font-bold">/mo</span></p>
-                        </div>
-
-                        ${loanHTML}
-
-                        <div class="mt-8 flex justify-between items-center border-t border-slate-100 pt-6">
-                            <div class="flex items-center gap-2.5">
-                                <i data-lucide="calendar-clock" class="w-5 h-5 ${overDue ? 'text-rose-500' : 'text-slate-400'}"></i>
-                                <p class="text-xs font-bold ${overDue ? 'text-rose-600' : 'text-slate-500'}">${overDue ? 'OVERDUE:' : 'NEXT DUE:'} ${dueDate.toLocaleDateString('en-IN', {day:'numeric', month:'short'})}</p>
-                            </div>
-                            <button onclick="window.markTrackerPaid('${trk.id}')" class="bg-slate-900 hover:bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-md">Record Payment</button>
+                        <div class="w-full h-2.5 rounded-full" style="background-color: ${getCategoryColor(cat, 'bgHex')}">
+                            <div class="h-2.5 rounded-full" style="width: ${pct}%; background-color: ${getCategoryColor(cat, 'hex')}"></div>
                         </div>
                     </div>`;
-                }).join('');
-                lucide.createIcons();
-            };
+            });
 
-            const renderCreditCards = () => {
-                if(!UI.cardsContainer) return;
-                if(state.creditCards.length === 0) {
-                    UI.cardsContainer.innerHTML = `<div class="col-span-full p-10 bg-white rounded-[2.5rem] border border-slate-100 text-center text-slate-400 premium-shadow"><p class="font-bold text-slate-600">No cards added.</p></div>`;
-                    return;
-                }
-                UI.cardsContainer.innerHTML = state.creditCards.map(c => {
-                    const balance = Math.max(0, c.billAmount - c.paidAmount);
-                    const isPaid = balance === 0;
-                    return `
-                    <div class="bg-white p-6 rounded-[2rem] premium-shadow border border-slate-100 relative">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="font-extrabold text-slate-900 text-xl">${c.name}</h3>
-                            <button onclick="window.deleteCC('${c.id}')" class="text-slate-300 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                        <div class="space-y-2 mb-4">
-                            <div class="flex justify-between text-sm"><span class="text-slate-500 font-bold">Billed:</span> <span class="font-bold text-rose-500">${formatMoney(c.billAmount)}</span></div>
-                            <div class="flex justify-between text-sm"><span class="text-slate-500 font-bold">Paid:</span> <span class="font-bold text-emerald-600">${formatMoney(c.paidAmount)}</span></div>
-                        </div>
-                        <div class="pt-4 border-t border-slate-100 flex justify-between items-center">
-                            <span class="text-xs font-bold text-slate-500">Due: ${new Date(c.dueDate).toLocaleDateString('en-IN', {day:'numeric', month:'short'})}</span>
-                            <span class="font-extrabold ${isPaid ? 'text-emerald-500' : 'text-slate-900'}">${isPaid ? 'Cleared' : 'Due: '+formatMoney(balance)}</span>
-                        </div>
+            // Show modal
+            els.reportModal.classList.remove('hidden');
+            els.reportModal.firstElementChild.classList.remove('modal-exit');
+            els.reportModal.firstElementChild.classList.add('modal-enter');
+
+            // Reset insights panel
+            els.reportInsightsContainer.innerHTML = els.aiLoading.outerHTML;
+            els.reportInsightsContainer.querySelector('#ai-loading').style.display = 'flex';
+
+            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
+            if (!apiKey) {
+                els.reportInsightsContainer.innerHTML = `
+                    <div class="bg-yellow-50 p-4 rounded-2xl flex gap-3 text-sm text-yellow-700">
+                        <div class="text-2xl">⚠️</div>
+                        <p>Add your Gemini API key to unlock AI-powered insights.</p>
                     </div>`;
-                }).join('');
-                lucide.createIcons();
-            };
+                return;
+            }
 
-            const updatePortfolioForm = () => {
-                const save = document.getElementById('port-savings');
-                const inv = document.getElementById('port-invests');
-                const debt = document.getElementById('port-debt');
-                if(save) save.value = state.portfolio.savings || '';
-                if(inv) inv.value = state.portfolio.invests || '';
-                if(debt) debt.value = state.portfolio.debt || '';
-            };
+            const prompt = `Analyze my finances in INR:
+- Monthly Income: ₹${totalInc}
+- Total Expenses: ₹${totalExp}
+- Savings: ₹${saved} (${rate}%)
+- Category breakdown: ${JSON.stringify(categoryTotals)}
 
-            // --- FIREBASE CRUD LOGIC ---
-            const filterDataByMonth = () => {
-                if(!UI.monthSelect) return;
-                const selected = UI.monthSelect.value;
-                state.monthTransactions = state.allTransactions.filter(t => t.date.startsWith(selected));
-                calculateDashboard();
-                if(UI.reportCard && UI.reportContent) { UI.reportCard.classList.add('hidden'); UI.reportContent.innerHTML = ''; }
-            };
+Give me exactly 3 specific, actionable insights using the 50/30/20 budgeting rule.
+Return ONLY a JSON array with objects: { "icon": "emoji", "text": "insight text", "color": "tailwind text class", "bg": "tailwind bg class" }`;
 
-            const initDataListeners = () => {
-                if(!db || !appId || !state.user) return;
-                
-                state.unsubs.push(onSnapshot(collection(db, 'artifacts', appId, 'users', state.user.uid, 'transactions'), (snap) => {
-                    state.allTransactions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })); filterDataByMonth();
-                }));
-                state.unsubs.push(onSnapshot(collection(db, 'artifacts', appId, 'users', state.user.uid, 'trackers'), (snap) => {
-                    state.trackers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })); renderTrackers();
-                }));
-                state.unsubs.push(onSnapshot(collection(db, 'artifacts', appId, 'users', state.user.uid, 'creditCards'), (snap) => {
-                    state.creditCards = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })); renderCreditCards();
-                }));
-                state.unsubs.push(onSnapshot(doc(db, 'artifacts', appId, 'users', state.user.uid, 'portfolio', 'main'), (snap) => {
-                    if(snap.exists()) { state.portfolio = snap.data(); updatePortfolioForm(); calculateDashboard(); }
-                }));
-            };
-
-            // Transaction Saves
-            UI.modalForm?.addEventListener('submit', async (e) => {
-                e.preventDefault(); if(!state.user || !db || !appId) return;
-                const data = {
-                    type: UI.modalTxType.value, amount: parseFloat(document.getElementById('modal-tx-amount').value), description: document.getElementById('modal-tx-desc').value,
-                    date: document.getElementById('modal-tx-date').value, method: document.getElementById('modal-tx-method').value, category: UI.modalTxCat.value, timestamp: Date.now()
-                };
-                try { 
-                    await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'transactions'), data); 
-                    window.closeTxModal(); showToast("Transaction saved"); 
-                } catch (err) { console.error(err); }
-            });
-
-            window.deleteTx = async (id) => {
-                if(!state.user || !db) return; 
-                try { await deleteDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'transactions', id)); showToast("Deleted transaction"); } catch (err) { console.error(err); }
-            };
-
-            // Portfolio & Cards
-            UI.portForm?.addEventListener('submit', async (e) => {
-                e.preventDefault(); if(!state.user || !db) return;
-                const data = {
-                    savings: parseFloat(document.getElementById('port-savings').value) || 0,
-                    invests: parseFloat(document.getElementById('port-invests').value) || 0,
-                    debt: parseFloat(document.getElementById('port-debt').value) || 0
-                };
-                try { await setDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'portfolio', 'main'), data); showToast("Wealth updated"); } catch(e) { console.error(e); }
-            });
-
-            UI.ccForm?.addEventListener('submit', async (e) => {
-                e.preventDefault(); if(!state.user || !db) return;
-                const data = {
-                    name: document.getElementById('cc-name').value, startDate: document.getElementById('cc-start').value, dueDate: document.getElementById('cc-due').value,
-                    billAmount: parseFloat(document.getElementById('cc-bill').value) || 0, paidAmount: parseFloat(document.getElementById('cc-paid').value) || 0
-                };
-                try { await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'creditCards'), data); window.closeCardModal(); showToast("Card added"); } catch(e) { console.error(e); }
-            });
-            window.deleteCC = async (id) => { if(!state.user || !db) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'creditCards', id)); } catch(e){} };
-
-            // Loan Trackers
-            UI.loanForm?.addEventListener('submit', async (e) => {
-                e.preventDefault(); if(!state.user || !db || !appId) return;
-                const type = document.querySelector('input[name="trackerType"]:checked')?.value || 'loan';
-                const data = {
-                    type: type, name: document.getElementById('trk-name').value, emi: parseFloat(document.getElementById('trk-emi').value),
-                    startDate: document.getElementById('trk-date').value, originalStartDate: document.getElementById('trk-date').value,
-                };
-                if(type === 'loan') {
-                    data.total = parseFloat(document.getElementById('trk-total').value); data.tenure = parseInt(document.getElementById('trk-tenure').value);
-                }
-                try { await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'trackers'), data); UI.loanForm.reset(); document.getElementById('add-loan-form').classList.add('hidden'); window.toggleTrackerFields(); showToast("Tracker added"); } catch (err) { console.error(err); }
-            });
-
-            window.deleteTracker = async (id) => { if(!state.user || !db) return; try { await deleteDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'trackers', id)); showToast("Tracker removed"); } catch (err) { console.error(err); } };
-
-            window.markTrackerPaid = async (id) => {
-                if(!state.user || !db || !appId) return; const trk = state.trackers.find(r => r.id === id); if(!trk) return;
-                try {
-                    await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'transactions'), {
-                        type: 'expense', amount: trk.emi, description: `${trk.name} (${trk.type==='loan'?'EMI':'Sub'})`,
-                        date: new Date().toISOString().split('T')[0], method: 'Bank', category: trk.type === 'loan' ? 'Loan EMI' : 'Other', timestamp: Date.now()
-                    });
-                    let date = new Date(trk.startDate); date.setMonth(date.getMonth() + 1);
-                    await updateDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'trackers', id), { startDate: date.toISOString().split('T')[0] });
-                    showToast("Payment recorded!");
-                } catch (err) { console.error(err); }
-            };
-
-            // PDF SCANNER
-            UI.pdfUpload?.addEventListener('change', async (e) => {
-                const file = e.target.files[0]; if (!file || !state.user || !db || !appId) return;
-                if(UI.pdfLabel) UI.pdfLabel.classList.add('hidden'); if(UI.pdfStatus) UI.pdfStatus.classList.remove('hidden');
-                
-                try {
-                    const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise; 
-                    let found = []; const today = new Date().toISOString().split('T')[0];
-                    for (let i = 1; i <= pdf.numPages; i++) {
-                        const items = (await (await pdf.getPage(i)).getTextContent()).items.map(it => it.str);
-                        for (let j = 0; j < items.length; j++) {
-                            const str = items[j].trim();
-                            if (str.includes('₹') || (str.match(/^[0-9,]+\.[0-9]{2}$/) && j > 0)) {
-                                let amt = parseFloat(str.replace(/[^\d.]/g, ''));
-                                if (amt > 0 && amt < 500000) {
-                                    let desc = 'Scanned Transaction';
-                                    for(let k=1; k<=3; k++){ if(items[j-k] && items[j-k].length > 3 && !items[j-k].match(/^[0-9]/)) { desc = items[j-k].trim(); break; } }
-                                    found.push({ type: 'expense', amount: amt, description: `[PDF] ${desc}`, date: today, method: 'Bank', category: 'Other', timestamp: Date.now() });
+            try {
+                const raw = await callGeminiWithFallback({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    icon:  { type: "STRING" },
+                                    text:  { type: "STRING" },
+                                    color: { type: "STRING" },
+                                    bg:    { type: "STRING" }
                                 }
                             }
                         }
                     }
-                    if(found.length > 0) {
-                        for(let i=0; i < Math.min(found.length, 10); i++) await addDoc(collection(db, 'artifacts', appId, 'users', state.user.uid, 'transactions'), found[i]);
-                        showToast(`Scanned & added ${Math.min(found.length, 10)} items`);
-                    } else showToast("No clear transactions found.");
-                } catch (err) { console.error(err); showToast("PDF parse failed."); }
-                
-                UI.pdfUpload.value = ''; if(UI.pdfLabel) UI.pdfLabel.classList.remove('hidden'); if(UI.pdfStatus) UI.pdfStatus.classList.add('hidden');
-            });
+                });
 
-            // AI ADVISOR
-            const callGemini = async (payload) => {
-                const apiKey = GEMINI_API_KEY || ""; if (!apiKey) throw new Error("NO_API_KEY");
-                let retries = 5, delays = [1000, 2000, 4000, 8000, 16000];
-                for (let i = 0; i < retries; i++) {
-                    try {
-                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        const text = (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text;
-                        if(text) return text; throw new Error("Invalid");
-                    } catch (e) { if (i === retries - 1) throw e; await new Promise(r => setTimeout(r, delays[i])); }
-                }
-            };
+                // Safely parse JSON (strip any markdown fences just in case)
+                const cleaned  = raw.replace(/```json|```/g, '').trim();
+                const insights = JSON.parse(cleaned);
 
-            const getContextData = () => {
-                const exp = state.monthTransactions.filter(t => t.type === 'expense').reduce((s,t)=>s+t.amount,0);
-                const inc = state.monthTransactions.filter(t => t.type === 'income').reduce((s,t)=>s+t.amount,0);
-                return `Income: ₹${inc}, Exp: ₹${exp}. Top Txs: ${JSON.stringify(state.monthTransactions.slice(0,8).map(t=>t.description+":₹"+t.amount))}. Loans/Subs: ${JSON.stringify(state.trackers.map(t=>t.name+":₹"+t.emi))}. Provide actionable wealth advice.`;
-            };
+                els.reportInsightsContainer.innerHTML = insights.map(insight => `
+                    <div class="${insight.bg} border border-white/50 p-4 rounded-2xl flex gap-3 shadow-sm">
+                        <div class="text-2xl shrink-0">${insight.icon}</div>
+                        <p class="text-sm ${insight.color} font-medium">${insight.text}</p>
+                    </div>`).join('');
 
-            // --- AI REPORT GENERATOR LOGIC ---
-            UI.btnReport?.addEventListener('click', async () => {
-                if (!UI.btnReport || !UI.reportContent || !UI.reportCard) return;
-                
-                UI.btnReport.disabled = true;
-                UI.btnReport.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Generating...`;
-                lucide.createIcons();
-
-                if (state.monthTransactions.length === 0 && state.trackers.length === 0) {
-                    UI.reportContent.innerHTML = "<p class='text-slate-500 font-semibold'>Not enough data to generate a report for this period. Add some transactions or loans.</p>";
-                    UI.reportCard.classList.remove('hidden');
-                    UI.btnReport.disabled = false;
-                    UI.btnReport.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report`;
-                    lucide.createIcons();
-                    return;
-                }
-
-                const payload = {
-                    contents: [{ parts: [{ text: `Based on this data, write a financial report. Context: ${getContextData()}` }] }],
-                    systemInstruction: { parts: [{ text: "You are a top-tier financial analyst. Provide a structured monthly report using basic HTML tags (<h3>, <p>, <ul>, <li>). Do not use markdown backticks. Include: 1. Executive Summary, 2. Spending Analysis, 3. Debt/EMI Status, 4. Actionable Recommendations." }] }
-                };
-
-                try {
-                    const reportHTML = await callGemini(payload);
-                    const cleanedHTML = reportHTML.replace(/```html|```/g, '').trim();
-                    UI.reportContent.innerHTML = cleanedHTML;
-                    UI.reportCard.classList.remove('hidden');
-                } catch (err) {
-                    UI.reportContent.innerHTML = `<p class="text-rose-500 font-bold">Failed to generate report. ${err.message === 'NO_API_KEY' ? 'Please configure your Gemini API key.' : 'Network error.'}</p>`;
-                    UI.reportCard.classList.remove('hidden');
-                }
-
-                UI.btnReport.disabled = false;
-                UI.btnReport.innerHTML = `<i data-lucide="sparkles" class="w-5 h-5"></i> Generate Report`;
-                lucide.createIcons();
-            });
-
-            const appendChat = (text, sender) => {
-                if(!UI.chatMessages) return;
-                const div = document.createElement('div'); div.className = 'flex gap-3 ' + (sender === 'user' ? 'justify-end' : '');
-                const bubble = document.createElement('div'); 
-                bubble.className = `text-sm p-4 rounded-[1.5rem] max-w-[85%] font-bold ${sender === 'user' ? 'bg-slate-900 text-white rounded-tr-sm shadow-md' : 'bg-indigo-50 border border-indigo-100 text-indigo-900 rounded-tl-sm shadow-sm'}`;
-                bubble.innerHTML = text; div.appendChild(bubble); UI.chatMessages.appendChild(div); UI.chatMessages.scrollTop = UI.chatMessages.scrollHeight;
-            };
-
-            UI.chatForm?.addEventListener('submit', async (e) => {
-                e.preventDefault(); 
-                if(!UI.chatInput || !UI.btnSendChat) return;
-                
-                const text = UI.chatInput.value.trim(); 
-                if(!text) return;
-                
-                appendChat(text, 'user'); 
-                UI.chatInput.value = ''; 
-                UI.btnSendChat.disabled = true;
-
-                state.chatHistory.push({ role: 'user', parts: [{ text }] });
-                if(state.chatHistory.length > 6) state.chatHistory = state.chatHistory.slice(-6);
-
-                const payload = {
-                    contents: [ { role: 'user', parts: [{ text: `[Context: ${getContextData()}]` }] }, { role: 'model', parts: [{ text: "Got it." }] }, ...state.chatHistory ],
-                    systemInstruction: { parts: [{ text: "Act as a premium wealth advisor. Focus on loan optimization, reducing EMIs, and maximizing savings. Keep answers brief, modern, and use INR (₹)." }] }
-                };
-
-                try {
-                    const response = await callGemini(payload);
-                    appendChat(response, 'ai'); state.chatHistory.push({ role: 'model', parts: [{ text: response }] });
-                } catch (err) {
-                    appendChat(err.message === 'NO_API_KEY' ? "Configure Gemini API Key in code." : "Network Error.", 'ai'); state.chatHistory.pop();
-                }
-                UI.btnSendChat.disabled = false; UI.chatInput.focus();
-            });
-
-            // --- INIT & AUTH FLOW ---
-            document.getElementById('btn-logout')?.addEventListener('click', () => { if(auth) signOut(auth); });
-            UI.monthSelect?.addEventListener('change', filterDataByMonth);
-
-            // Google Login
-            document.getElementById('btn-google-login')?.addEventListener('click', async () => {
-                if(!auth || !UI.authStatus) return;
-                UI.authStatus.textContent = "Connecting to Google...";
-                try { 
-                    await signInWithPopup(auth, new GoogleAuthProvider()); 
-                } catch(e) { 
-                    console.error("Google Auth Error:", e);
-                    let msg = e.message;
-                    if(e.code === 'auth/unauthorized-domain') msg = "Google Login blocked: Domain not authorized in Firebase Console. Use 'Continue as Guest'.";
-                    UI.authStatus.innerHTML = `<span class="text-rose-400 leading-tight block">${msg}</span>`; 
-                }
-            });
-
-            // Guest Login Fallback
-            document.getElementById('btn-guest-login')?.addEventListener('click', async () => {
-                if(!auth || !UI.authStatus) return;
-                UI.authStatus.textContent = "Signing in securely as Guest...";
-                try { await signInAnonymously(auth); } 
-                catch(e) { console.error("Guest Auth Error:", e); UI.authStatus.textContent = e.message; }
-            });
-
-            // Run Startup
-            const now = new Date(); 
-            if(UI.monthSelect) UI.monthSelect.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            if(document.getElementById('modal-tx-date')) document.getElementById('modal-tx-date').valueAsDate = now; 
-            if(document.getElementById('trk-date')) document.getElementById('trk-date').valueAsDate = now; 
-            
-            updateModalCategoryDropdown(); 
-            window.toggleTrackerFields();
-
-            if (!auth) return;
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                if(UI.authStatus) UI.authStatus.textContent = "Authenticating secure session...";
-                try { await signInWithCustomToken(auth, __initial_auth_token); } catch(e) { console.error(e); }
+            } catch (error) {
+                els.reportInsightsContainer.innerHTML = `
+                    <div class="bg-rose-50 p-4 rounded-2xl text-sm text-rose-600">
+                        Failed to generate AI insights. Please check your API key and try again.
+                    </div>`;
             }
+        };
 
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    state.user = user; initDataListeners();
-                    
-                    const userNameEl = document.getElementById('user-name');
-                    const userAvatarEl = document.getElementById('user-avatar');
-                    if(userNameEl) userNameEl.textContent = user.displayName || 'Guest User';
-                    if(userAvatarEl && user.photoURL) userAvatarEl.src = user.photoURL;
-                    
-                    if(UI.authOverlay) {
-                        UI.authOverlay.style.opacity = '0'; 
-                        setTimeout(() => { 
-                            UI.authOverlay.classList.add('hidden'); 
-                            if(UI.authStatus) UI.authStatus.textContent = ''; 
-                        }, 500);
-                    }
-                } else {
-                    state.unsubs.forEach(u => u()); state.unsubs = []; state.allTransactions = []; state.trackers = []; state.creditCards = []; state.portfolio = { savings: 0, invests: 0, debt: 0 };
-                    if(UI.authOverlay) {
-                        UI.authOverlay.classList.remove('hidden'); 
-                        setTimeout(() => UI.authOverlay.style.opacity = '1', 50);
-                    }
+        window.closeReportModal = () => {
+            els.reportModal.firstElementChild.classList.remove('modal-enter');
+            els.reportModal.firstElementChild.classList.add('modal-exit');
+            setTimeout(() => els.reportModal.classList.add('hidden'), 200);
+        };
+
+        // -----------------------------------------------------------
+        // APP INIT
+        // -----------------------------------------------------------
+        const initializeAppFlow = async () => {
+            els.currentMonthDisplay.textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            els.expenseDate.valueAsDate         = new Date();
+
+            if (window.firebaseUtils?.auth) {
+                const { auth, onAuthStateChanged, signInWithCustomToken } = window.firebaseUtils;
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
                 }
-            });
-        });
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        authUserId = user.uid;
+                        showApp(user);
+                        loadDataFromCloud();
+                    } else {
+                        showLogin();
+                    }
+                });
+            } else {
+                showLogin();
+            }
+        };
+
+        window.onload = initializeAppFlow;
     </script>
 </body>
 </html>
