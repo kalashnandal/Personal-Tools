@@ -925,16 +925,17 @@
         };
 
         const renderExpenseList = (expenses, containerId, emptyId) => {
-            const container = document.getElementById(containerId);
-            const emptyState = document.getElementById(emptyId);
-            
-            Array.from(container.children).forEach(c => { if(c.id !== emptyId) c.remove(); });
+    const container = document.getElementById(containerId);
+    const emptyState = document.getElementById(emptyId);
+    
+    Array.from(container.children).forEach(c => { if(c.id !== emptyId) c.remove(); });
 
-            if (expenses.length === 0) {
-                emptyState.style.display = 'flex';
-                return;
-            }
-            emptyState.style.display = 'none';
+    if (expenses.length === 0) {
+        if (emptyState) emptyState.style.display = 'flex';
+        return;
+    }
+    if (emptyState) emptyState.style.display = 'none';
+
             
             [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
                 const item = document.createElement('div');
