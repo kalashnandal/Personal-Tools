@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,6 +88,11 @@
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+        /* Hide tabs by default */
+        .tab-content { display: none; }
+        .tab-content.active { display: flex; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col relative overflow-x-hidden">
@@ -132,13 +138,25 @@
                     <h1 class="text-lg font-bold text-slate-900 tracking-tight hidden sm:block">FinanceFlow</h1>
                 </div>
                 
-                <div class="flex items-center gap-6">
-                    <span id="sync-status" class="text-xs font-medium text-slate-400 flex items-center gap-1">
+                <div class="flex items-center gap-4">
+                    <!-- Sticky Log Expense Button -->
+                    <button onclick="openExpenseModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="hidden sm:inline">Log Expense</span>
+                    </button>
+
+                    <!-- Reset Button -->
+                    <button onclick="openResetModal()" class="text-slate-400 hover:text-rose-500 transition-colors p-2" title="Reset Month">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+
+                    <span id="sync-status" class="text-xs font-medium text-slate-400 flex items-center gap-1 hidden sm:flex">
                         <div class="w-2 h-2 rounded-full bg-slate-300"></div> Connected
                     </span>
-                    <div class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full hidden md:block" id="current-month-display">
-                        Loading...
-                    </div>
                     <div class="flex items-center gap-3 pl-4 border-l border-slate-200">
                         <div class="flex flex-col items-end hidden sm:flex">
                             <span id="user-name" class="text-sm font-semibold text-slate-800 leading-tight">User</span>
@@ -150,195 +168,337 @@
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex flex-col gap-8 pb-32">
-            
-            <!-- Top Dashboard Metrics -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                    <div class="absolute -right-6 -top-6 bg-indigo-50 w-24 h-24 rounded-full opacity-50"></div>
-                    <p class="text-sm font-medium text-slate-500 mb-1 relative z-10">Available Balance</p>
-                    <h2 class="text-4xl font-bold text-slate-900 relative z-10" id="total-balance">₹0</h2>
-                    <div class="mt-4 w-full bg-slate-100 rounded-full h-2 relative z-10">
-                        <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" id="balance-progress" style="width: 0%"></div>
-                    </div>
-                    <p class="text-xs text-slate-400 mt-2 relative z-10" id="balance-status">0% of income spent</p>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <div class="flex justify-between items-start mb-1">
-                        <p class="text-sm font-medium text-slate-500">Monthly Income</p>
-                        <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" /></svg>
-                        </span>
-                    </div>
-                    <h2 class="text-3xl font-bold text-emerald-600" id="total-income">₹0</h2>
-                    <div class="mt-2 text-xs text-slate-500 flex justify-between">
-                        <span>5th: <span id="summary-salary" class="font-semibold">₹0</span></span>
-                        <span>15th: <span id="summary-incentive" class="font-semibold">₹0</span></span>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <div class="flex justify-between items-start mb-1">
-                        <p class="text-sm font-medium text-slate-500">Total Expenses</p>
-                        <span class="bg-rose-100 text-rose-700 p-1.5 rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5-5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd" /></svg>
-                        </span>
-                    </div>
-                    <h2 class="text-3xl font-bold text-rose-600" id="total-expenses">₹0</h2>
-                    <p class="mt-2 text-xs text-slate-500"><span id="expense-count" class="font-semibold">0</span> transactions this month</p>
-                </div>
+        <!-- Navigation Tabs -->
+        <div class="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto flex gap-6">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="py-4 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600 transition-colors">Dashboard</button>
+                <button onclick="switchTab('projections')" id="tab-projections" class="py-4 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">Manual Projections</button>
+                <button onclick="switchTab('history')" id="tab-history" class="py-4 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">History</button>
             </div>
+        </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Left Column: Inputs -->
-                <div class="flex flex-col gap-6 lg:col-span-1">
-                    <!-- PDF Scanner -->
-                    <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl border border-indigo-500 shadow-md p-6 text-white relative overflow-hidden">
-                        <div class="absolute -right-4 -bottom-4 opacity-20">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-32 w-32" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full pb-32">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="tab-content active flex-col gap-8">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-bold text-slate-800">Current Month Overview</h2>
+                    <div class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full" id="current-month-display">
+                        Loading...
+                    </div>
+                </div>
+
+                <!-- Top Dashboard Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                        <div class="absolute -right-6 -top-6 bg-indigo-50 w-24 h-24 rounded-full opacity-50"></div>
+                        <p class="text-sm font-medium text-slate-500 mb-1 relative z-10 flex items-center gap-1">Available Liquid Balance 
+                            <span class="text-xs text-slate-400 font-normal" title="Bank + Cash + Income - Bank/Cash Expenses">(Assets - UPI/Cash Expenses)</span>
+                        </p>
+                        <h2 class="text-4xl font-bold text-slate-900 relative z-10" id="total-balance">₹0</h2>
+                        <div class="mt-4 w-full bg-slate-100 rounded-full h-2 relative z-10">
+                            <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" id="balance-progress" style="width: 0%"></div>
                         </div>
-                        <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 relative z-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg> Smart PDF Scanner
-                        </h3>
-                        <p class="text-indigo-100 text-sm mb-4 relative z-10">Upload GPay statement to auto-fill.</p>
-                        <div class="relative z-10">
-                            <input type="file" id="pdf-upload" accept="application/pdf" class="hidden">
-                            <label for="pdf-upload" id="upload-label" class="cursor-pointer flex items-center justify-center w-full bg-white text-indigo-700 font-medium py-2.5 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02]">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg> Upload Statement
-                            </label>
+                        <p class="text-xs text-slate-400 mt-2 relative z-10" id="balance-status">Available cash reserves</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-sm font-medium text-slate-500">Gross Total Assets</p>
+                            <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" /></svg>
+                            </span>
+                        </div>
+                        <h2 class="text-3xl font-bold text-emerald-600" id="total-assets">₹0</h2>
+                        <div class="mt-2 text-xs text-slate-500 flex justify-between gap-2 overflow-x-auto whitespace-nowrap custom-scrollbar pb-1">
+                            <span>Bank: <span id="summary-bank" class="font-semibold">₹0</span></span>
+                            <span>Cash: <span id="summary-cash" class="font-semibold">₹0</span></span>
+                            <span>Income: <span id="summary-income" class="font-semibold">₹0</span></span>
                         </div>
                     </div>
 
-                    <!-- Income Config -->
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                        <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg> Income Settings
-                        </h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Salary (5th)</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
-                                    <input type="number" id="income-salary" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Incentive (15th)</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
-                                    <input type="number" id="income-incentive" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
-                                </div>
-                            </div>
-                            <button id="save-income-btn" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 rounded-xl transition-colors">Save Income</button>
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-1">
+                            <p class="text-sm font-medium text-slate-500">Total Month Expenses</p>
+                            <span class="bg-rose-100 text-rose-700 p-1.5 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12 13a1 1 0 100 2h5a1 1 0 001-1V9a1 1 0 10-2 0v2.586l-4.293-4.293a1 1 0 00-1.414 0L8 9.586 3.707 5.293a1 1 0 00-1.414 1.414l5-5a1 1 0 001.414 0L11 9.414 14.586 13H12z" clip-rule="evenodd" /></svg>
+                            </span>
                         </div>
+                        <h2 class="text-3xl font-bold text-rose-600" id="total-expenses">₹0</h2>
+                        <p class="mt-2 text-xs text-slate-500"><span id="expense-count" class="font-semibold">0</span> transactions this month (Incl. CC)</p>
                     </div>
+                </div>
 
-                    <!-- Expense Form -->
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                        <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg> Add Expense
-                        </h3>
-                        <form id="expense-form" class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                                <input type="text" id="expense-desc" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Groceries">
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
-                                        <input type="number" id="expense-amount" required min="1" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                    <!-- Left Column: Inputs & Managers -->
+                    <div class="flex flex-col gap-6 lg:col-span-1">
+                        
+                        <!-- Accounts & Income Config -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg> Accounts & Income
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 gap-2 pb-3 border-b border-slate-100">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Bank Balance</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                            <input type="number" id="acc-bank" class="pl-6 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Cash in Hand</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                            <input type="number" id="acc-cash" class="pl-6 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="0">
+                                        </div>
                                     </div>
                                 </div>
+                                
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                                    <input type="date" id="expense-date" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                                    <label class="block text-xs font-medium text-slate-700 mb-1">Salary Income</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                        <input type="number" id="income-salary" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="0">
+                                    </div>
                                 </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Incentive</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                            <input type="number" id="income-incentive" class="pl-6 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="0">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Other Income</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                            <input type="number" id="income-other" class="pl-6 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="save-income-btn" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2 rounded-xl transition-colors">Save Accounts & Income</button>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
-                                <select id="expense-category" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
-                                    <option value="Housing">Housing</option>
-                                    <option value="Food">Food & Dining</option>
-                                    <option value="Transportation">Transportation</option>
-                                    <option value="Utilities">Utilities</option>
-                                    <option value="Shopping">Shopping</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Healthcare">Healthcare</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                        </div>
+
+                        <!-- Credit Cards Config -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg> Credit Cards
+                            </h3>
+                            <div id="cc-list" class="space-y-3 mb-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                                <!-- CC Items dynamically injected -->
                             </div>
-                            <button type="submit" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl transition-colors flex justify-center items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
-                                </svg> Add
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                            <form id="cc-form" class="space-y-3 border-t border-slate-100 pt-3">
+                                <div>
+                                    <input type="text" id="cc-bank" required class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Bank Name (e.g. HDFC)">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 text-sm">₹</span></div>
+                                        <input type="number" id="cc-due" required min="0" class="pl-6 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Base Due">
+                                    </div>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 text-sm">₹</span></div>
+                                        <input type="number" id="cc-limit" required min="1" class="pl-6 w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Total Limit">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold py-2 rounded-xl transition-colors">Add Credit Card</button>
+                            </form>
+                        </div>
 
-                <!-- Right Column: Chart & Transactions -->
-                <div class="lg:col-span-2 flex flex-col gap-6">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative flex flex-col items-center justify-center" id="chart-container" style="min-height: 300px;">
-                        <div id="chart-empty-state" class="text-center text-slate-400 absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl z-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
-                            </svg>
-                            <p class="text-sm">Add expenses to view analysis.</p>
-                        </div>
-                        <div class="w-full flex justify-between items-center mb-4 z-20">
-                            <h3 class="text-lg font-semibold text-slate-900">Spending Analysis</h3>
-                            <button onclick="openReportModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
-                                </svg>
-                                Generate AI Report
-                            </button>
-                        </div>
-                        <div class="relative h-56 w-full flex justify-center z-20 opacity-0 transition-opacity duration-300" id="canvas-wrapper">
-                            <canvas id="expenseChart"></canvas>
+                        <!-- EMIs Config -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg> Active EMIs
+                            </h3>
+                            <div id="emi-list" class="space-y-3 mb-4 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                                <!-- EMI Items -->
+                            </div>
+                            <form id="emi-form" class="space-y-3 border-t border-slate-100 pt-3">
+                                <div>
+                                    <input type="text" id="emi-name" required class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="EMI Name (e.g. Car Loan)">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-slate-500 text-sm">₹</span></div>
+                                        <input type="number" id="emi-amount" required min="1" class="pl-6 w-full rounded-xl border border-slate-300 px-2 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Amount">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="emi-months" required min="1" class="w-full rounded-xl border border-slate-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Months Left">
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-orange-50 hover:bg-orange-100 text-orange-700 text-sm font-semibold py-2 rounded-xl transition-colors">Add EMI</button>
+                            </form>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col flex-grow min-h-[400px]">
-                        <h3 class="text-lg font-semibold text-slate-900 mb-4 flex justify-between items-center border-b border-slate-100 pb-4">
-                            <span>Recent Transactions</span>
-                            <button onclick="clearAllData()" class="text-sm text-slate-400 hover:text-rose-500 transition-colors">Clear All</button>
-                        </h3>
-                        <div class="flex-grow overflow-y-auto custom-scrollbar pr-2" id="expenses-container">
-                            <div id="empty-state" class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 pt-10">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <!-- Right Column: Chart & Transactions -->
+                    <div class="lg:col-span-2 flex flex-col gap-6">
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 relative flex flex-col items-center justify-center" id="chart-container" style="min-height: 300px;">
+                            <div id="chart-empty-state" class="text-center text-slate-400 absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl z-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
                                 </svg>
-                                <p class="text-sm text-center">No expenses recorded yet.</p>
+                                <p class="text-sm">Add expenses to view analysis.</p>
+                            </div>
+                            <div class="w-full flex justify-between items-center mb-4 z-20">
+                                <h3 class="text-lg font-semibold text-slate-900">Current Month Spending</h3>
+                                <button onclick="openReportModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" />
+                                    </svg>
+                                    Generate AI Report
+                                </button>
+                            </div>
+                            <div class="relative h-56 w-full flex justify-center z-20 opacity-0 transition-opacity duration-300" id="canvas-wrapper">
+                                <canvas id="expenseChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col flex-grow min-h-[400px]">
+                            <h3 class="text-lg font-semibold text-slate-900 mb-4 flex justify-between items-center border-b border-slate-100 pb-4">
+                                <span>Recent Transactions (This Month)</span>
+                            </h3>
+                            <div class="flex-grow overflow-y-auto custom-scrollbar pr-2" id="expenses-container">
+                                <div id="empty-state" class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 pt-10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                    </svg>
+                                    <p class="text-sm text-center">No expenses recorded for this month.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- VIEW: MANUAL PROJECTIONS -->
+            <div id="view-projections" class="tab-content flex-col gap-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-2xl font-bold text-slate-800">Manual Projection Planner</h2>
+                    <button onclick="saveManualProjection()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm">
+                        Calculate & Save
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Manual Inputs -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4 border-b border-slate-100 pb-3">Expected Estimates</h3>
+                        <p class="text-sm text-slate-500 mb-6">Enter your expected numbers for the upcoming month to calculate your free cash flow.</p>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Expected Income (Total)</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                    <input type="number" id="proj-in-income" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-emerald-50/30">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Expected Routine Expenses</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                    <input type="number" id="proj-in-expense" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-rose-50/30">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Expected Credit Card Bills</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                    <input type="number" id="proj-in-cc" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-rose-50/30">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Expected EMI Payments</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                                    <input type="number" id="proj-in-emi" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-rose-50/30">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Projection Results -->
+                    <div class="bg-indigo-50 rounded-2xl border border-indigo-100 p-6 flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute -right-10 -bottom-10 bg-indigo-200 w-40 h-40 rounded-full opacity-20"></div>
+                        <h3 class="text-lg font-semibold text-indigo-900 mb-6 relative z-10">Projection Results</h3>
+                        
+                        <div class="space-y-4 text-sm text-indigo-800 relative z-10">
+                            <div class="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                                <span>Total Expected Inflow</span>
+                                <span class="font-semibold text-emerald-600" id="proj-out-income">₹0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-white/60 rounded-lg">
+                                <span>Total Expected Outflow (Exp + CC + EMI)</span>
+                                <span class="font-semibold text-rose-600" id="proj-out-outflow">- ₹0</span>
+                            </div>
+                            <div class="flex justify-between items-center p-5 bg-indigo-600 text-white rounded-xl mt-4 shadow-md">
+                                <span class="font-bold text-lg">Expected Free Cash Flow</span>
+                                <span class="font-bold text-2xl" id="proj-out-leftover">₹0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: HISTORY -->
+            <div id="view-history" class="tab-content flex-col gap-6">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row gap-4 items-end justify-between">
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">From Date</label>
+                            <input type="date" id="hist-from" class="rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">To Date</label>
+                            <input type="date" id="hist-to" class="rounded-xl border border-slate-300 px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        </div>
+                        <button onclick="filterHistory()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors">
+                            Filter
+                        </button>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-slate-500">Period Total Expense</p>
+                        <p class="text-2xl font-bold text-slate-800" id="hist-total">₹0</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- History Chart -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-1 relative flex flex-col justify-center min-h-[300px]">
+                        <div id="hist-chart-empty" class="text-center text-slate-400 absolute inset-0 flex flex-col items-center justify-center bg-slate-50 rounded-2xl z-10 hidden">
+                            <p class="text-sm">No data in this range.</p>
+                        </div>
+                        <div class="relative h-56 w-full flex justify-center z-20" id="hist-canvas-wrapper">
+                            <canvas id="historyChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- History Transactions -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 lg:col-span-2 max-h-[500px] overflow-y-auto custom-scrollbar">
+                        <div id="hist-container" class="space-y-2">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
 
         <!-- FLOATING CHAT WIDGET -->
         <div id="chat-widget" class="fixed bottom-6 right-6 z-40 flex flex-col items-end">
-            
-            <!-- Chat Window -->
             <div id="chat-window" class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-80 sm:w-96 h-[500px] max-h-[80vh] flex flex-col mb-4 hidden transform transition-all origin-bottom-right scale-95 opacity-0">
-                <!-- Chat Header -->
                 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
                     <div class="flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
@@ -352,17 +512,13 @@
                         </svg>
                     </button>
                 </div>
-                
-                <!-- Chat Messages Area -->
                 <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
                     <div class="flex flex-col gap-1 items-start">
                         <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">
-                            Hi! I'm your AI financial assistant. I have read your dashboard data. Ask me anything about your spending or budget!
+                            Hi! I'm your AI financial assistant. Ask me anything about your spending, EMIs, or budget!
                         </div>
                     </div>
                 </div>
-
-                <!-- Chat Input Area -->
                 <div class="p-3 bg-white border-t border-slate-100 rounded-b-2xl flex items-center gap-2 shrink-0">
                     <input type="text" id="chat-input" class="flex-grow bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm rounded-xl px-4 py-2.5 outline-none transition-all" placeholder="Ask about your finances...">
                     <button id="chat-send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl transition-colors shrink-0 disabled:opacity-50">
@@ -372,8 +528,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Floating Button -->
             <button onclick="toggleChat()" id="chat-toggle-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl p-4 rounded-full transition-all transform hover:-translate-y-1 flex items-center justify-center relative">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -386,7 +540,88 @@
         </div>
     </div>
 
-    <!-- AI REPORT MODAL -->
+    <!-- ADD EXPENSE MODAL -->
+    <div id="expense-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
+            <div class="flex justify-between items-center p-6 border-b border-slate-100">
+                <h3 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg> Log an Expense
+                </h3>
+                <button onclick="closeExpenseModal()" class="text-slate-400 hover:text-slate-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="expense-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                    <input type="text" id="expense-desc" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Groceries">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-slate-500 sm:text-sm">₹</span></div>
+                            <input type="number" id="expense-amount" required min="1" class="pl-7 w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                        <input type="date" id="expense-date" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                        <select id="expense-category" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                            <option value="Housing">Housing</option>
+                            <option value="Food">Food & Dining</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Paid Via</label>
+                        <select id="expense-payment" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-sm">
+                            <option value="UPI">UPI / Bank</option>
+                            <option value="Cash">Cash</option>
+                            <!-- CC options injected here -->
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition-colors shadow-md">
+                    Add Transaction
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESET MODAL -->
+    <div id="reset-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center">
+            <div class="mx-auto w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">Reset Current Month?</h3>
+            <p class="text-sm text-slate-500 mb-6">This clears all expenses from the current month. Historical data and your base Accounts/Credit Card details are preserved. Type <strong>reset</strong> to confirm.</p>
+            <input type="text" id="reset-input" class="w-full text-center rounded-xl border border-slate-300 px-4 py-2.5 mb-4 focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Type reset">
+            <div class="flex gap-3">
+                <button onclick="closeResetModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-xl transition-colors">Cancel</button>
+                <button onclick="confirmReset()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 rounded-xl transition-colors">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI REPORT MODAL (Existing) -->
     <div id="report-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden relative">
             <div class="bg-gradient-to-r from-indigo-700 to-purple-800 p-6 text-white flex justify-between items-center shrink-0">
@@ -407,16 +642,16 @@
             <div class="p-6 overflow-y-auto custom-scrollbar flex-grow space-y-8">
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <p class="text-sm text-slate-500 font-medium">Total Saved</p>
+                        <p class="text-sm text-slate-500 font-medium">Free Liquid Cash</p>
                         <p class="text-2xl font-bold text-emerald-600" id="report-saved">₹0</p>
                     </div>
                     <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                        <p class="text-sm text-slate-500 font-medium">Savings Rate</p>
+                        <p class="text-sm text-slate-500 font-medium">Spending Ratio</p>
                         <p class="text-2xl font-bold text-indigo-600" id="report-rate">0%</p>
                     </div>
                 </div>
                 <div>
-                    <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Category Breakdown</h3>
+                    <h3 class="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Category Breakdown (All Expenses)</h3>
                     <div id="report-bars-container" class="space-y-4"></div>
                 </div>
                 <div>
@@ -434,10 +669,6 @@
                     </div>
                 </div>
             </div>
-            <div class="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex justify-end">
-                <button onclick="window.print()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 px-5 py-2.5 rounded-xl text-sm font-semibold mr-3">Print / PDF</button>
-                <button onclick="closeReportModal()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-5 py-2.5 rounded-xl text-sm font-semibold">Close</button>
-            </div>
         </div>
     </div>
 
@@ -449,91 +680,43 @@
         <span id="toast-msg" class="text-sm font-medium">Action successful</span>
     </div>
 
-    <!-- ============================================================
-         CORE LOGIC — SINGLE CLEAN SCRIPT (all bugs fixed)
-         ============================================================ -->
     <script>
         // -----------------------------------------------------------
-        // STATE
+        // STATE 
         // -----------------------------------------------------------
-        const state = { income: { salary: 0, incentive: 0 }, expenses: [] };
-        let myChart = null;
+        const state = { 
+            accounts: { bank: 0, cash: 0 },
+            income: { salary: 0, incentive: 0, other: 0 }, 
+            expenses: [], // { id, desc, amount, date, category, payment }
+            emis: [],     // { id, name, amount, months }
+            creditCards: [], // { id, bank, due, limit }
+            projections: { inc: 0, exp: 0, cc: 0, emi: 0 }
+        };
+        let dashboardChart = null;
+        let historyChart = null;
         let authUserId = null;
 
-        // FIX #3 — Chat history capped at MAX_HISTORY turns to avoid token bloat
         let chatHistory = [];
         const MAX_CHAT_HISTORY = 10;
-
-        // Gemini model fallback chain (FIX #2)
-        const GEMINI_MODELS = [
-                'gemini-1.5-flash-latest',
-    'gemini-1.5-pro-latest',
-    'gemini-pro'
-        ];
-
-        // -----------------------------------------------------------
-        // DOM ELEMENT REFERENCES
-        // -----------------------------------------------------------
-        const els = {
-            loginOverlay:         document.getElementById('login-overlay'),
-            appContent:           document.getElementById('app-content'),
-            btnGoogleLogin:       document.getElementById('btn-google-login'),
-            btnLogout:            document.getElementById('btn-logout'),
-            userName:             document.getElementById('user-name'),
-            userAvatar:           document.getElementById('user-avatar'),
-            loginLoading:         document.getElementById('login-loading'),
-            totalBalance:         document.getElementById('total-balance'),
-            totalIncome:          document.getElementById('total-income'),
-            totalExpenses:        document.getElementById('total-expenses'),
-            summarySalary:        document.getElementById('summary-salary'),
-            summaryIncentive:     document.getElementById('summary-incentive'),
-            expenseCount:         document.getElementById('expense-count'),
-            balanceProgress:      document.getElementById('balance-progress'),
-            balanceStatus:        document.getElementById('balance-status'),
-            incomeSalary:         document.getElementById('income-salary'),
-            incomeIncentive:      document.getElementById('income-incentive'),
-            saveIncomeBtn:        document.getElementById('save-income-btn'),
-            expenseForm:          document.getElementById('expense-form'),
-            expenseDesc:          document.getElementById('expense-desc'),
-            expenseAmount:        document.getElementById('expense-amount'),
-            expenseDate:          document.getElementById('expense-date'),
-            expenseCategory:      document.getElementById('expense-category'),
-            expensesContainer:    document.getElementById('expenses-container'),
-            emptyState:           document.getElementById('empty-state'),
-            currentMonthDisplay:  document.getElementById('current-month-display'),
-            pdfUpload:            document.getElementById('pdf-upload'),
-            uploadLabel:          document.getElementById('upload-label'),
-            chartEmptyState:      document.getElementById('chart-empty-state'),
-            canvasWrapper:        document.getElementById('canvas-wrapper'),
-            reportModal:          document.getElementById('report-modal'),
-            reportSaved:          document.getElementById('report-saved'),
-            reportRate:           document.getElementById('report-rate'),
-            reportBarsContainer:  document.getElementById('report-bars-container'),
-            reportInsightsContainer: document.getElementById('report-insights-container'),
-            aiLoading:            document.getElementById('ai-loading'),
-            toast:                document.getElementById('toast'),
-            toastMsg:             document.getElementById('toast-msg'),
-            syncStatus:           document.getElementById('sync-status'),
-            chatWindow:           document.getElementById('chat-window'),
-            chatToggleBtn:        document.getElementById('chat-toggle-btn'),
-            chatMessages:         document.getElementById('chat-messages'),
-            chatInput:            document.getElementById('chat-input'),
-            chatSendBtn:          document.getElementById('chat-send-btn')
-        };
+        const GEMINI_MODELS = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest', 'gemini-pro'];
 
         // -----------------------------------------------------------
         // HELPERS
         // -----------------------------------------------------------
-        const formatCurrency = (amount) =>
-            new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
-
-        const formatDate = (dateString) =>
-            new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+        const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+        const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        const isCurrentMonth = (dateString) => {
+            const d = new Date(dateString);
+            const now = new Date();
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        };
 
         const showToast = (msg) => {
-            els.toastMsg.textContent = msg;
-            els.toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => els.toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         };
 
         const getCategoryColor = (category, type = 'class') => {
@@ -551,40 +734,35 @@
         };
 
         // -----------------------------------------------------------
-        // AUTH & UI
+        // TABS NAVIGATION
         // -----------------------------------------------------------
-        const showApp = (user) => {
-            els.userName.textContent = user.displayName || 'User';
-            if (user.photoURL) els.userAvatar.src = user.photoURL;
-            els.loginOverlay.style.opacity = '0';
-            setTimeout(() => {
-                els.loginOverlay.classList.add('hidden');
-                els.appContent.classList.remove('hidden');
-                setTimeout(() => els.appContent.style.opacity = '1', 50);
-            }, 500);
-        };
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('border-indigo-600', 'text-indigo-600');
+                el.classList.add('border-transparent', 'text-slate-500');
+            });
+            
+            document.getElementById(`view-${tabId}`).classList.add('active');
+            const tabBtn = document.getElementById(`tab-${tabId}`);
+            tabBtn.classList.remove('border-transparent', 'text-slate-500');
+            tabBtn.classList.add('border-indigo-600', 'text-indigo-600');
 
-        const showLogin = () => {
-            els.appContent.style.opacity = '0';
-            setTimeout(() => {
-                els.appContent.classList.add('hidden');
-                els.loginOverlay.classList.remove('hidden');
-                setTimeout(() => els.loginOverlay.style.opacity = '1', 50);
-            }, 500);
+            if(tabId === 'history') filterHistory();
         };
 
         // -----------------------------------------------------------
-        // FIREBASE SYNC
+        // FIREBASE SYNC 
         // -----------------------------------------------------------
         const syncDataToCloud = async () => {
             if (!authUserId || !window.firebaseUtils?.db) return;
             const { db, doc, setDoc, appId } = window.firebaseUtils;
             try {
-                els.syncStatus.innerHTML = `<div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div> Syncing...`;
-                await setDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'currentMonth'), state);
-                els.syncStatus.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-400"></div> Saved`;
+                document.getElementById('sync-status').innerHTML = `<div class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse"></div> Syncing...`;
+                await setDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'masterData'), state);
+                document.getElementById('sync-status').innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-400"></div> Saved`;
             } catch (error) {
-                els.syncStatus.innerHTML = `<div class="w-2 h-2 rounded-full bg-rose-400"></div> Sync Error`;
+                document.getElementById('sync-status').innerHTML = `<div class="w-2 h-2 rounded-full bg-rose-400"></div> Sync Error`;
             }
         };
 
@@ -592,15 +770,36 @@
             if (!authUserId || !window.firebaseUtils?.db) return;
             const { db, doc, getDoc, appId } = window.firebaseUtils;
             try {
-                const docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'currentMonth'));
+                let docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'masterData'));
+                if (!docSnap.exists()) {
+                    docSnap = await getDoc(doc(db, 'artifacts', appId, 'users', authUserId, 'financeData', 'currentMonth')); // legacy fallback
+                }
+
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    state.income   = data.income   || { salary: 0, incentive: 0 };
+                    state.accounts = data.accounts || { bank: 0, cash: 0 };
+                    state.income   = data.income   || { salary: 0, incentive: 0, other: 0 };
                     state.expenses = data.expenses || [];
-                    els.incomeSalary.value    = state.income.salary    || '';
-                    els.incomeIncentive.value = state.income.incentive || '';
+                    state.emis     = data.emis     || [];
+                    state.creditCards = data.creditCards || [];
+                    state.projections = data.projections || { inc: 0, exp: 0, cc: 0, emi: 0 };
+
+                    document.getElementById('acc-bank').value         = state.accounts.bank || '';
+                    document.getElementById('acc-cash').value         = state.accounts.cash || '';
+                    document.getElementById('income-salary').value    = state.income.salary    || '';
+                    document.getElementById('income-incentive').value = state.income.incentive || '';
+                    document.getElementById('income-other').value     = state.income.other     || '';
+                    
+                    document.getElementById('proj-in-income').value  = state.projections.inc || '';
+                    document.getElementById('proj-in-expense').value = state.projections.exp || '';
+                    document.getElementById('proj-in-cc').value      = state.projections.cc || '';
+                    document.getElementById('proj-in-emi').value     = state.projections.emi || '';
+                    
+                    updateDropdowns();
+                    renderEMIs();
+                    renderCCs();
                     calculateDashboard();
-                    renderExpenses();
+                    updateProjectionUI();
                     showToast('Cloud data synchronized!');
                 }
             } catch (error) {
@@ -609,34 +808,35 @@
         };
 
         // -----------------------------------------------------------
-        // DASHBOARD CALCULATIONS & RENDERING
+        // RENDER LOGIC
         // -----------------------------------------------------------
-        const updateChart = () => {
-            if (state.expenses.length === 0) {
-                els.chartEmptyState.style.display = 'flex';
-                els.canvasWrapper.style.opacity   = '0';
-                return;
+        const drawChart = (expenses, canvasId, chartRefObj, emptyStateId) => {
+            if (expenses.length === 0) {
+                document.getElementById(emptyStateId).style.display = 'flex';
+                document.getElementById(canvasId).parentElement.style.opacity = '0';
+                return chartRefObj.chart;
             }
-            els.chartEmptyState.style.display = 'none';
-            els.canvasWrapper.style.opacity   = '1';
+            document.getElementById(emptyStateId).style.display = 'none';
+            document.getElementById(canvasId).parentElement.style.opacity = '1';
 
-            const catTotals = state.expenses.reduce((acc, exp) => {
+            const catTotals = expenses.reduce((acc, exp) => {
                 acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
                 return acc;
             }, {});
 
-            const labels    = Object.keys(catTotals);
-            const dataVals  = Object.values(catTotals);
-            const bgColors  = labels.map(c => getCategoryColor(c, 'hex'));
-            const ctx       = document.getElementById('expenseChart').getContext('2d');
+            const labels = Object.keys(catTotals);
+            const dataVals = Object.values(catTotals);
+            const bgColors = labels.map(c => getCategoryColor(c, 'hex'));
+            const ctx = document.getElementById(canvasId).getContext('2d');
 
-            if (myChart) {
-                myChart.data.labels                    = labels;
-                myChart.data.datasets[0].data          = dataVals;
-                myChart.data.datasets[0].backgroundColor = bgColors;
-                myChart.update();
+            if (chartRefObj.chart) {
+                chartRefObj.chart.data.labels = labels;
+                chartRefObj.chart.data.datasets[0].data = dataVals;
+                chartRefObj.chart.data.datasets[0].backgroundColor = bgColors;
+                chartRefObj.chart.update();
+                return chartRefObj.chart;
             } else {
-                myChart = new Chart(ctx, {
+                return new Chart(ctx, {
                     type: 'doughnut',
                     data: { labels, datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 4 }] },
                     options: {
@@ -648,176 +848,348 @@
         };
 
         const calculateDashboard = () => {
-            const totalInc = state.income.salary + state.income.incentive;
-            const totalExp = state.expenses.reduce((s, e) => s + e.amount, 0);
-            const balance  = totalInc - totalExp;
+            const currentMonthExpenses = state.expenses.filter(e => isCurrentMonth(e.date));
+            
+            // Asset Calculation (Liquid balance = Bank + Cash + Income - Expenses paid by Bank/Cash)
+            const grossAssets = (state.accounts.bank || 0) + (state.accounts.cash || 0) + 
+                                (state.income.salary || 0) + (state.income.incentive || 0) + (state.income.other || 0);
+            
+            const liquidExpenses = currentMonthExpenses
+                .filter(e => e.payment === 'UPI' || e.payment === 'Cash')
+                .reduce((s, e) => s + e.amount, 0);
+                
+            const totalExp = currentMonthExpenses.reduce((s, e) => s + e.amount, 0); // All expenses (incl CC) for charts
+            const availableLiquid = grossAssets - liquidExpenses;
 
-            els.totalIncome.textContent      = formatCurrency(totalInc);
-            els.summarySalary.textContent    = formatCurrency(state.income.salary);
-            els.summaryIncentive.textContent = formatCurrency(state.income.incentive);
-            els.totalExpenses.textContent    = formatCurrency(totalExp);
-            els.expenseCount.textContent     = state.expenses.length;
-            els.totalBalance.textContent     = formatCurrency(balance);
-            els.totalBalance.className       = balance < 0
+            document.getElementById('total-assets').textContent      = formatCurrency(grossAssets);
+            document.getElementById('summary-bank').textContent      = formatCurrency(state.accounts.bank || 0);
+            document.getElementById('summary-cash').textContent      = formatCurrency(state.accounts.cash || 0);
+            document.getElementById('summary-income').textContent    = formatCurrency((state.income.salary||0) + (state.income.incentive||0) + (state.income.other||0));
+            
+            document.getElementById('total-expenses').textContent    = formatCurrency(totalExp);
+            document.getElementById('expense-count').textContent     = currentMonthExpenses.length;
+            
+            document.getElementById('total-balance').textContent     = formatCurrency(availableLiquid);
+            document.getElementById('total-balance').className       = availableLiquid < 0
                 ? "text-4xl font-bold text-rose-600 relative z-10"
                 : "text-4xl font-bold text-slate-900 relative z-10";
 
-            const pct = totalInc > 0 ? Math.min((totalExp / totalInc) * 100, 100) : 0;
-            els.balanceProgress.style.width   = `${pct}%`;
-            els.balanceProgress.className     = `h-2 rounded-full transition-all duration-500 ${pct > 90 ? 'bg-rose-500' : pct > 70 ? 'bg-yellow-500' : 'bg-indigo-500'}`;
-            els.balanceStatus.textContent     = totalInc > 0
-                ? `${pct.toFixed(1)}% of income spent`
-                : 'Enter income to see spending ratio';
+            const pct = grossAssets > 0 ? Math.min((liquidExpenses / grossAssets) * 100, 100) : 0;
+            const prog = document.getElementById('balance-progress');
+            prog.style.width   = `${pct}%`;
+            prog.className     = `h-2 rounded-full transition-all duration-500 ${pct > 90 ? 'bg-rose-500' : pct > 70 ? 'bg-yellow-500' : 'bg-indigo-500'}`;
+            
+            // Chart
+            const ref = { chart: dashboardChart };
+            dashboardChart = drawChart(currentMonthExpenses, 'expenseChart', ref, 'chart-empty-state');
 
-            updateChart();
+            // Render list
+            renderExpenseList(currentMonthExpenses, 'expenses-container', 'empty-state');
+            
+            // Also re-render CCs in case debts changed
+            renderCCs();
         };
 
-        const renderExpenses = () => {
-            els.expensesContainer.innerHTML = '';
-            if (state.expenses.length === 0) {
-                els.expensesContainer.appendChild(els.emptyState);
-                els.emptyState.style.display = 'flex';
+        const renderExpenseList = (expenses, containerId, emptyId) => {
+            const container = document.getElementById(containerId);
+            const emptyState = document.getElementById(emptyId);
+            
+            Array.from(container.children).forEach(c => { if(c.id !== emptyId) c.remove(); });
+
+            if (expenses.length === 0) {
+                emptyState.style.display = 'flex';
                 return;
             }
-            els.emptyState.style.display = 'none';
-            [...state.expenses]
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .forEach(exp => {
-                    const item = document.createElement('div');
-                    item.className = 'flex items-center justify-between p-4 border border-slate-100 rounded-xl mb-3 hover:bg-slate-50 transition-colors group bg-white';
-                    item.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${getCategoryColor(exp.category)}">${exp.category.substring(0, 2).toUpperCase()}</div>
-                            <div>
-                                <p class="font-semibold text-slate-800 text-sm">${exp.description}</p>
-                                <p class="text-xs text-slate-500">${formatDate(exp.date)} &bull; ${exp.category}</p>
-                            </div>
+            emptyState.style.display = 'none';
+            
+            [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-4 border border-slate-100 rounded-xl mb-3 hover:bg-slate-50 transition-colors group bg-white';
+                
+                let paymentText = exp.payment;
+                if (exp.payment !== 'UPI' && exp.payment !== 'Cash') {
+                    const cc = state.creditCards.find(c => c.id === exp.payment);
+                    paymentText = cc ? `CC: ${cc.bank}` : 'Credit Card';
+                }
+
+                const methodBadge = (exp.payment === 'UPI' || exp.payment === 'Cash') 
+                    ? `<span class="bg-emerald-50 text-emerald-600 text-[10px] px-2 py-0.5 rounded ml-2 border border-emerald-100">${exp.payment}</span>`
+                    : `<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded ml-2 border border-blue-100">${paymentText}</span>`;
+
+                item.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${getCategoryColor(exp.category)}">${exp.category.substring(0, 2).toUpperCase()}</div>
+                        <div>
+                            <p class="font-semibold text-slate-800 text-sm">${exp.description} ${methodBadge}</p>
+                            <p class="text-xs text-slate-500">${formatDate(exp.date)} &bull; ${exp.category}</p>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <span class="font-bold text-slate-800">-${formatCurrency(exp.amount)}</span>
-                            <button onclick="deleteExpense('${exp.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>`;
-                    els.expensesContainer.appendChild(item);
-                });
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="font-bold text-slate-800">-${formatCurrency(exp.amount)}</span>
+                        <button onclick="deleteExpense('${exp.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>`;
+                container.appendChild(item);
+            });
         };
 
         // -----------------------------------------------------------
-        // EXPENSE ACTIONS
+        // EMI & CC MANAGERS
         // -----------------------------------------------------------
+        const renderEMIs = () => {
+            const list = document.getElementById('emi-list');
+            list.innerHTML = '';
+            if(state.emis.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 text-center py-2">No active EMIs added.</p>`;
+                return;
+            }
+            state.emis.forEach(emi => {
+                list.innerHTML += `
+                    <div class="flex justify-between items-center bg-orange-50 p-2.5 rounded-lg border border-orange-100 text-sm">
+                        <div>
+                            <p class="font-semibold text-slate-800">${emi.name}</p>
+                            <p class="text-xs text-orange-600">${emi.months} months left</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="font-bold text-slate-800">${formatCurrency(emi.amount)}</span>
+                            <button onclick="deleteEMI('${emi.id}')" class="text-slate-400 hover:text-rose-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                        </div>
+                    </div>`;
+            });
+        };
+
+        const renderCCs = () => {
+            const list = document.getElementById('cc-list');
+            list.innerHTML = '';
+            if(state.creditCards.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 text-center py-2">No credit cards added.</p>`;
+                return;
+            }
+            
+            state.creditCards.forEach(cc => {
+                // Calculate dynamic CC debt (Base due + current month expenses on this card)
+                const currentMonthDebt = state.expenses
+                    .filter(e => isCurrentMonth(e.date) && e.payment === cc.id)
+                    .reduce((sum, e) => sum + e.amount, 0);
+                
+                const totalDue = cc.due + currentMonthDebt;
+                const availableLimit = Math.max((cc.limit || 0) - totalDue, 0);
+                const utilizationPct = (cc.limit > 0) ? Math.min((totalDue / cc.limit) * 100, 100) : 0;
+                
+                const barColor = utilizationPct > 90 ? 'bg-rose-500' : utilizationPct > 70 ? 'bg-yellow-500' : 'bg-blue-500';
+
+                list.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 text-sm relative overflow-hidden group">
+                        <div class="flex justify-between items-center mb-1">
+                            <p class="font-bold text-slate-800">${cc.bank}</p>
+                            <button onclick="deleteCC('${cc.id}')" class="text-slate-300 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-500 mb-2">
+                            <span>Due: <strong class="text-rose-600">${formatCurrency(totalDue)}</strong></span>
+                            <span>Available: <strong class="text-emerald-600">${formatCurrency(availableLimit)}</strong></span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5">
+                            <div class="${barColor} h-1.5 rounded-full" style="width: ${utilizationPct}%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 text-right">Limit: ${formatCurrency(cc.limit || 0)}</p>
+                    </div>`;
+            });
+        };
+
+        const updateDropdowns = () => {
+            const select = document.getElementById('expense-payment');
+            select.innerHTML = '<option value="UPI">UPI / Bank</option><option value="Cash">Cash</option>';
+            state.creditCards.forEach(cc => {
+                const opt = document.createElement('option');
+                opt.value = cc.id;
+                opt.textContent = `CC: ${cc.bank}`;
+                select.appendChild(opt);
+            });
+        };
+
+        document.getElementById('emi-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            state.emis.push({
+                id: 'emi-' + Date.now(),
+                name: document.getElementById('emi-name').value,
+                amount: parseFloat(document.getElementById('emi-amount').value),
+                months: parseInt(document.getElementById('emi-months').value)
+            });
+            e.target.reset();
+            renderEMIs();
+            syncDataToCloud();
+            showToast('EMI Added');
+        });
+
+        document.getElementById('cc-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            state.creditCards.push({
+                id: 'cc-' + Date.now(),
+                bank: document.getElementById('cc-bank').value,
+                due: parseFloat(document.getElementById('cc-due').value),
+                limit: parseFloat(document.getElementById('cc-limit').value)
+            });
+            e.target.reset();
+            renderCCs();
+            updateDropdowns();
+            syncDataToCloud();
+            showToast('Credit Card Added');
+        });
+
+        window.deleteEMI = (id) => { state.emis = state.emis.filter(e => e.id !== id); renderEMIs(); syncDataToCloud(); showToast('EMI removed'); };
+        window.deleteCC = (id) => { state.creditCards = state.creditCards.filter(c => c.id !== id); renderCCs(); updateDropdowns(); calculateDashboard(); syncDataToCloud(); showToast('Card removed'); };
+
+        // -----------------------------------------------------------
+        // ACTIONS (EXPENSE & INCOME & RESET)
+        // -----------------------------------------------------------
+        window.openExpenseModal = () => {
+            document.getElementById('expense-date').valueAsDate = new Date();
+            const m = document.getElementById('expense-modal');
+            m.classList.remove('hidden');
+        };
+        window.closeExpenseModal = () => document.getElementById('expense-modal').classList.add('hidden');
+
+        document.getElementById('expense-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            state.expenses.push({
+                id: 'id-' + Date.now(),
+                description: document.getElementById('expense-desc').value,
+                amount: parseFloat(document.getElementById('expense-amount').value),
+                date: document.getElementById('expense-date').value,
+                category: document.getElementById('expense-category').value,
+                payment: document.getElementById('expense-payment').value
+            });
+            e.target.reset();
+            closeExpenseModal();
+            calculateDashboard();
+            if(document.getElementById('view-history').classList.contains('active')) filterHistory();
+            syncDataToCloud();
+            showToast('Expense logged successfully');
+            chatHistory = [];
+        });
+
+        document.getElementById('save-income-btn').addEventListener('click', () => {
+            state.accounts.bank    = parseFloat(document.getElementById('acc-bank').value)         || 0;
+            state.accounts.cash    = parseFloat(document.getElementById('acc-cash').value)         || 0;
+            state.income.salary    = parseFloat(document.getElementById('income-salary').value)    || 0;
+            state.income.incentive = parseFloat(document.getElementById('income-incentive').value) || 0;
+            state.income.other     = parseFloat(document.getElementById('income-other').value)     || 0;
+            calculateDashboard();
+            syncDataToCloud();
+            showToast('Accounts & Income saved');
+            chatHistory = [];
+        });
+
         window.deleteExpense = (id) => {
             state.expenses = state.expenses.filter(e => e.id !== id);
             calculateDashboard();
-            renderExpenses();
+            if(document.getElementById('view-history').classList.contains('active')) filterHistory();
             syncDataToCloud();
             showToast('Expense removed');
-            // FIX #3 — reset chat history when data changes so AI has fresh context
             chatHistory = [];
         };
 
-        // FIX #5 — "Clear All" now also resets income fields
-        window.clearAllData = () => {
-            state.expenses          = [];
-            state.income.salary     = 0;
-            state.income.incentive  = 0;
-            els.incomeSalary.value    = '';
-            els.incomeIncentive.value = '';
-            calculateDashboard();
-            renderExpenses();
-            syncDataToCloud();
-            showToast('All data cleared');
-            chatHistory = [];
+        // Reset Current Month only
+        window.openResetModal = () => {
+            document.getElementById('reset-input').value = '';
+            document.getElementById('reset-modal').classList.remove('hidden');
+        };
+        window.closeResetModal = () => document.getElementById('reset-modal').classList.add('hidden');
+        window.confirmReset = () => {
+            if(document.getElementById('reset-input').value.toLowerCase() === 'reset') {
+                // Keep historical expenses
+                state.expenses = state.expenses.filter(e => !isCurrentMonth(e.date));
+                // Clear Income inputs (but KEEP Accounts/Bank/Cash and CC Base limits)
+                state.income = { salary: 0, incentive: 0, other: 0 };
+                document.getElementById('income-salary').value = '';
+                document.getElementById('income-incentive').value = '';
+                document.getElementById('income-other').value = '';
+                
+                calculateDashboard();
+                syncDataToCloud();
+                closeResetModal();
+                showToast('Current month data reset successfully');
+                chatHistory = [];
+            } else {
+                showToast('Type reset to confirm');
+            }
         };
 
         // -----------------------------------------------------------
-        // EVENT LISTENERS
+        // MANUAL PROJECTIONS
         // -----------------------------------------------------------
-        els.saveIncomeBtn.addEventListener('click', () => {
-            state.income.salary    = parseFloat(els.incomeSalary.value)    || 0;
-            state.income.incentive = parseFloat(els.incomeIncentive.value) || 0;
-            calculateDashboard();
+        const updateProjectionUI = () => {
+            const inc = state.projections.inc || 0;
+            const outflow = (state.projections.exp || 0) + (state.projections.cc || 0) + (state.projections.emi || 0);
+            const leftover = inc - outflow;
+            
+            document.getElementById('proj-out-income').textContent = formatCurrency(inc);
+            document.getElementById('proj-out-outflow').textContent = `- ${formatCurrency(outflow)}`;
+            document.getElementById('proj-out-leftover').textContent = formatCurrency(leftover);
+        };
+
+        window.saveManualProjection = () => {
+            state.projections.inc = parseFloat(document.getElementById('proj-in-income').value) || 0;
+            state.projections.exp = parseFloat(document.getElementById('proj-in-expense').value) || 0;
+            state.projections.cc  = parseFloat(document.getElementById('proj-in-cc').value) || 0;
+            state.projections.emi = parseFloat(document.getElementById('proj-in-emi').value) || 0;
+            
+            updateProjectionUI();
             syncDataToCloud();
-            showToast('Income saved');
-            // Reset chat history so next question reflects updated income
-            chatHistory = [];
-        });
-
-        els.expenseForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const desc     = els.expenseDesc.value;
-            const amount   = parseFloat(els.expenseAmount.value);
-            const date     = els.expenseDate.value;
-            const category = els.expenseCategory.value;
-            if (!desc || !amount || !date || !category) return;
-
-            state.expenses.push({ id: 'id-' + Date.now(), description: desc, amount, date, category });
-            els.expenseForm.reset();
-            els.expenseDate.valueAsDate = new Date();
-            calculateDashboard();
-            renderExpenses();
-            syncDataToCloud();
-            showToast('Expense added');
-            // Reset chat history so AI sees fresh data on next question
-            chatHistory = [];
-        });
-
-        // Auth
-        els.btnGoogleLogin.addEventListener('click', async () => {
-            if (!window.firebaseUtils?.auth) return alert("Firebase not configured!");
-            els.btnGoogleLogin.disabled = true;
-            els.loginLoading.classList.remove('hidden');
-            const { auth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence } = window.firebaseUtils;
-            try {
-                await setPersistence(auth, browserLocalPersistence);
-                await signInWithPopup(auth, new GoogleAuthProvider());
-            } catch (err) {
-                console.error("Login failed:", err);
-                showToast("Login cancelled or failed.");
-                els.btnGoogleLogin.disabled = false;
-                els.loginLoading.classList.add('hidden');
-            }
-        });
-
-        els.btnLogout.addEventListener('click', () => {
-            if (window.firebaseUtils?.auth) {
-                window.firebaseUtils.signOut(window.firebaseUtils.auth).then(() => {
-                    authUserId     = null;
-                    state.expenses = [];
-                    state.income   = { salary: 0, incentive: 0 };
-                    chatHistory    = [];
-                    showLogin();
-                });
-            }
-        });
+            showToast('Projection calculated and saved');
+        };
 
         // -----------------------------------------------------------
-        // PDF SCANNER — FIX #4: look back up to 3 tokens for merchant name
+        // HISTORY FILTERING
         // -----------------------------------------------------------
-        els.pdfUpload.addEventListener('change', async (e) => {
+        const filterHistory = () => {
+            const from = document.getElementById('hist-from').value;
+            const to = document.getElementById('hist-to').value;
+            
+            let filtered = state.expenses;
+            if (from) filtered = filtered.filter(e => e.date >= from);
+            if (to) filtered = filtered.filter(e => e.date <= to);
+
+            const total = filtered.reduce((s, e) => s + e.amount, 0);
+            document.getElementById('hist-total').textContent = formatCurrency(total);
+
+            const ref = { chart: historyChart };
+            historyChart = drawChart(filtered, 'historyChart', ref, 'hist-chart-empty');
+            renderExpenseList(filtered, 'hist-container', 'empty-state-placeholder'); 
+        };
+
+        const initHistoryDates = () => {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const formatDateStr = (d) => d.toISOString().split('T')[0];
+            document.getElementById('hist-from').value = formatDateStr(firstDay);
+            document.getElementById('hist-to').value = formatDateStr(now);
+        };
+
+        // -----------------------------------------------------------
+        // PDF SCANNER
+        // -----------------------------------------------------------
+        document.getElementById('pdf-upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            els.uploadLabel.innerHTML = 'Scanning...';
-            els.uploadLabel.classList.add('opacity-75');
+            const label = document.getElementById('upload-label');
+            label.innerHTML = 'Scanning...';
+            label.classList.add('opacity-75');
 
             try {
-                const pdf    = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
-                let newExp   = [];
-                const today  = new Date().toISOString().split('T')[0];
+                const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+                let newExp = [];
+                const today = new Date().toISOString().split('T')[0];
 
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const items = (await (await pdf.getPage(i)).getTextContent()).items.map(item => item.str);
-
                     for (let j = 0; j < items.length; j++) {
                         const str = items[j].trim();
-                        // Detect ₹ amount or a plain decimal that looks like a currency value
                         if (str.includes('₹') || (str.match(/^[0-9,]+\.[0-9]{2}$/) && !str.includes(':'))) {
                             const amt = parseFloat(str.replace(/[^\d.]/g, ''));
                             if (amt > 0 && amt < 1000000) {
-                                // FIX #4: look back up to 3 tokens for a meaningful description
                                 let desc = 'Scanned Transaction';
                                 for (let k = 1; k <= 3; k++) {
                                     const candidate = (items[j - k] || '').trim();
@@ -826,13 +1198,7 @@
                                         break;
                                     }
                                 }
-                                newExp.push({
-                                    id: 'pdf-' + Date.now() + Math.random(),
-                                    description: desc,
-                                    amount: amt,
-                                    date: today,
-                                    category: 'Other'
-                                });
+                                newExp.push({ id: 'pdf-' + Date.now() + Math.random(), description: desc, amount: amt, date: today, category: 'Other', payment: 'UPI' });
                             }
                         }
                     }
@@ -841,302 +1207,188 @@
                 if (newExp.length > 0) {
                     state.expenses.push(...newExp);
                     calculateDashboard();
-                    renderExpenses();
                     syncDataToCloud();
                     showToast(`Added ${newExp.length} transactions`);
                     chatHistory = [];
                 } else {
-                    showToast('No ₹ amounts found in PDF.');
+                    showToast('No amounts found in PDF.');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('PDF read error. Please try another file.');
+                showToast('PDF error. Please try another file.');
             }
 
-            els.uploadLabel.innerHTML = 'Upload Statement';
-            els.uploadLabel.classList.remove('opacity-75');
+            label.innerHTML = 'Upload Statement';
+            label.classList.remove('opacity-75');
             e.target.value = '';
         });
 
         // -----------------------------------------------------------
-        // CHAT WIDGET — FIX #1 (single definition) + FIX #2 (model fallback)
+        // AI REPORT & CHAT 
         // -----------------------------------------------------------
-        window.toggleChat = () => {
-            const isHidden = els.chatWindow.classList.contains('hidden');
-            if (isHidden) {
-                els.chatWindow.classList.remove('hidden');
-                const pingEl = els.chatToggleBtn.querySelector('.animate-ping');
-                if (pingEl) pingEl.parentElement.remove();
-                setTimeout(() => els.chatWindow.classList.remove('scale-95', 'opacity-0'), 10);
-            } else {
-                els.chatWindow.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => els.chatWindow.classList.add('hidden'), 150);
-            }
-        };
-
-        const renderChatMessage = (text, sender) => {
-            const div         = document.createElement('div');
-            div.className     = 'flex flex-col gap-1 w-full ' + (sender === 'user' ? 'items-end' : 'items-start');
-            const bubbleClass = sender === 'user'
-                ? 'bg-indigo-600 text-white rounded-tr-sm'
-                : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm';
-            div.innerHTML = `<div class="text-sm p-3 rounded-2xl shadow-sm max-w-[85%] ${bubbleClass}">${text}</div>`;
-            els.chatMessages.appendChild(div);
-            els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
-        };
-
-        const showTypingIndicator = () => {
-            const div     = document.createElement('div');
-            div.id        = 'typing-indicator';
-            div.className = 'flex flex-col gap-1 items-start w-full';
-            div.innerHTML = `
-                <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] flex items-center gap-1 h-10">
-                    <svg height="8" width="32" class="opacity-70">
-                        <circle class="typing-dot" cx="4"  cy="4" r="3" />
-                        <circle class="typing-dot" cx="16" cy="4" r="3" />
-                        <circle class="typing-dot" cx="28" cy="4" r="3" />
-                    </svg>
-                </div>`;
-            els.chatMessages.appendChild(div);
-            els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
-        };
-
-        const removeTypingIndicator = () => {
-            const ind = document.getElementById('typing-indicator');
-            if (ind) ind.remove();
-        };
-
-        // FIX #2 — Gemini call with model fallback chain
         const callGeminiWithFallback = async (payload) => {
             const apiKey = window.firebaseUtils?.activeGeminiKey || '';
             if (!apiKey) throw new Error('NO_API_KEY');
 
             for (const model of GEMINI_MODELS) {
                 try {
-                    const res = await fetch(
-                        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-                        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }
-                    );
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     const data = await res.json();
-                    if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-                        return data.candidates[0].content.parts[0].text;
-                    }
-                    // If quota or model error, try next
-                    console.warn(`Model ${model} returned no candidates:`, data);
-                } catch (err) {
-                    console.warn(`Model ${model} failed:`, err);
-                }
+                    if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return data.candidates[0].content.parts[0].text;
+                } catch (err) { console.warn(`Model ${model} failed:`, err); }
             }
             throw new Error('ALL_MODELS_FAILED');
         };
 
-        // FIX #1 — Single, clean handleChatSend definition
-        const handleChatSend = async () => {
-            const text = els.chatInput.value.trim();
-            if (!text) return;
-
-            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
-            if (!apiKey) {
-                renderChatMessage(text, 'user');
-                els.chatInput.value = '';
-                setTimeout(() => renderChatMessage('Please add your Gemini API Key in the configuration section.', 'bot'), 500);
-                return;
-            }
-
-            els.chatInput.value       = '';
-            els.chatSendBtn.disabled  = true;
-            renderChatMessage(text, 'user');
-            showTypingIndicator();
-
-            // FIX #3 — Cap history to last MAX_CHAT_HISTORY messages
-            chatHistory.push({ role: 'user', parts: [{ text }] });
-            if (chatHistory.length > MAX_CHAT_HISTORY * 2) {
-                chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY * 2);
-            }
-
-            // Always rebuild fresh context from current state
-            const totalInc   = state.income.salary + state.income.incentive;
-            const contextData = `Monthly income: ₹${totalInc}. Expenses: ${JSON.stringify(
-                state.expenses.map(e => ({ desc: e.description, amt: e.amount, cat: e.category, date: e.date }))
-            )}`;
-
-            const payload = {
-                systemInstruction: {
-                    parts: [{
-                        text: `You are FinanceFlow, an AI financial assistant embedded in a personal finance dashboard.
-The user's CURRENT live financial data is:
-${contextData}
-
-Rules:
-- Answer questions briefly and kindly based strictly on this data.
-- Format all currencies in INR (₹).
-- Keep answers concise — 2-4 sentences max unless a detailed breakdown is needed.
-- If the user asks about something not in the data, say so politely.`
-                    }]
-                },
-                contents: chatHistory
-            };
-
-            try {
-                const aiText = await callGeminiWithFallback(payload);
-                removeTypingIndicator();
-                chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
-                renderChatMessage(aiText, 'bot');
-            } catch (err) {
-                removeTypingIndicator();
-                if (err.message === 'NO_API_KEY') {
-                    renderChatMessage('Please add your Gemini API Key in the configuration section at the top of the file.', 'bot');
-                } else if (err.message === 'ALL_MODELS_FAILED') {
-                    renderChatMessage('All Gemini models are temporarily unavailable. Please check your API key and quota.', 'bot');
-                } else {
-                    renderChatMessage('Network error. Please check your connection and try again.', 'bot');
-                }
-                // Remove the user message from history if AI failed to respond
-                chatHistory.pop();
-            }
-
-            els.chatSendBtn.disabled = false;
-            els.chatInput.focus();
-        };
-
-        els.chatSendBtn.addEventListener('click', handleChatSend);
-        els.chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatSend(); });
-
-        // -----------------------------------------------------------
-        // AI REPORT MODAL
-        // -----------------------------------------------------------
         window.openReportModal = async () => {
-            const totalInc = state.income.salary + state.income.incentive;
-            const totalExp = state.expenses.reduce((s, e) => s + e.amount, 0);
-            const saved    = totalInc - totalExp;
-            const rate     = totalInc > 0 ? ((saved / totalInc) * 100).toFixed(1) : 0;
+            const currentMonthExpenses = state.expenses.filter(e => isCurrentMonth(e.date));
+            const grossAssets = (state.accounts.bank || 0) + (state.accounts.cash || 0) + 
+                                (state.income.salary || 0) + (state.income.incentive || 0) + (state.income.other || 0);
+                                
+            const liquidExpenses = currentMonthExpenses.filter(e => e.payment === 'UPI' || e.payment === 'Cash').reduce((s, e) => s + e.amount, 0);
+            
+            const totalExp = currentMonthExpenses.reduce((s, e) => s + e.amount, 0);
+            const saved = grossAssets - liquidExpenses;
+            const rate = grossAssets > 0 ? ((liquidExpenses / grossAssets) * 100).toFixed(1) : 0;
 
-            els.reportSaved.textContent  = formatCurrency(saved);
-            els.reportSaved.className    = saved >= 0
-                ? "text-2xl font-bold text-emerald-600"
-                : "text-2xl font-bold text-rose-600";
-            els.reportRate.textContent   = `${rate}%`;
+            document.getElementById('report-saved').textContent = formatCurrency(saved);
+            document.getElementById('report-saved').className = saved >= 0 ? "text-2xl font-bold text-emerald-600" : "text-2xl font-bold text-rose-600";
+            document.getElementById('report-rate').textContent = `${rate}%`;
 
-            // Category breakdown bars
-            const categoryTotals = state.expenses.reduce((acc, exp) => {
-                acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
-                return acc;
-            }, {});
-
-            els.reportBarsContainer.innerHTML = '';
+            const categoryTotals = currentMonthExpenses.reduce((acc, exp) => { acc[exp.category] = (acc[exp.category] || 0) + exp.amount; return acc; }, {});
+            const bars = document.getElementById('report-bars-container');
+            bars.innerHTML = '';
             Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).forEach(([cat, amt]) => {
                 const pct = totalExp > 0 ? ((amt / totalExp) * 100).toFixed(1) : 0;
-                els.reportBarsContainer.innerHTML += `
+                bars.innerHTML += `
                     <div class="mb-3">
-                        <div class="flex justify-between text-sm mb-1">
-                            <span class="font-medium text-slate-700">${cat}</span>
-                            <span class="text-slate-500">${formatCurrency(amt)} (${pct}%)</span>
-                        </div>
-                        <div class="w-full h-2.5 rounded-full" style="background-color: ${getCategoryColor(cat, 'bgHex')}">
-                            <div class="h-2.5 rounded-full" style="width: ${pct}%; background-color: ${getCategoryColor(cat, 'hex')}"></div>
-                        </div>
+                        <div class="flex justify-between text-sm mb-1"><span class="font-medium text-slate-700">${cat}</span><span class="text-slate-500">${formatCurrency(amt)} (${pct}%)</span></div>
+                        <div class="w-full h-2.5 rounded-full" style="background-color: ${getCategoryColor(cat, 'bgHex')}"><div class="h-2.5 rounded-full" style="width: ${pct}%; background-color: ${getCategoryColor(cat, 'hex')}"></div></div>
                     </div>`;
             });
 
-            // Show modal
-            els.reportModal.classList.remove('hidden');
-            els.reportModal.firstElementChild.classList.remove('modal-exit');
-            els.reportModal.firstElementChild.classList.add('modal-enter');
+            document.getElementById('report-modal').classList.remove('hidden');
+            const insights = document.getElementById('report-insights-container');
+            insights.innerHTML = `<div class="flex justify-center text-indigo-500 py-4"><svg class="animate-spin h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
 
-            // Reset insights panel
-            els.reportInsightsContainer.innerHTML = els.aiLoading.outerHTML;
-            els.reportInsightsContainer.querySelector('#ai-loading').style.display = 'flex';
-
-            const apiKey = window.firebaseUtils?.activeGeminiKey || '';
-            if (!apiKey) {
-                els.reportInsightsContainer.innerHTML = `
-                    <div class="bg-yellow-50 p-4 rounded-2xl flex gap-3 text-sm text-yellow-700">
-                        <div class="text-2xl">⚠️</div>
-                        <p>Add your Gemini API key to unlock AI-powered insights.</p>
-                    </div>`;
-                return;
+            if (!window.firebaseUtils?.activeGeminiKey) {
+                insights.innerHTML = `<div class="bg-yellow-50 p-3 rounded-lg text-sm text-yellow-700">Add Gemini Key to see AI insights.</div>`; return;
             }
-
-            const prompt = `Analyze my finances in INR:
-- Monthly Income: ₹${totalInc}
-- Total Expenses: ₹${totalExp}
-- Savings: ₹${saved} (${rate}%)
-- Category breakdown: ${JSON.stringify(categoryTotals)}
-
-Give me exactly 3 specific, actionable insights using the 50/30/20 budgeting rule.
-Return ONLY a JSON array with objects: { "icon": "emoji", "text": "insight text", "color": "tailwind text class", "bg": "tailwind bg class" }`;
 
             try {
                 const raw = await callGeminiWithFallback({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "ARRAY",
-                            items: {
-                                type: "OBJECT",
-                                properties: {
-                                    icon:  { type: "STRING" },
-                                    text:  { type: "STRING" },
-                                    color: { type: "STRING" },
-                                    bg:    { type: "STRING" }
-                                }
-                            }
-                        }
-                    }
+                    contents: [{ parts: [{ text: `Analyze my current month: Total Assets ₹${grossAssets}, Liquid Exp ₹${liquidExpenses}, Total Exp ₹${totalExp}. Categories: ${JSON.stringify(categoryTotals)}. Return JSON array of 3 objects {icon: emoji, text: string, color: tailwind-text, bg: tailwind-bg}` }] }],
+                    generationConfig: { responseMimeType: "application/json", responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { icon: { type: "STRING" }, text: { type: "STRING" }, color: { type: "STRING" }, bg: { type: "STRING" } } } } }
                 });
+                const data = JSON.parse(raw.replace(/```json|```/g, '').trim());
+                insights.innerHTML = data.map(i => `<div class="${i.bg} border border-white p-4 rounded-xl flex gap-3 shadow-sm"><div class="text-xl">${i.icon}</div><p class="text-sm ${i.color} font-medium">${i.text}</p></div>`).join('');
+            } catch (err) { insights.innerHTML = `<div class="bg-rose-50 p-3 rounded-lg text-sm text-rose-600">Failed AI Insights.</div>`; }
+        };
+        window.closeReportModal = () => document.getElementById('report-modal').classList.add('hidden');
 
-                // Safely parse JSON (strip any markdown fences just in case)
-                const cleaned  = raw.replace(/```json|```/g, '').trim();
-                const insights = JSON.parse(cleaned);
-
-                els.reportInsightsContainer.innerHTML = insights.map(insight => `
-                    <div class="${insight.bg} border border-white/50 p-4 rounded-2xl flex gap-3 shadow-sm">
-                        <div class="text-2xl shrink-0">${insight.icon}</div>
-                        <p class="text-sm ${insight.color} font-medium">${insight.text}</p>
-                    </div>`).join('');
-
-            } catch (error) {
-                els.reportInsightsContainer.innerHTML = `
-                    <div class="bg-rose-50 p-4 rounded-2xl text-sm text-rose-600">
-                        Failed to generate AI insights. Please check your API key and try again.
-                    </div>`;
+        // CHAT
+        window.toggleChat = () => {
+            const w = document.getElementById('chat-window');
+            if (w.classList.contains('hidden')) {
+                w.classList.remove('hidden'); setTimeout(() => w.classList.remove('scale-95', 'opacity-0'), 10);
+                const ping = document.querySelector('#chat-toggle-btn .animate-ping'); if(ping) ping.parentElement.remove();
+            } else {
+                w.classList.add('scale-95', 'opacity-0'); setTimeout(() => w.classList.add('hidden'), 150);
             }
         };
 
-        window.closeReportModal = () => {
-            els.reportModal.firstElementChild.classList.remove('modal-enter');
-            els.reportModal.firstElementChild.classList.add('modal-exit');
-            setTimeout(() => els.reportModal.classList.add('hidden'), 200);
+        const renderChatMessage = (text, sender) => {
+            const div = document.createElement('div');
+            div.className = 'flex flex-col gap-1 w-full ' + (sender === 'user' ? 'items-end' : 'items-start');
+            div.innerHTML = `<div class="text-sm p-3 rounded-2xl shadow-sm max-w-[85%] ${sender === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-sm'}">${text}</div>`;
+            document.getElementById('chat-messages').appendChild(div);
+            div.scrollIntoView();
         };
 
+        const handleChatSend = async () => {
+            const inp = document.getElementById('chat-input');
+            const text = inp.value.trim(); if (!text) return;
+            if (!window.firebaseUtils?.activeGeminiKey) {
+                renderChatMessage(text, 'user'); inp.value = ''; setTimeout(() => renderChatMessage('Add Gemini API Key.', 'bot'), 500); return;
+            }
+
+            inp.value = ''; document.getElementById('chat-send-btn').disabled = true;
+            renderChatMessage(text, 'user');
+            
+            const typing = document.createElement('div'); typing.id = 'typing-indicator';
+            typing.innerHTML = `<div class="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm max-w-[85%] flex gap-1 h-10"><svg height="8" width="32" class="opacity-70"><circle class="typing-dot" cx="4" cy="4" r="3" /><circle class="typing-dot" cx="16" cy="4" r="3" /><circle class="typing-dot" cx="28" cy="4" r="3" /></svg></div>`;
+            document.getElementById('chat-messages').appendChild(typing);
+
+            chatHistory.push({ role: 'user', parts: [{ text }] });
+            if (chatHistory.length > MAX_CHAT_HISTORY * 2) chatHistory = chatHistory.slice(-MAX_CHAT_HISTORY * 2);
+
+            try {
+                const grossAssets = (state.accounts.bank || 0) + (state.accounts.cash || 0) + (state.income.salary || 0) + (state.income.incentive || 0) + (state.income.other || 0);
+                const aiText = await callGeminiWithFallback({
+                    systemInstruction: { parts: [{ text: `You are FinanceFlow AI. Total Assets: ₹${grossAssets}. Current expenses: ${JSON.stringify(state.expenses.filter(e => isCurrentMonth(e.date)))}. EMIs: ${JSON.stringify(state.emis)}. CCs: ${JSON.stringify(state.creditCards)}. Be concise.` }] },
+                    contents: chatHistory
+                });
+                typing.remove();
+                chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
+                renderChatMessage(aiText, 'bot');
+            } catch (err) {
+                typing.remove(); chatHistory.pop();
+                renderChatMessage('Error connecting to AI. Try again.', 'bot');
+            }
+            document.getElementById('chat-send-btn').disabled = false; inp.focus();
+        };
+        document.getElementById('chat-send-btn').addEventListener('click', handleChatSend);
+        document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatSend(); });
+
         // -----------------------------------------------------------
-        // APP INIT
+        // AUTH INIT
         // -----------------------------------------------------------
         const initializeAppFlow = async () => {
-            els.currentMonthDisplay.textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
-            els.expenseDate.valueAsDate         = new Date();
+            document.getElementById('current-month-display').textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+            initHistoryDates();
 
             if (window.firebaseUtils?.auth) {
                 const { auth, onAuthStateChanged, signInWithCustomToken } = window.firebaseUtils;
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
-                }
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         authUserId = user.uid;
-                        showApp(user);
+                        document.getElementById('user-name').textContent = user.displayName || 'User';
+                        if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+                        document.getElementById('login-overlay').classList.add('hidden');
+                        document.getElementById('app-content').classList.remove('hidden');
+                        setTimeout(() => document.getElementById('app-content').style.opacity = '1', 50);
                         loadDataFromCloud();
                     } else {
-                        showLogin();
+                        document.getElementById('app-content').classList.add('hidden');
+                        document.getElementById('login-overlay').classList.remove('hidden');
+                        document.getElementById('login-overlay').style.opacity = '1';
                     }
                 });
-            } else {
-                showLogin();
             }
         };
+
+        // Login / Logout Buttons
+        document.getElementById('btn-google-login').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-google-login'); btn.disabled = true; document.getElementById('login-loading').classList.remove('hidden');
+            try {
+                await window.firebaseUtils.setPersistence(window.firebaseUtils.auth, window.firebaseUtils.browserLocalPersistence);
+                await window.firebaseUtils.signInWithPopup(window.firebaseUtils.auth, new window.firebaseUtils.GoogleAuthProvider());
+            } catch (err) { btn.disabled = false; document.getElementById('login-loading').classList.add('hidden'); }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            window.firebaseUtils.signOut(window.firebaseUtils.auth).then(() => {
+                authUserId = null; state.expenses = []; state.emis = []; state.creditCards = []; state.income = { salary: 0, incentive: 0, other: 0 }; state.accounts = { bank: 0, cash: 0 };
+                window.location.reload();
+            });
+        });
 
         window.onload = initializeAppFlow;
     </script>
 </body>
 </html>
+
+
+```
