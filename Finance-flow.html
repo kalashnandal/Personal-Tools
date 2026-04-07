@@ -670,6 +670,10 @@
                     </div>
                 </div>
             </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 shrink-0 flex justify-end">
+                <button onclick="window.print()" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 px-5 py-2.5 rounded-xl text-sm font-semibold mr-3">Print / PDF</button>
+                <button onclick="closeReportModal()" class="bg-indigo-600 text-white hover:bg-indigo-700 px-5 py-2.5 rounded-xl text-sm font-semibold">Close</button>
+            </div>
         </div>
     </div>
 
@@ -734,7 +738,6 @@
             return (colors[category] || colors['Other'])[type];
         };
 
-        // UI View Managers
         const showApp = (user) => {
             document.getElementById('user-name').textContent = user.displayName || 'User';
             if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
@@ -997,7 +1000,6 @@
             }
             
             state.creditCards.forEach(cc => {
-                // Calculate dynamic CC debt (Base due + current month expenses on this card)
                 const currentMonthDebt = state.expenses
                     .filter(e => isCurrentMonth(e.date) && e.payment === cc.id)
                     .reduce((sum, e) => sum + e.amount, 0);
@@ -1129,7 +1131,7 @@
             if(document.getElementById('reset-input').value.toLowerCase() === 'reset') {
                 // Keep historical expenses
                 state.expenses = state.expenses.filter(e => !isCurrentMonth(e.date));
-                // Clear Income inputs (but KEEP Accounts/Bank/Cash and CC Base limits)
+                // Clear Income inputs
                 state.income = { salary: 0, incentive: 0, other: 0 };
                 document.getElementById('income-salary').value = '';
                 document.getElementById('income-incentive').value = '';
@@ -1192,7 +1194,6 @@
             const now = new Date();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
             
-            // Adjust to local timezone to avoid UTC shift
             const formatLocal = (d) => {
                 const offset = d.getTimezoneOffset() * 60000;
                 return new Date(d.getTime() - offset).toISOString().split('T')[0];
@@ -1377,47 +1378,42 @@
         document.getElementById('chat-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleChatSend(); });
 
         // -----------------------------------------------------------
-        // AUTH INIT & RACE CONDITION FIX
+        // AUTH INIT (Original Google Popup logic strictly restored)
         // -----------------------------------------------------------
-        const startApp = () => {
-            // Polling prevents the race condition between the type="module" script loading and this execution.
-            if (!window.firebaseUtils || !window.firebaseUtils.auth) {
-                setTimeout(startApp, 100);
-                return;
-            }
-
-            const { auth, onAuthStateChanged, signInWithCustomToken } = window.firebaseUtils;
-            
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    authUserId = user.uid;
-                    showApp(user);
-                    loadDataFromCloud();
-                } else {
-                    showLogin();
-                }
-            });
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
-            }
-        };
-
-        window.onload = () => {
+        const initializeAppFlow = async () => {
             document.getElementById('current-month-display').textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
             initHistoryDates();
-            startApp();
+
+            if (window.firebaseUtils?.auth) {
+                const { auth, onAuthStateChanged, signInWithCustomToken } = window.firebaseUtils;
+                
+                // Fallback for environment token
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
+                }
+                
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        authUserId = user.uid;
+                        showApp(user);
+                        loadDataFromCloud();
+                    } else {
+                        showLogin();
+                    }
+                });
+            } else {
+                showLogin();
+            }
         };
 
-        // Login / Logout Buttons
-        document.getElementById('btn-google-login').addEventListener('click', async () => {
-            if (!window.firebaseUtils?.auth) {
-                showToast("Still connecting to server, please wait a second...");
-                return;
-            }
+        window.onload = initializeAppFlow;
 
-            const btn = document.getElementById('btn-google-login'); 
-            btn.disabled = true; 
+        // Login Button
+        document.getElementById('btn-google-login').addEventListener('click', async () => {
+            if (!window.firebaseUtils?.auth) return alert("Firebase not configured!");
+            
+            const btn = document.getElementById('btn-google-login');
+            btn.disabled = true;
             document.getElementById('login-loading').classList.remove('hidden');
             
             const { auth, GoogleAuthProvider, signInWithPopup, setPersistence, browserLocalPersistence } = window.firebaseUtils;
@@ -1425,23 +1421,25 @@
             try {
                 await setPersistence(auth, browserLocalPersistence);
                 await signInWithPopup(auth, new GoogleAuthProvider());
-                // Once successful, onAuthStateChanged handles the screen switch automatically
-            } catch (err) { 
-                console.error("Login Error:", err);
-                showToast("Login cancelled or blocked. Please try again.");
-                btn.disabled = false; 
-                document.getElementById('login-loading').classList.add('hidden'); 
+            } catch (err) {
+                console.error("Login failed:", err);
+                showToast("Login cancelled or failed.");
+                btn.disabled = false;
+                document.getElementById('login-loading').classList.add('hidden');
             }
         });
 
+        // Logout Button
         document.getElementById('btn-logout').addEventListener('click', () => {
-            window.firebaseUtils.signOut(window.firebaseUtils.auth).then(() => {
-                authUserId = null; 
-                state.expenses = []; state.emis = []; state.creditCards = []; 
-                state.income = { salary: 0, incentive: 0, other: 0 }; 
-                state.accounts = { bank: 0, cash: 0 };
-                window.location.reload();
-            });
+            if (window.firebaseUtils?.auth) {
+                window.firebaseUtils.signOut(window.firebaseUtils.auth).then(() => {
+                    authUserId = null; 
+                    state.expenses = []; state.emis = []; state.creditCards = []; 
+                    state.income = { salary: 0, incentive: 0, other: 0 }; 
+                    state.accounts = { bank: 0, cash: 0 };
+                    window.location.reload();
+                });
+            }
         });
     </script>
 </body>
