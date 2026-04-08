@@ -717,21 +717,19 @@
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global State & Config
-        // Put your Gemini API Key here for deployment!
-        const GEMINI_API_KEY = "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw"; 
-        
-        const myFirebaseConfig = {
-            apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
-            authDomain: "financeflow-89cc0.firebaseapp.com",
-            projectId: "financeflow-89cc0",
-            storageBucket: "financeflow-89cc0.firebasestorage.app",
-            messagingSenderId: "123998162746",
-            appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03",
-            measurementId: "G-QVMJW4KSWP"
+        const GEMINI_API_KEY = ""; 
+        const defaultFirebaseConfig = {
+            apiKey: "dummy-key",
+            authDomain: "dummy.firebaseapp.com",
+            projectId: "dummy-project",
+            storageBucket: "dummy.firebasestorage.app",
+            messagingSenderId: "123",
+            appId: "1:123:web:123",
+            measurementId: "G-123"
         };
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-ultimate';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : defaultFirebaseConfig;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'finance-premium-ultimate-1';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -754,7 +752,7 @@
         };
 
         const CATS = {
-            expense: ["Food & Dining", "Housing & Rent", "Credit Card Bill", "Loan EMI", "Transportation", "Utilities", "Shopping", "Entertainment", "Healthcare", "Investment", "Other"],
+            expense: ["Food & Dining", "Housing & Rent", "Credit Card Bill", "Loan EMI", "Transportation", "Utilities", "Shopping", "Entertainment", "Investment", "Other"],
             income: ["Salary", "Business", "Investment Return", "Other"]
         };
 
@@ -797,6 +795,7 @@
             document.getElementById('sidebar')?.classList.add('-translate-x-full'); 
             document.getElementById('sidebar-overlay')?.classList.add('hidden');
             
+            // Re-render charts if they were hidden when updated
             if(viewId === 'dashboard' && state.expenseChart) state.expenseChart.update();
             if(viewId === 'dashboard' && state.trendChart) state.trendChart.update();
         };
@@ -815,15 +814,12 @@
                 document.getElementById('theme-icon').setAttribute('data-lucide', 'sun');
             }
             lucide.createIcons();
-            if(state.expenseChart) {
-                state.expenseChart.options.plugins.legend.labels.color = html.classList.contains('dark') ? '#94a3b8' : '#475569';
-                state.expenseChart.update();
-            }
+            if(state.expenseChart) state.expenseChart.options.plugins.legend.labels.color = html.classList.contains('dark') ? '#94a3b8' : '#475569';
+            if(state.expenseChart) state.expenseChart.update();
             if(state.trendChart) {
-                const color = html.classList.contains('dark') ? '#94a3b8' : '#475569';
-                state.trendChart.options.plugins.legend.labels.color = color;
-                state.trendChart.options.scales.x.ticks.color = color;
-                state.trendChart.options.scales.y.ticks.color = color;
+                state.trendChart.options.plugins.legend.labels.color = html.classList.contains('dark') ? '#94a3b8' : '#475569';
+                state.trendChart.options.scales.x.ticks.color = html.classList.contains('dark') ? '#94a3b8' : '#475569';
+                state.trendChart.options.scales.y.ticks.color = html.classList.contains('dark') ? '#94a3b8' : '#475569';
                 state.trendChart.update();
             }
         };
@@ -959,7 +955,7 @@
                 document.getElementById('loan-form').reset();
                 document.getElementById('add-loan-form').classList.add('hidden');
                 window.toggleTrackerFields();
-                showToast("Tracker Added Successfully"); 
+                showToast("Tracker Added"); 
                 document.activeElement.blur();
             } catch (err) { console.error(err); showToast("Failed to add tracker."); }
         };
@@ -970,6 +966,7 @@
             const cat = document.getElementById('budget-category').value;
             const limit = parseFloat(document.getElementById('budget-limit').value);
             try {
+                // Check if exists
                 const existing = state.budgets.find(b => b.category === cat);
                 if(existing) {
                     await updateDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'budgets', existing.id), { limit });
@@ -1103,6 +1100,7 @@
             } else {
                 trendEmpty.classList.add('hidden');
                 
+                // Calculate last 6 months
                 const monthlyData = {};
                 for(let i=5; i>=0; i--) {
                     const d = new Date(); d.setMonth(d.getMonth() - i);
@@ -1361,6 +1359,7 @@
 
         // --- AI FEATURES ---
         
+        // Convert file to base64
         const fileToGenerativePart = async (file) => {
             const base64EncodedDataPromise = new Promise((resolve) => {
                 const reader = new FileReader();
@@ -1390,7 +1389,6 @@
 
         window.fetchPersonalizedInsights = async (manual = false) => {
             if(state.monthTransactions.length === 0) return;
-            if(!GEMINI_API_KEY) return; // Prevent fail if key empty
             
             const btnRefresh = document.getElementById('btn-refresh-tips');
             if(manual && btnRefresh) {
@@ -1453,12 +1451,6 @@
                 return;
             }
 
-            if(!GEMINI_API_KEY) {
-                cont.innerHTML = "<p class='text-rose-500'>Please enter your Gemini API Key in the configuration.</p>"; card.classList.remove('hidden');
-                btn.disabled = false; btn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600"></i> Generate`; lucide.createIcons();
-                return;
-            }
-
             try {
                 const res = await callGemini({
                     contents: [{ parts: [{ text: `Write a financial report based on: ${getContextData()}` }] }],
@@ -1478,13 +1470,6 @@
             
             msgs.innerHTML += `<div class="flex gap-2 sm:gap-3 justify-end"><div class="text-xs sm:text-sm p-3.5 sm:p-4 rounded-[1.5rem] rounded-tr-sm bg-slate-900 dark:bg-indigo-600 text-white font-bold shadow-md max-w-[85%]">${text}</div></div>`;
             input.value = ''; msgs.scrollTop = msgs.scrollHeight;
-
-            if(!GEMINI_API_KEY) {
-                msgs.innerHTML += `<div class="flex gap-2 sm:gap-3"><div class="text-xs sm:text-sm p-3.5 sm:p-4 rounded-[1.5rem] rounded-tl-sm bg-rose-50 border border-rose-100 text-rose-600 font-medium shadow-sm max-w-[85%]">Please add your Gemini API Key.</div></div>`;
-                msgs.scrollTop = msgs.scrollHeight;
-                return;
-            }
-
             state.chatHistory.push({ role: 'user', parts: [{ text }] }); if(state.chatHistory.length > 6) state.chatHistory = state.chatHistory.slice(-6);
 
             try {
@@ -1501,7 +1486,6 @@
         // --- IMAGE RECEIPT SCANNER ---
         document.getElementById('receipt-upload')?.addEventListener('change', async (e) => {
             const file = e.target.files[0]; if (!file || !state.user) return;
-            if(!GEMINI_API_KEY) { showToast("Add Gemini API key first!"); return; }
             
             const icon = document.getElementById('receipt-icon');
             icon.setAttribute('data-lucide', 'loader-2'); icon.classList.add('animate-spin'); lucide.createIcons();
@@ -1511,7 +1495,7 @@
                 const payload = {
                     contents: [{
                         parts: [
-                            { text: "Extract transaction from this receipt. Return ONLY valid JSON matching exactly: {\"amount\": 120.50, \"description\": \"Merchant Name\", \"date\": \"2023-10-25\", \"category\": \"Food & Dining\"}. Categories allowed: Food & Dining, Housing & Rent, Shopping, Transportation, Utilities, Entertainment, Healthcare, Other." },
+                            { text: "Extract transaction from this receipt. Return ONLY valid JSON matching exactly: {\"amount\": 120.50, \"description\": \"Merchant Name\", \"date\": \"2023-10-25\", \"category\": \"Food & Dining\"}. Categories allowed: Food & Dining, Housing & Rent, Shopping, Transportation, Utilities, Entertainment, Other." },
                             imagePart
                         ]
                     }],
