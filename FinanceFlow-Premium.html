@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +34,7 @@
         // CONFIGURATION AREA
         // =====================================================================
         // ⚠️ NEVER HARDCODE A LIVE KEY IN PUBLIC CODE. Insert your NEW key here.
-        const OPENAI_API_KEY = "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"; 
+        const OPENAI_API_KEY = ""; 
 
         const myFirebaseConfig = {
             apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
@@ -189,7 +189,7 @@
                 <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                     <div class="flex justify-between items-start mb-2">
                         <p class="text-sm font-medium text-slate-500">Liquid Balance</p>
-                        <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></span>
+                        <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></span>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-bold text-slate-900" id="dash-liquid">₹0</h2>
                     <p class="text-xs text-slate-500 mt-2">Cash + Bank amounts</p>
@@ -744,7 +744,13 @@
     // EXPORT & REPORTING LOGIC (MANUAL PDF / CSV)
     // -----------------------------------------------------------
     window.exportReport = (formatType) => {
-        const expenses = [...state.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort expenses strictly by Category First, then by Date (descending)
+        const expenses = [...state.expenses].sort((a, b) => {
+            if (a.category !== b.category) {
+                return a.category.localeCompare(b.category);
+            }
+            return new Date(b.date) - new Date(a.date);
+        });
         
         const b = state.balances;
         const liquid = (b.bank || 0) + (b.cash || 0);
@@ -760,10 +766,10 @@
         const dateStr = new Date().toISOString().split('T')[0];
 
         if (formatType === 'csv') {
-            let csvContent = "Date,Description,Category,Payment Method,Amount (INR)\n";
+            let csvContent = "Category,Date,Description,Payment Method,Amount (INR)\n";
             expenses.forEach(e => {
                 let desc = (e.description || '').replace(/"/g, '""'); // Escape quotes
-                csvContent += `"${e.date}","${desc}","${e.category}","${e.payment}","${e.amount}"\n`;
+                csvContent += `"${e.category}","${e.date}","${desc}","${e.payment}","${e.amount}"\n`;
             });
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -779,6 +785,7 @@
             
         } else if (formatType === 'pdf') {
             try {
+                showToast('Generating PDF...');
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
                 
@@ -796,37 +803,129 @@
                 
                 doc.setFontSize(11);
                 doc.setTextColor(51, 65, 85); 
-                doc.text(`Total Assets: INR ${totalAssets}`, 14, 53);
-                doc.text(`Liquid Balance: INR ${liquid}`, 14, 60);
-                doc.text(`Total Credit Card Debt: INR ${ccDebt}`, 14, 67);
+                doc.text(`Total Assets: INR ${formatCurrency(totalAssets).replace('₹', '')}`, 14, 53);
+                doc.text(`Liquid Balance: INR ${formatCurrency(liquid).replace('₹', '')}`, 14, 60);
+                doc.text(`Total Credit Card Debt: INR ${formatCurrency(ccDebt).replace('₹', '')}`, 14, 67);
+                
+                let tableStartY = 75;
+
+                if (expenses.length > 0) {
+                    // Create hidden canvas area for high-res chart generation
+                    const chartDiv = document.createElement('div');
+                    chartDiv.style.width = '1800px';
+                    chartDiv.style.height = '800px';
+                    chartDiv.style.position = 'absolute';
+                    chartDiv.style.left = '-9999px';
+                    chartDiv.style.display = 'flex';
+                    document.body.appendChild(chartDiv);
+
+                    // --- 1. PIE CHART ---
+                    const canvasPie = document.createElement('canvas');
+                    canvasPie.width = 800; canvasPie.height = 800;
+                    chartDiv.appendChild(canvasPie);
+
+                    const catTotals = {};
+                    expenses.forEach(e => { catTotals[e.category] = (catTotals[e.category] || 0) + e.amount; });
+                    const pieLabels = Object.keys(catTotals);
+                    const pieData = Object.values(catTotals);
+                    const pieColors = pieLabels.map(c => getCategoryColor(c, 'hex'));
+
+                    const pieChart = new Chart(canvasPie, {
+                        type: 'pie',
+                        data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: pieColors }] },
+                        options: { 
+                            animation: false, responsive: false, 
+                            plugins: { 
+                                title: { display: true, text: 'Spending by Category', font: { size: 28 } }, 
+                                legend: { labels: { font: { size: 20 } } } 
+                            } 
+                        }
+                    });
+
+                    // --- 2. BAR CHART (DAILY/WEEKLY AVG) ---
+                    const canvasBar = document.createElement('canvas');
+                    canvasBar.width = 1000; canvasBar.height = 800;
+                    chartDiv.appendChild(canvasBar);
+
+                    const dailyTotals = {};
+                    let totalSpend = 0;
+                    let activeDays = new Set();
+                    
+                    expenses.forEach(e => {
+                        dailyTotals[e.date] = (dailyTotals[e.date] || 0) + e.amount;
+                        totalSpend += e.amount;
+                        activeDays.add(e.date);
+                    });
+                    
+                    const sortedDates = Object.keys(dailyTotals).sort();
+                    const barData = sortedDates.map(d => dailyTotals[d]);
+                    const avgSpend = activeDays.size > 0 ? (totalSpend / activeDays.size).toFixed(0) : 0;
+
+                    const barLabels = sortedDates.map(d => {
+                        const dt = new Date(d);
+                        return `${dt.toLocaleString('default', { month: 'short' })} ${dt.getDate()}`;
+                    });
+
+                    const barChart = new Chart(canvasBar, {
+                        type: 'bar',
+                        data: { labels: barLabels, datasets: [{ label: 'Daily Spend (INR)', data: barData, backgroundColor: '#10b981' }] },
+                        options: { 
+                            animation: false, 
+                            responsive: false, 
+                            plugins: { 
+                                title: { display: true, text: `Daily Spend (Avg: ₹${avgSpend}/active day)`, font: { size: 28 } },
+                                legend: { labels: { font: { size: 20 } } }
+                            },
+                            scales: {
+                                y: { ticks: { font: { size: 18 } } },
+                                x: { ticks: { font: { size: 18 } } }
+                            }
+                        }
+                    });
+
+                    // Capture Base64
+                    const pieImg = pieChart.toBase64Image();
+                    const barImg = barChart.toBase64Image();
+
+                    // Cleanup
+                    pieChart.destroy();
+                    barChart.destroy();
+                    document.body.removeChild(chartDiv);
+
+                    // Add to PDF Document
+                    doc.addImage(pieImg, 'PNG', 10, 80, 80, 80);
+                    doc.addImage(barImg, 'PNG', 100, 80, 100, 80);
+                    
+                    tableStartY = 175; // Push table down below the charts
+                }
                 
                 doc.setFontSize(14);
                 doc.setTextColor(15, 23, 42);
-                doc.text("Transaction History", 14, 82);
+                doc.text("Transaction History (Sorted by Category)", 14, tableStartY - 5);
                 
                 if (expenses.length > 0) {
                     doc.autoTable({
-                        startY: 88,
-                        head: [['Date', 'Description', 'Category', 'Method', 'Amount (INR)']],
+                        startY: tableStartY,
+                        head: [['Category', 'Date', 'Description', 'Method', 'Amount (INR)']],
                         body: expenses.map(e => [
+                            e.category,
                             formatDate(e.date), 
                             e.description, 
-                            e.category, 
                             e.payment, 
                             e.amount
                         ]),
                         headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
                         alternateRowStyles: { fillColor: [248, 250, 252] },
-                        margin: { top: 10 }
+                        margin: { top: 15 }
                     });
                 } else {
                     doc.setFontSize(11);
                     doc.setTextColor(100);
-                    doc.text("No transactions logged yet.", 14, 88);
+                    doc.text("No transactions logged yet.", 14, tableStartY);
                 }
                 
                 doc.save(`FinanceFlow_Report_${dateStr}.pdf`);
-                showToast('PDF Report Downloaded');
+                showToast('PDF Report Downloaded Successfully');
             } catch (err) {
                 console.error("PDF Generation Error: ", err);
                 showToast('Failed to generate PDF. Try CSV instead.');
