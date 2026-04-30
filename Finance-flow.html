@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +10,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -27,7 +33,8 @@
         // =====================================================================
         // CONFIGURATION AREA
         // =====================================================================
-        const GEMINI_API_KEY = ""; // Kept empty as per instructions
+        // Read the API key securely from local storage instead of hardcoding
+        const savedGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
         const myFirebaseConfig = {
             apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
@@ -42,7 +49,6 @@
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'github-finance-app';
-        const activeGeminiKey = GEMINI_API_KEY || "";
 
         let app, auth, db;
         try {
@@ -54,7 +60,7 @@
         }
 
         window.firebaseUtils = {
-            db, auth, appId, activeGeminiKey,
+            db, auth, appId, activeGeminiKey: savedGeminiKey,
             GoogleAuthProvider, signInWithPopup, signInAnonymously,
             setPersistence, browserLocalPersistence,
             signOut, onAuthStateChanged,
@@ -126,6 +132,9 @@
                 <button onclick="openModal('expense-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     <span class="hidden sm:inline">Add Expense</span>
+                </button>
+                <button onclick="setAPIKey()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2 flex items-center gap-1" title="Set Gemini API Key">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-3.252a2 2 0 01.586-1.414l5.518-5.518A6 6 0 0117 9z" /></svg>
                 </button>
                 <button onclick="openModal('reset-modal')" class="text-slate-400 hover:text-rose-500 transition-colors p-2" title="Reset Month">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -270,12 +279,24 @@
                 <div class="lg:col-span-2 flex flex-col gap-6 sm:gap-8">
                     <!-- Expense Chart -->
                     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 relative flex flex-col">
-                        <div class="w-full flex justify-between items-center mb-4 z-20">
+                        <div class="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 z-20">
                             <h3 class="text-lg font-semibold text-slate-900">Current Month Spending</h3>
-                            <button onclick="openReportModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
-                                AI Report
-                            </button>
+                            
+                            <!-- Export and Report Action Buttons -->
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button onclick="exportReport('csv')" class="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5" title="Download CSV Report">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    CSV
+                                </button>
+                                <button onclick="exportReport('pdf')" class="bg-rose-600 hover:bg-rose-700 text-white shadow-md hover:shadow-lg px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5" title="Download PDF Report">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    PDF
+                                </button>
+                                <button onclick="openReportModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
+                                    Gemini AI
+                                </button>
+                            </div>
                         </div>
                         <div class="relative h-64 w-full flex justify-center z-20" id="canvas-wrapper">
                             <div id="chart-empty-state" class="absolute inset-0 flex flex-col items-center justify-center text-slate-400 bg-slate-50/50 rounded-2xl z-10 hidden">
@@ -387,7 +408,7 @@
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
-                    <h3 class="font-semibold text-sm">AI Assistant</h3>
+                    <h3 class="font-semibold text-sm">Gemini AI Assistant</h3>
                 </div>
                 <button onclick="toggleChat()" class="text-indigo-100 hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -395,7 +416,7 @@
             </div>
             <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
                 <div class="flex flex-col gap-1 items-start">
-                    <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Hi! I can analyze your spending and debt. What do you want to know?</div>
+                    <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Hi! I can analyze your spending and debt. Make sure your Gemini API Key is set via the key icon in the header first!</div>
                 </div>
             </div>
             <div class="p-3 bg-white border-t border-slate-100 rounded-b-2xl flex items-center gap-2 shrink-0">
@@ -559,7 +580,7 @@
 
 <script>
     // -----------------------------------------------------------
-    // STATE & CORE VARIABLES
+    // STATE & CORE VARIABLES (DO NOT MODIFY FIREBASE STATE STRUCT)
     // -----------------------------------------------------------
     let state = {
         balances: { bank: 0, cash: 0, savings: 0, invest: 0 },
@@ -576,7 +597,21 @@
     let authUserId     = null;
     let chatHistory    = [];
     const MAX_CHAT_HISTORY = 10;
-    const GEMINI_MODELS = ['gemini-2.5-flash-preview-09-2025'];
+    
+    // EXPLICITLY USE ONLY THE STANDARD FREE MODEL to prevent "Not Found" errors
+    const GEMINI_MODELS = ['gemini-1.5-flash'];
+    let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
+
+    // Set Gemini Key manually via prompt
+    window.setAPIKey = () => {
+        const key = prompt("Enter your Gemini API Key to enable AI features:");
+        if (key) {
+            localStorage.setItem('my_gemini_key', key.trim());
+            activeGeminiKey = key.trim();
+            if(window.firebaseUtils) window.firebaseUtils.activeGeminiKey = activeGeminiKey;
+            showToast("API Key saved securely to browser!");
+        }
+    };
 
     // -----------------------------------------------------------
     // UTILS
@@ -717,6 +752,199 @@
         btn.classList.remove('border-transparent', 'text-slate-500');
         btn.classList.add('border-indigo-600', 'text-indigo-600');
         if (tabId === 'history') filterHistory();
+    };
+
+    // -----------------------------------------------------------
+    // EXPORT & REPORTING LOGIC (MANUAL PDF / CSV)
+    // -----------------------------------------------------------
+    window.exportReport = (formatType) => {
+        // Sort expenses strictly by Category First, then by Date (descending)
+        const expenses = [...state.expenses].sort((a, b) => {
+            if (a.category !== b.category) {
+                return a.category.localeCompare(b.category);
+            }
+            return new Date(b.date) - new Date(a.date);
+        });
+        
+        const b = state.balances;
+        const liquid = (b.bank || 0) + (b.cash || 0);
+        const totalAssets = liquid + (b.savings || 0) + (b.invest || 0);
+        
+        let ccDebt = 0;
+        state.creditCards.forEach(cc => {
+            const spent = state.expenses.filter(e => e.payment === 'Credit Card' && e.ccId === cc.id).reduce((s,e)=>s+e.amount,0);
+            const paid = state.ccPayments.filter(p => p.ccId === cc.id).reduce((s,p)=>s+p.amount,0);
+            ccDebt += Math.max(0, cc.due + spent - paid);
+        });
+
+        const dateStr = new Date().toISOString().split('T')[0];
+
+        if (formatType === 'csv') {
+            let csvContent = "Category,Date,Description,Payment Method,Amount (INR)\n";
+            expenses.forEach(e => {
+                let desc = (e.description || '').replace(/"/g, '""'); // Escape quotes
+                csvContent += `"${e.category}","${e.date}","${desc}","${e.payment}","${e.amount}"\n`;
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `FinanceFlow_Report_${dateStr}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('CSV Report Downloaded');
+            
+        } else if (formatType === 'pdf') {
+            try {
+                showToast('Generating PDF...');
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(22);
+                doc.setTextColor(79, 70, 229); 
+                doc.text("FinanceFlow Financial Report", 14, 22);
+                
+                doc.setFontSize(11);
+                doc.setTextColor(100);
+                doc.text(`Generated on: ${new Date().toLocaleString('en-IN')}`, 14, 30);
+                
+                doc.setFontSize(14);
+                doc.setTextColor(15, 23, 42); 
+                doc.text("Current Financial Snapshot", 14, 45);
+                
+                doc.setFontSize(11);
+                doc.setTextColor(51, 65, 85); 
+                doc.text(`Total Assets: INR ${formatCurrency(totalAssets).replace('₹', '')}`, 14, 53);
+                doc.text(`Liquid Balance: INR ${formatCurrency(liquid).replace('₹', '')}`, 14, 60);
+                doc.text(`Total Credit Card Debt: INR ${formatCurrency(ccDebt).replace('₹', '')}`, 14, 67);
+                
+                let tableStartY = 75;
+
+                if (expenses.length > 0) {
+                    // Create hidden canvas area for high-res chart generation
+                    const chartDiv = document.createElement('div');
+                    chartDiv.style.width = '1800px';
+                    chartDiv.style.height = '800px';
+                    chartDiv.style.position = 'absolute';
+                    chartDiv.style.left = '-9999px';
+                    chartDiv.style.display = 'flex';
+                    document.body.appendChild(chartDiv);
+
+                    // --- 1. PIE CHART ---
+                    const canvasPie = document.createElement('canvas');
+                    canvasPie.width = 800; canvasPie.height = 800;
+                    chartDiv.appendChild(canvasPie);
+
+                    const catTotals = {};
+                    expenses.forEach(e => { catTotals[e.category] = (catTotals[e.category] || 0) + e.amount; });
+                    const pieLabels = Object.keys(catTotals);
+                    const pieData = Object.values(catTotals);
+                    const pieColors = pieLabels.map(c => getCategoryColor(c, 'hex'));
+
+                    const pieChart = new Chart(canvasPie, {
+                        type: 'pie',
+                        data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: pieColors }] },
+                        options: { 
+                            animation: false, responsive: false, 
+                            plugins: { 
+                                title: { display: true, text: 'Spending by Category', font: { size: 28 } }, 
+                                legend: { labels: { font: { size: 20 } } } 
+                            } 
+                        }
+                    });
+
+                    // --- 2. BAR CHART (DAILY/WEEKLY AVG) ---
+                    const canvasBar = document.createElement('canvas');
+                    canvasBar.width = 1000; canvasBar.height = 800;
+                    chartDiv.appendChild(canvasBar);
+
+                    const dailyTotals = {};
+                    let totalSpend = 0;
+                    let activeDays = new Set();
+                    
+                    expenses.forEach(e => {
+                        dailyTotals[e.date] = (dailyTotals[e.date] || 0) + e.amount;
+                        totalSpend += e.amount;
+                        activeDays.add(e.date);
+                    });
+                    
+                    const sortedDates = Object.keys(dailyTotals).sort();
+                    const barData = sortedDates.map(d => dailyTotals[d]);
+                    const avgSpend = activeDays.size > 0 ? (totalSpend / activeDays.size).toFixed(0) : 0;
+
+                    const barLabels = sortedDates.map(d => {
+                        const dt = new Date(d);
+                        return `${dt.toLocaleString('default', { month: 'short' })} ${dt.getDate()}`;
+                    });
+
+                    const barChart = new Chart(canvasBar, {
+                        type: 'bar',
+                        data: { labels: barLabels, datasets: [{ label: 'Daily Spend (INR)', data: barData, backgroundColor: '#10b981' }] },
+                        options: { 
+                            animation: false, 
+                            responsive: false, 
+                            plugins: { 
+                                title: { display: true, text: `Daily Spend (Avg: ₹${avgSpend}/active day)`, font: { size: 28 } },
+                                legend: { labels: { font: { size: 20 } } }
+                            },
+                            scales: {
+                                y: { ticks: { font: { size: 18 } } },
+                                x: { ticks: { font: { size: 18 } } }
+                            }
+                        }
+                    });
+
+                    // Capture Base64
+                    const pieImg = pieChart.toBase64Image();
+                    const barImg = barChart.toBase64Image();
+
+                    // Cleanup
+                    pieChart.destroy();
+                    barChart.destroy();
+                    document.body.removeChild(chartDiv);
+
+                    // Add to PDF Document
+                    doc.addImage(pieImg, 'PNG', 10, 80, 80, 80);
+                    doc.addImage(barImg, 'PNG', 100, 80, 100, 80);
+                    
+                    tableStartY = 175; // Push table down below the charts
+                }
+                
+                doc.setFontSize(14);
+                doc.setTextColor(15, 23, 42);
+                doc.text("Transaction History (Sorted by Category)", 14, tableStartY - 5);
+                
+                if (expenses.length > 0) {
+                    doc.autoTable({
+                        startY: tableStartY,
+                        head: [['Category', 'Date', 'Description', 'Method', 'Amount (INR)']],
+                        body: expenses.map(e => [
+                            e.category,
+                            formatDate(e.date), 
+                            e.description, 
+                            e.payment, 
+                            e.amount
+                        ]),
+                        headStyles: { fillColor: [79, 70, 229], textColor: [255, 255, 255] },
+                        alternateRowStyles: { fillColor: [248, 250, 252] },
+                        margin: { top: 15 }
+                    });
+                } else {
+                    doc.setFontSize(11);
+                    doc.setTextColor(100);
+                    doc.text("No transactions logged yet.", 14, tableStartY);
+                }
+                
+                doc.save(`FinanceFlow_Report_${dateStr}.pdf`);
+                showToast('PDF Report Downloaded Successfully');
+            } catch (err) {
+                console.error("PDF Generation Error: ", err);
+                showToast('Failed to generate PDF. Try CSV instead.');
+            }
+        }
     };
 
     // -----------------------------------------------------------
@@ -1053,26 +1281,45 @@
     };
 
     // -----------------------------------------------------------
-    // GEMINI AI
+    // GEMINI AI INTEGRATION
     // -----------------------------------------------------------
     const fetchGemini = async (payload) => {
-        const key = window.firebaseUtils?.activeGeminiKey || '';
+        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
         if (!key) throw new Error('NO_API_KEY');
+        
+        let errorMessage = 'FAILED';
         for (const model of GEMINI_MODELS) {
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                
                 const data = await res.json();
-                if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return data.candidates[0].content.parts[0].text;
-            } catch (err) { console.warn(err); }
+                
+                if (data.error) {
+                    errorMessage = data.error.message;
+                    console.error(`Gemini API Error (${model}):`, data.error);
+                    continue; 
+                }
+                
+                if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            } catch (err) { 
+                console.warn("Fetch error:", err); 
+                errorMessage = err.message;
+            }
         }
-        throw new Error('FAILED');
+        throw new Error(errorMessage);
     };
 
     window.openReportModal = async () => {
         openModal('report-modal');
         const container = document.getElementById('report-insights-container');
         const bars = document.getElementById('report-bars-container');
-        bars.innerHTML = ''; container.innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-slate-400"><svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing data...</p></div>`;
+        bars.innerHTML = ''; container.innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-slate-400"><svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing spending patterns...</p></div>`;
 
         const curExp = state.expenses.filter(e => isCurrentMonth(e.date));
         const total = curExp.reduce((s,e)=>s+e.amount,0);
@@ -1083,22 +1330,23 @@
             bars.innerHTML += `<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span class="font-medium text-slate-700">${cat}</span><span class="text-slate-500">${formatCurrency(amt)} (${pct}%)</span></div><div class="w-full h-2 rounded-full" style="background-color:${getCategoryColor(cat,'bgHex')}"><div class="h-2 rounded-full" style="width:${pct}%;background-color:${getCategoryColor(cat,'hex')}"></div></div></div>`;
         });
 
-        if (!window.firebaseUtils?.activeGeminiKey) {
-            container.innerHTML = `<div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-700">Add Gemini API Key to see AI insights.</div>`;
+        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
+        if (!key) {
+            container.innerHTML = `<div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-700">Click the Key icon in the top right to set your Gemini API Key and see AI insights.</div>`;
             return;
         }
 
         try {
-            const prompt = `Act as a financial advisor. Networth: ${document.getElementById('dash-networth').textContent}. Expenses: ${JSON.stringify(cats)}. Return JSON array of 3 objects: {icon: "emoji", text: "insight string", color: "text-indigo-600", bg: "bg-indigo-50"}`;
+            const prompt = `Act as a financial advisor. Networth: ${document.getElementById('dash-networth').textContent}. Expenses: ${JSON.stringify(cats)}. Return JSON array of 3 objects with exact keys: "icon" (emoji), "text" (insight string), "color" (use "text-indigo-600"), "bg" (use "bg-indigo-50").`;
             const raw = await fetchGemini({ contents:[{parts:[{text:prompt}]}], generationConfig: { responseMimeType: "application/json" } });
             const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
             container.innerHTML = data.map(i=>`<div class="${i.bg} border border-white p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
         } catch(e) {
-            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Could not generate AI insights.</div>`;
+            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Error: ${e.message}. Check API Key and console.</div>`;
         }
     };
 
-    // Chat
+    // Chat Interface
     window.toggleChat = () => {
         const w = document.getElementById('chat-window');
         if (w.classList.contains('hidden')) {
@@ -1120,13 +1368,15 @@
         msgDiv.appendChild(typing); msgDiv.scrollTop = msgDiv.scrollHeight;
 
         chatHistory.push({role:'user',parts:[{text}]});
+        
         try {
-            const aiText = await fetchGemini({ systemInstruction:{parts:[{text:`You are FinanceFlow AI. Summarize data: ${JSON.stringify(state)}. Keep answers short.`}]}, contents:chatHistory.slice(-6) });
+            const aiText = await fetchGemini({ systemInstruction:{parts:[{text:`You are FinanceFlow AI powered by Gemini. Summarize data: ${JSON.stringify(state)}. Keep answers short.`}]}, contents:chatHistory.slice(-MAX_CHAT_HISTORY) });
             typing.remove(); chatHistory.push({role:'model',parts:[{text:aiText}]});
             msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">${aiText}</div></div>`;
         } catch(e) {
             typing.remove(); chatHistory.pop();
-            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Error connecting to AI. Please ensure you have an API key configured.</div></div>`;
+            const errMsg = e.message === 'NO_API_KEY' ? 'Please ensure you have set your Gemini API key via the Key icon in the header.' : e.message;
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Error: ${errMsg}</div></div>`;
         }
         document.getElementById('chat-send-btn').disabled=false; inp.focus(); msgDiv.scrollTop = msgDiv.scrollHeight;
     };
@@ -1178,5 +1428,6 @@
 </script>
 </body>
 </html>
+
 
 ```
