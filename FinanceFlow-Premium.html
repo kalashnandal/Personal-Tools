@@ -598,8 +598,8 @@
     let chatHistory    = [];
     const MAX_CHAT_HISTORY = 10;
     
-    // Changed to standard, publicly available Gemini models
-    const GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro'];
+    // EXPLICITLY USE ONLY THE STANDARD FREE MODEL to prevent "Not Found" errors
+    const GEMINI_MODELS = ['gemini-1.5-flash'];
     let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
     // Set Gemini Key manually via prompt
