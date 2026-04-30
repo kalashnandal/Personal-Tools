@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -598,8 +598,14 @@
     let chatHistory    = [];
     const MAX_CHAT_HISTORY = 10;
     
-    // EXPLICITLY USE ONLY THE STANDARD FREE MODEL to prevent "Not Found" errors
-    const GEMINI_MODELS = ['gemini-1.5-flash'];
+    // WATERFALL FALLBACK: If one alias fails (due to key restrictions or region), it tries the next one.
+    const GEMINI_MODELS = [
+        'gemini-1.5-flash-latest', 
+        'gemini-1.5-flash', 
+        'gemini-1.5-flash-8b', 
+        'gemini-1.0-pro', 
+        'gemini-pro'
+    ];
     let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
     // Set Gemini Key manually via prompt
@@ -1281,7 +1287,7 @@
     };
 
     // -----------------------------------------------------------
-    // GEMINI AI INTEGRATION
+    // GEMINI AI INTEGRATION (WATERFALL FALLBACK)
     // -----------------------------------------------------------
     const fetchGemini = async (payload) => {
         const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
@@ -1300,19 +1306,19 @@
                 
                 if (data.error) {
                     errorMessage = data.error.message;
-                    console.error(`Gemini API Error (${model}):`, data.error);
-                    continue; 
+                    console.warn(`Gemini API Failed (${model}):`, data.error.message);
+                    continue; // Immediately try the next model
                 }
                 
                 if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
                     return data.candidates[0].content.parts[0].text;
                 }
             } catch (err) { 
-                console.warn("Fetch error:", err); 
+                console.warn(`Fetch error for ${model}:`, err); 
                 errorMessage = err.message;
             }
         }
-        throw new Error(errorMessage);
+        throw new Error(errorMessage); // Only throws if ALL models fail
     };
 
     window.openReportModal = async () => {
