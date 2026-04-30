@@ -33,8 +33,8 @@
         // =====================================================================
         // CONFIGURATION AREA
         // =====================================================================
-        // ⚠️ NEVER HARDCODE A LIVE KEY IN PUBLIC CODE. Insert your NEW key here.
-        const OPENAI_API_KEY = ""; 
+        // Read the API key securely from local storage instead of hardcoding
+        const savedGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
         const myFirebaseConfig = {
             apiKey: "AIzaSyDbPhsf7pISkrs9f6c3_sUGKRoC5XHIRmw",
@@ -49,7 +49,6 @@
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'github-finance-app';
-        const activeOpenAIKey = OPENAI_API_KEY || "";
 
         let app, auth, db;
         try {
@@ -61,7 +60,7 @@
         }
 
         window.firebaseUtils = {
-            db, auth, appId, activeOpenAIKey,
+            db, auth, appId, activeGeminiKey: savedGeminiKey,
             GoogleAuthProvider, signInWithPopup, signInAnonymously,
             setPersistence, browserLocalPersistence,
             signOut, onAuthStateChanged,
@@ -134,6 +133,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     <span class="hidden sm:inline">Add Expense</span>
                 </button>
+                <button onclick="setAPIKey()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2 flex items-center gap-1" title="Set Gemini API Key">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-3.252a2 2 0 01.586-1.414l5.518-5.518A6 6 0 0117 9z" /></svg>
+                </button>
                 <button onclick="openModal('reset-modal')" class="text-slate-400 hover:text-rose-500 transition-colors p-2" title="Reset Month">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
@@ -189,7 +191,7 @@
                 <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
                     <div class="flex justify-between items-start mb-2">
                         <p class="text-sm font-medium text-slate-500">Liquid Balance</p>
-                        <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></span>
+                        <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></span>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-bold text-slate-900" id="dash-liquid">₹0</h2>
                     <p class="text-xs text-slate-500 mt-2">Cash + Bank amounts</p>
@@ -291,8 +293,8 @@
                                     PDF
                                 </button>
                                 <button onclick="openReportModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md hover:shadow-lg px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
-                                    ChatGPT AI
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
+                                    Gemini AI
                                 </button>
                             </div>
                         </div>
@@ -403,30 +405,30 @@
     <!-- FLOATING CHAT WIDGET -->
     <div id="chat-widget" class="fixed bottom-6 right-4 sm:right-6 z-40 flex flex-col items-end">
         <div id="chat-window" class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-[calc(100vw-32px)] sm:w-96 h-[450px] max-h-[80vh] flex flex-col mb-4 hidden transform transition-all origin-bottom-right scale-95 opacity-0">
-            <div class="bg-gradient-to-r from-emerald-600 to-teal-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-200" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
-                    <h3 class="font-semibold text-sm">ChatGPT Assistant</h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
+                    <h3 class="font-semibold text-sm">Gemini AI Assistant</h3>
                 </div>
-                <button onclick="toggleChat()" class="text-emerald-100 hover:text-white transition-colors">
+                <button onclick="toggleChat()" class="text-indigo-100 hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
             <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
                 <div class="flex flex-col gap-1 items-start">
-                    <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Hi! I'm your ChatGPT financial assistant. What do you want to know about your finances?</div>
+                    <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Hi! I can analyze your spending and debt. Make sure your Gemini API Key is set via the key icon in the header first!</div>
                 </div>
             </div>
             <div class="p-3 bg-white border-t border-slate-100 rounded-b-2xl flex items-center gap-2 shrink-0">
-                <input type="text" id="chat-input" class="flex-grow bg-slate-100 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-sm rounded-xl px-4 py-2.5 outline-none transition-all" placeholder="Ask about finances...">
-                <button id="chat-send-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl transition-colors shrink-0 disabled:opacity-50">
+                <input type="text" id="chat-input" class="flex-grow bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm rounded-xl px-4 py-2.5 outline-none transition-all" placeholder="Ask about finances...">
+                <button id="chat-send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl transition-colors shrink-0 disabled:opacity-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                 </button>
             </div>
         </div>
-        <button onclick="toggleChat()" id="chat-toggle-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl p-3 sm:p-4 rounded-full transition-all transform hover:-translate-y-1 flex items-center justify-center relative">
+        <button onclick="toggleChat()" id="chat-toggle-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl p-3 sm:p-4 rounded-full transition-all transform hover:-translate-y-1 flex items-center justify-center relative">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-            <span class="absolute top-0 right-0 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-emerald-600"></span></span>
+            <span class="absolute top-0 right-0 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-yellow-400 border-2 border-indigo-600"></span></span>
         </button>
     </div>
 </div>
@@ -554,14 +556,14 @@
 <!-- AI REPORT MODAL -->
 <div id="report-modal" class="modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-2xl h-[90vh] sm:h-[80vh] flex flex-col overflow-hidden">
-        <div class="bg-gradient-to-r from-emerald-600 to-teal-700 p-5 sm:p-6 text-white flex justify-between items-center shrink-0">
-            <div><h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-emerald-200" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg> ChatGPT AI Insights</h2></div>
-            <button onclick="closeModal('report-modal')" class="text-white hover:text-emerald-200 bg-white/10 p-2 rounded-full"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+        <div class="bg-gradient-to-r from-indigo-700 to-purple-800 p-5 sm:p-6 text-white flex justify-between items-center shrink-0">
+            <div><h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg> Gemini AI Insights</h2></div>
+            <button onclick="closeModal('report-modal')" class="text-white hover:text-indigo-200 bg-white/10 p-2 rounded-full"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
         <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-grow space-y-6">
             <div id="report-insights-container" class="space-y-3">
                 <div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-slate-400">
-                    <svg class="animate-spin h-8 w-8 text-emerald-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     <p class="text-sm font-medium">Analyzing spending patterns...</p>
                 </div>
             </div>
@@ -596,8 +598,20 @@
     let chatHistory    = [];
     const MAX_CHAT_HISTORY = 10;
     
-    // We default to the standard endpoints/models but you can change this to match your specific model access
-    const OPENAI_MODEL = "gpt-4o-mini";
+    // Gemini Settings
+    const GEMINI_MODELS = ['gemini-2.5-flash-preview-09-2025'];
+    let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
+
+    // Set Gemini Key manually via prompt
+    window.setAPIKey = () => {
+        const key = prompt("Enter your Gemini API Key to enable AI features:");
+        if (key) {
+            localStorage.setItem('my_gemini_key', key.trim());
+            activeGeminiKey = key.trim();
+            if(window.firebaseUtils) window.firebaseUtils.activeGeminiKey = activeGeminiKey;
+            showToast("API Key saved securely to browser!");
+        }
+    };
 
     // -----------------------------------------------------------
     // UTILS
@@ -1267,55 +1281,26 @@
     };
 
     // -----------------------------------------------------------
-    // OPENAI CHATGPT API INTEGRATION
+    // GEMINI AI INTEGRATION
     // -----------------------------------------------------------
-    const fetchOpenAI = async (systemPrompt, messages, responseFormat = "text") => {
-        const key = window.firebaseUtils?.activeOpenAIKey || '';
+    const fetchGemini = async (payload) => {
+        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
         if (!key) throw new Error('NO_API_KEY');
-
-        // Prepare the standard OpenAI Messages array structure
-        const formattedMessages = [];
-        if (systemPrompt) {
-            formattedMessages.push({ role: "system", content: systemPrompt });
+        for (const model of GEMINI_MODELS) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (data?.candidates?.[0]?.content?.parts?.[0]?.text) return data.candidates[0].content.parts[0].text;
+            } catch (err) { console.warn(err); }
         }
-        
-        // Append all incoming user/assistant messages
-        formattedMessages.push(...messages);
-
-        const payload = {
-            model: OPENAI_MODEL, // e.g. "gpt-4o-mini"
-            messages: formattedMessages
-        };
-
-        // Enforce JSON parsing if strictly requested
-        if (responseFormat === "json") {
-            payload.response_format = { type: "json_object" };
-        }
-
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${key}`
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-        
-        if (data.error) {
-            console.error("OpenAI Error:", data.error);
-            throw new Error(data.error.message || 'API Error');
-        }
-
-        return data.choices[0].message.content;
+        throw new Error('FAILED');
     };
 
     window.openReportModal = async () => {
         openModal('report-modal');
         const container = document.getElementById('report-insights-container');
         const bars = document.getElementById('report-bars-container');
-        bars.innerHTML = ''; container.innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-slate-400"><svg class="animate-spin h-8 w-8 text-emerald-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing data via ChatGPT...</p></div>`;
+        bars.innerHTML = ''; container.innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-slate-400"><svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing spending patterns...</p></div>`;
 
         const curExp = state.expenses.filter(e => isCurrentMonth(e.date));
         const total = curExp.reduce((s,e)=>s+e.amount,0);
@@ -1326,32 +1311,19 @@
             bars.innerHTML += `<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span class="font-medium text-slate-700">${cat}</span><span class="text-slate-500">${formatCurrency(amt)} (${pct}%)</span></div><div class="w-full h-2 rounded-full" style="background-color:${getCategoryColor(cat,'bgHex')}"><div class="h-2 rounded-full" style="width:${pct}%;background-color:${getCategoryColor(cat,'hex')}"></div></div></div>`;
         });
 
-        if (!window.firebaseUtils?.activeOpenAIKey) {
-            container.innerHTML = `<div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-700">Add an OpenAI API Key in the configuration to see AI insights.</div>`;
+        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
+        if (!key) {
+            container.innerHTML = `<div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-700">Click the Key icon in the top right to set your Gemini API Key and see AI insights.</div>`;
             return;
         }
 
         try {
-            // Updated Prompt string to strictly ask for valid JSON format compliant with OpenAI JSON mode
-            const prompt = `Act as a financial advisor. Networth: ${document.getElementById('dash-networth').textContent}. Expenses: ${JSON.stringify(cats)}. You must return ONLY valid JSON containing an object with an "insights" array. The array must contain 3 objects with exact keys: "icon" (emoji), "text" (insight string), "color" (use "text-emerald-600"), and "bg" (use "bg-emerald-50").`;
-            
-            const rawOutput = await fetchOpenAI("", [{ role: "user", content: prompt }], "json");
-            
-            // Clean markdown wrappings just in case
-            const cleanedOutput = rawOutput.replace(/```json|```/g,'').trim();
-            const parsedData = JSON.parse(cleanedOutput);
-            
-            // Handle if OpenAI returned array directly or wrapped it in an object
-            const insightsArray = Array.isArray(parsedData) ? parsedData : (parsedData.insights || []);
-            
-            if (insightsArray.length > 0) {
-                container.innerHTML = insightsArray.map(i=>`<div class="${i.bg} border border-emerald-100 p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
-            } else {
-                 container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Failed to parse JSON insight structure.</div>`;
-            }
+            const prompt = `Act as a financial advisor. Networth: ${document.getElementById('dash-networth').textContent}. Expenses: ${JSON.stringify(cats)}. Return JSON array of 3 objects with exact keys: "icon" (emoji), "text" (insight string), "color" (use "text-indigo-600"), "bg" (use "bg-indigo-50").`;
+            const raw = await fetchGemini({ contents:[{parts:[{text:prompt}]}], generationConfig: { responseMimeType: "application/json" } });
+            const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+            container.innerHTML = data.map(i=>`<div class="${i.bg} border border-white p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
         } catch(e) {
-            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Could not generate ChatGPT insights. Check API Key and console.</div>`;
-            console.error(e);
+            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Could not generate AI insights. Check API Key and console.</div>`;
         }
     };
 
@@ -1369,32 +1341,22 @@
         const text = inp.value.trim(); if(!text) return;
         const msgDiv = document.getElementById('chat-messages');
         
-        msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-end"><div class="text-sm p-3 bg-emerald-600 text-white rounded-2xl rounded-tr-sm shadow-sm max-w-[85%]">${text}</div></div>`;
+        msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-end"><div class="text-sm p-3 bg-indigo-600 text-white rounded-2xl rounded-tr-sm shadow-sm max-w-[85%]">${text}</div></div>`;
         inp.value=''; document.getElementById('chat-send-btn').disabled=true;
         
         const typing = document.createElement('div'); typing.id='typing';
         typing.innerHTML=`<div class="flex flex-col gap-1 w-full items-start"><div class="bg-white border border-slate-200 p-3 rounded-2xl shadow-sm max-w-[85%] flex gap-1 h-10"><svg height="8" width="32" class="opacity-70"><circle class="typing-dot" cx="4" cy="4" r="3"/><circle class="typing-dot" cx="16" cy="4" r="3"/><circle class="typing-dot" cx="28" cy="4" r="3"/></svg></div></div>`;
         msgDiv.appendChild(typing); msgDiv.scrollTop = msgDiv.scrollHeight;
 
-        // Using standard OpenAI roles ('user', 'assistant')
-        chatHistory.push({ role: 'user', content: text });
+        chatHistory.push({role:'user',parts:[{text}]});
         
         try {
-            const systemText = `You are FinanceFlow AI powered by ChatGPT. Summarize data: ${JSON.stringify(state)}. Keep answers short, friendly and helpful.`;
-            
-            // Pass recent context 
-            const recentHistory = chatHistory.slice(-MAX_CHAT_HISTORY);
-            const aiText = await fetchOpenAI(systemText, recentHistory);
-            
-            typing.remove(); 
-            chatHistory.push({ role: 'assistant', content: aiText });
-            
+            const aiText = await fetchGemini({ systemInstruction:{parts:[{text:`You are FinanceFlow AI powered by Gemini. Summarize data: ${JSON.stringify(state)}. Keep answers short.`}]}, contents:chatHistory.slice(-MAX_CHAT_HISTORY) });
+            typing.remove(); chatHistory.push({role:'model',parts:[{text:aiText}]});
             msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">${aiText}</div></div>`;
         } catch(e) {
-            typing.remove(); 
-            chatHistory.pop(); // Remove failed user message from history array to prevent getting stuck
-            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Error connecting to ChatGPT. Please ensure you have a valid OpenAI API key configured.</div></div>`;
-            console.error(e);
+            typing.remove(); chatHistory.pop();
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Error connecting to AI. Please ensure you have set your Gemini API key via the Key icon in the header.</div></div>`;
         }
         document.getElementById('chat-send-btn').disabled=false; inp.focus(); msgDiv.scrollTop = msgDiv.scrollHeight;
     };
