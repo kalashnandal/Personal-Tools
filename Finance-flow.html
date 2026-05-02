@@ -608,15 +608,14 @@
     ];
     let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
-    // Set Gemini Key manually via prompt
-    window.setAPIKey = () => {
-        const key = prompt("Enter your Gemini API Key to enable AI features:");
-        if (key) {
-            localStorage.setItem('my_gemini_key', key.trim());
-            activeGeminiKey = key.trim();
-            if(window.firebaseUtils) window.firebaseUtils.activeGeminiKey = activeGeminiKey;
-            showToast("API Key saved securely to browser!");
-        }
+    const GEMINI_MODELS = [
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-1.5-pro'
+];
+
     };
 
     // -----------------------------------------------------------
