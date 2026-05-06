@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,11 +59,8 @@
             console.warn("Firebase init error:", e);
         }
 
-        // We capture the system's injected activeGeminiKey (for testing in Canvas) or fallback to your saved one
-        const envGeminiKey = typeof window !== 'undefined' && window.__gemini_api_key ? window.__gemini_api_key : savedGeminiKey;
-
         window.firebaseUtils = {
-            db, auth, appId, activeGeminiKey: envGeminiKey,
+            db, auth, appId, activeGeminiKey: savedGeminiKey,
             GoogleAuthProvider, signInWithPopup, signInAnonymously,
             setPersistence, browserLocalPersistence,
             signOut, onAuthStateChanged,
@@ -131,10 +129,6 @@
                 <h1 class="text-lg font-bold text-slate-900 tracking-tight hidden sm:block">FinanceFlow</h1>
             </div>
             <div class="flex items-center gap-2 sm:gap-4">
-                <button onclick="openModal('expense-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-                    <span class="hidden sm:inline">Add Expense</span>
-                </button>
                 <button onclick="setAPIKey()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2 flex items-center gap-1" title="Set Gemini API Key">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-3.252a2 2 0 01.586-1.414l5.518-5.518A6 6 0 0117 9z" /></svg>
                 </button>
@@ -404,7 +398,15 @@
         </div>
     </main>
 
-    <!-- FLOATING CHAT WIDGET -->
+    <!-- STICKY ADD EXPENSE BUTTON (BOTTOM CENTER) -->
+    <div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+        <button onclick="openModal('expense-modal')" class="bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl hover:shadow-2xl px-6 py-3.5 rounded-full font-bold flex items-center gap-2 transition-all transform hover:-translate-y-1 border-2 border-white/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span class="text-base tracking-wide">Add Expense</span>
+        </button>
+    </div>
+
+    <!-- FLOATING CHAT WIDGET (BOTTOM RIGHT) -->
     <div id="chat-widget" class="fixed bottom-6 right-4 sm:right-6 z-40 flex flex-col items-end">
         <div id="chat-window" class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-[calc(100vw-32px)] sm:w-96 h-[450px] max-h-[80vh] flex flex-col mb-4 hidden transform transition-all origin-bottom-right scale-95 opacity-0">
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
@@ -600,12 +602,6 @@
     let chatHistory    = [];
     const MAX_CHAT_HISTORY = 10;
     
-    // WATERFALL FALLBACK: If one alias fails (due to key restrictions or region), it tries the next one.
-    const GEMINI_MODELS = [
-        'gemini-2.5-flash-preview-09-2025', // 1. Works perfectly in the canvas environment testing tool
-        'gemini-1.5-flash',                 // 2. Works perfectly on live GitHub with personal studio keys
-        'gemini-1.5-flash-8b'               // 3. Fallback for restricted regions
-    ];
     let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
     // Set Gemini Key manually via prompt
@@ -1287,14 +1283,20 @@
     };
 
     // -----------------------------------------------------------
-    // GEMINI AI INTEGRATION (WATERFALL FALLBACK)
+    // SMART GEMINI AI INTEGRATION
     // -----------------------------------------------------------
     const fetchGemini = async (payload) => {
-        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
-        if (!key) throw new Error('NO_API_KEY');
+        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey || "";
         
-        let errorMessage = 'FAILED';
-        for (const model of GEMINI_MODELS) {
+        // If the user has NOT provided an API key, we try the Canvas Preview model.
+        // If the user HAS provided an API key, we try the standard Public models.
+        const modelsToTry = key 
+            ? ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'] 
+            : ['gemini-2.5-flash-preview-09-2025'];
+        
+        let lastError = 'Unknown Error';
+        
+        for (const model of modelsToTry) {
             try {
                 const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, { 
                     method: 'POST', 
@@ -1305,9 +1307,9 @@
                 const data = await res.json();
                 
                 if (data.error) {
-                    errorMessage = data.error.message;
+                    lastError = data.error.message;
                     console.warn(`Gemini API Failed (${model}):`, data.error.message);
-                    continue; // Immediately try the next model in the list
+                    continue; 
                 }
                 
                 if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
@@ -1315,10 +1317,17 @@
                 }
             } catch (err) { 
                 console.warn(`Fetch error for ${model}:`, err); 
-                errorMessage = err.message;
+                lastError = err.message;
             }
         }
-        throw new Error(errorMessage); // Only throws if ALL models in the array fail
+        
+        // If everything failed, throw a readable error based on what happened
+        if (lastError.includes("API key not valid") || lastError.includes("API_KEY_INVALID")) {
+             throw new Error("Invalid API Key. Please check the key you entered.");
+        } else if (!key && lastError.includes("key")) {
+             throw new Error("Please set your Gemini API Key using the Key icon in the header.");
+        }
+        throw new Error(lastError);
     };
 
     window.openReportModal = async () => {
@@ -1336,19 +1345,19 @@
             bars.innerHTML += `<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span class="font-medium text-slate-700">${cat}</span><span class="text-slate-500">${formatCurrency(amt)} (${pct}%)</span></div><div class="w-full h-2 rounded-full" style="background-color:${getCategoryColor(cat,'bgHex')}"><div class="h-2 rounded-full" style="width:${pct}%;background-color:${getCategoryColor(cat,'hex')}"></div></div></div>`;
         });
 
-        const key = window.firebaseUtils?.activeGeminiKey || activeGeminiKey;
-        if (!key) {
-            container.innerHTML = `<div class="bg-yellow-50 p-4 rounded-xl text-sm text-yellow-700">Click the Key icon in the top right to set your Gemini API Key and see AI insights.</div>`;
-            return;
-        }
-
         try {
             const prompt = `Act as a financial advisor. Networth: ${document.getElementById('dash-networth').textContent}. Expenses: ${JSON.stringify(cats)}. Return JSON array of 3 objects with exact keys: "icon" (emoji), "text" (insight string), "color" (use "text-indigo-600"), "bg" (use "bg-indigo-50").`;
-            const raw = await fetchGemini({ contents:[{parts:[{text:prompt}]}], generationConfig: { responseMimeType: "application/json" } });
+            
+            const payload = { 
+                contents: [{ parts: [{ text: prompt }] }], 
+                generationConfig: { responseMimeType: "application/json" } 
+            };
+            
+            const raw = await fetchGemini(payload);
             const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
             container.innerHTML = data.map(i=>`<div class="${i.bg} border border-white p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
         } catch(e) {
-            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Error: ${e.message}. Check API Key and console.</div>`;
+            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600">Error: ${e.message}</div>`;
         }
     };
 
@@ -1376,13 +1385,15 @@
         chatHistory.push({role:'user',parts:[{text}]});
         
         try {
-            const aiText = await fetchGemini({ systemInstruction:{parts:[{text:`You are FinanceFlow AI powered by Gemini. Summarize data: ${JSON.stringify(state)}. Keep answers short.`}]}, contents:chatHistory.slice(-MAX_CHAT_HISTORY) });
+            const aiText = await fetchGemini({ 
+                systemInstruction: { parts: [{ text: `You are FinanceFlow AI powered by Gemini. Summarize data: ${JSON.stringify(state)}. Keep answers short.` }] }, 
+                contents: chatHistory.slice(-MAX_CHAT_HISTORY) 
+            });
             typing.remove(); chatHistory.push({role:'model',parts:[{text:aiText}]});
             msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">${aiText}</div></div>`;
         } catch(e) {
             typing.remove(); chatHistory.pop();
-            const errMsg = e.message === 'NO_API_KEY' ? 'Please ensure you have set your Gemini API key via the Key icon in the header.' : e.message;
-            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Error: ${errMsg}</div></div>`;
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Error: ${e.message}</div></div>`;
         }
         document.getElementById('chat-send-btn').disabled=false; inp.focus(); msgDiv.scrollTop = msgDiv.scrollHeight;
     };
