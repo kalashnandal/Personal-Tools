@@ -33,7 +33,7 @@
         // =====================================================================
         // CONFIGURATION AREA
         // =====================================================================
-        // Read the API key securely from local storage instead of hardcoding
+        // Read the API key securely from local storage
         const savedGeminiKey = localStorage.getItem('my_gemini_key') || "";
 
         const myFirebaseConfig = {
@@ -59,7 +59,6 @@
             console.warn("Firebase init error:", e);
         }
 
-        // We capture the system's injected activeGeminiKey (for testing in Canvas) or fallback to your saved one
         const envGeminiKey = typeof window !== 'undefined' && window.__gemini_api_key ? window.__gemini_api_key : savedGeminiKey;
 
         window.firebaseUtils = {
@@ -562,18 +561,30 @@
     </div>
 </div>
 
-<!-- RESET MODAL -->
+<!-- RESET MODAL WITH RECOVERY -->
 <div id="reset-modal" class="modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center">
+    <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center relative">
+        <button onclick="closeModal('reset-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        
         <div class="mx-auto w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
         </div>
-        <h3 class="text-lg font-bold text-slate-900 mb-2">Reset Month?</h3>
-        <p class="text-sm text-slate-500 mb-6">Clears current month expenses. Historical data preserved. Type <strong>reset</strong>.</p>
-        <input type="text" id="reset-input" class="w-full text-center rounded-xl border border-slate-300 px-4 py-3 mb-4 focus:ring-2 focus:ring-rose-500 outline-none">
-        <div class="flex gap-3">
+        <h3 class="text-lg font-bold text-slate-900 mb-2">Manage Month Data</h3>
+        <p class="text-sm text-slate-500 mb-6">Type <strong>reset</strong> to clear current month's expenses. Historical data is preserved.</p>
+        
+        <input type="text" id="reset-input" class="w-full text-center rounded-xl border border-slate-300 px-4 py-3 mb-4 focus:ring-2 focus:ring-rose-500 outline-none" placeholder="Type 'reset' here">
+        
+        <div class="flex gap-3 mb-4">
             <button onclick="closeModal('reset-modal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 rounded-xl">Cancel</button>
             <button onclick="confirmReset()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-3 rounded-xl">Reset</button>
+        </div>
+
+        <!-- RECOVERY BUTTON (ALWAYS VISIBLE, CONDITIONALLY ENABLED) -->
+        <div class="border-t border-slate-100 pt-4 mt-2">
+            <button id="btn-recover" onclick="recoverReset()" class="w-full bg-emerald-50 text-emerald-700 font-medium py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-50">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
+                Undo Last Reset
+            </button>
         </div>
     </div>
 </div>
@@ -605,7 +616,7 @@
 
 <script>
     // -----------------------------------------------------------
-    // STATE & CORE VARIABLES (DO NOT MODIFY FIREBASE STATE STRUCT)
+    // STATE & CORE VARIABLES
     // -----------------------------------------------------------
     let state = {
         balances: { bank: 0, cash: 0, savings: 0, invest: 0 },
@@ -613,7 +624,8 @@
         emis: [],
         creditCards: [], 
         ccPayments: [],  
-        projections: { inSal:0, inOther:0, outRent:0, outEmi:0, outCc:0, outFood:0, outTrans:0, outShop:0 }
+        projections: { inSal:0, inOther:0, outRent:0, outEmi:0, outCc:0, outFood:0, outTrans:0, outShop:0 },
+        backupExpenses: null // Added for Undo Feature
     };
     
     let dashboardChart = null;
@@ -671,13 +683,28 @@
     };
 
     // -----------------------------------------------------------
-    // MODAL LOGIC (Outside click dismiss)
+    // MODAL LOGIC & RECOVERY LOGIC
     // -----------------------------------------------------------
     window.openModal = (id) => {
         document.getElementById(id).classList.add('active');
         if(id === 'expense-modal') {
             document.getElementById('expense-date').valueAsDate = new Date();
-            toggleTxnType(); // Initialize dropdowns based on radio
+            toggleTxnType(); 
+        }
+        if(id === 'reset-modal') {
+            document.getElementById('reset-input').value = '';
+            const recBtn = document.getElementById('btn-recover');
+            
+            // Check if there is a backup available to enable the button
+            if (state.backupExpenses && state.backupExpenses.length > 0) {
+                recBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                recBtn.classList.add('hover:bg-emerald-100');
+                recBtn.disabled = false;
+            } else {
+                recBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                recBtn.classList.remove('hover:bg-emerald-100');
+                recBtn.disabled = true;
+            }
         }
     };
     window.closeModal = (id) => document.getElementById(id).classList.remove('active');
@@ -687,6 +714,26 @@
             if (e.target === this) this.classList.remove('active');
         });
     });
+
+    window.confirmReset = () => {
+        if (document.getElementById('reset-input').value.toLowerCase() === 'reset') {
+            // Create backup before wiping
+            state.backupExpenses = JSON.parse(JSON.stringify(state.expenses)); 
+            
+            state.expenses = state.expenses.filter(e => !isCurrentMonth(e.date));
+            calculateDashboard(); syncDataToCloud(); closeModal('reset-modal'); showToast('Month reset successful');
+        } else { showToast('Type reset to confirm'); }
+    };
+
+    window.recoverReset = () => {
+        if (state.backupExpenses && state.backupExpenses.length > 0) {
+            state.expenses = JSON.parse(JSON.stringify(state.backupExpenses));
+            state.backupExpenses = null;
+            calculateDashboard(); syncDataToCloud(); closeModal('reset-modal'); showToast('Expenses recovered successfully!');
+        } else {
+            showToast('No backup found.');
+        }
+    };
 
     // -----------------------------------------------------------
     // AUTH LOGIC
@@ -740,7 +787,8 @@
                     emis: d.emis || [],
                     creditCards: d.creditCards || [],
                     ccPayments: d.ccPayments || [],
-                    projections: d.projections || { inSal:0, inOther:0, outRent:0, outEmi:0, outCc:0, outFood:0, outTrans:0, outShop:0 }
+                    projections: d.projections || { inSal:0, inOther:0, outRent:0, outEmi:0, outCc:0, outFood:0, outTrans:0, outShop:0 },
+                    backupExpenses: d.backupExpenses || null
                 };
                 updateUIFromState();
                 showToast('Cloud data synchronized');
@@ -1318,13 +1366,6 @@
     window.deleteEMI = (id) => { state.emis = state.emis.filter(e => e.id !== id); renderEMIs(); calculateDashboard(); syncDataToCloud(); };
     window.deleteCC  = (id) => { state.creditCards = state.creditCards.filter(c => c.id !== id); state.ccPayments = state.ccPayments.filter(p => p.ccId !== id); updateCCDropdowns(); calculateDashboard(); syncDataToCloud(); };
 
-    window.confirmReset = () => {
-        if (document.getElementById('reset-input').value.toLowerCase() === 'reset') {
-            state.expenses = state.expenses.filter(e => !isCurrentMonth(e.date));
-            calculateDashboard(); syncDataToCloud(); closeModal('reset-modal'); showToast('Month reset successful');
-        } else { showToast('Type reset to confirm'); }
-    };
-
     // -----------------------------------------------------------
     // PROJECTIONS
     // -----------------------------------------------------------
@@ -1351,14 +1392,13 @@
     const filterHistory = () => {
         const from = document.getElementById('hist-from').value;
         const to   = document.getElementById('hist-to').value;
-        let filtered = state.expenses.filter(e => !e.type || e.type === 'expense'); // only show expenses in history graph
+        let filtered = state.expenses.filter(e => !e.type || e.type === 'expense'); 
         if (from) filtered = filtered.filter(e => e.date >= from);
         if (to)   filtered = filtered.filter(e => e.date <= to);
         
         document.getElementById('hist-total').textContent = formatCurrency(filtered.reduce((s, e) => s + e.amount, 0));
         historyChart = drawDoughnutChart(filtered, 'historyChart', historyChart, 'hist-chart-empty');
         
-        // Show both income and expense in list
         let allFiltered = state.expenses;
         if (from) allFiltered = allFiltered.filter(e => e.date >= from);
         if (to)   allFiltered = allFiltered.filter(e => e.date <= to);
@@ -1374,37 +1414,50 @@
     };
 
     // -----------------------------------------------------------
-    // EXACT ERROR AI INTEGRATION
+    // SMART GEMINI AI INTEGRATION
     // -----------------------------------------------------------
     const fetchGemini = async (payload) => {
-        const isEnvKey = !!(window.firebaseUtils?.activeGeminiKey && !localStorage.getItem('my_gemini_key'));
         const key = localStorage.getItem('my_gemini_key') || window.firebaseUtils?.activeGeminiKey || "";
-        
         if (!key) throw new Error('Please set your Gemini API Key using the Key icon in the header.');
 
-        // 1. If testing in Canvas (Env Key), use Preview Model
-        // 2. If using your own key, strictly force standard 1.5-flash
-        const model = isEnvKey ? 'gemini-2.5-flash-preview-09-2025' : 'gemini-1.5-flash';
+        const modelsToTry = [
+            'gemini-2.5-flash-preview-09-2025', 
+            'gemini-2.5-flash',
+            'gemini-1.5-flash-latest',
+            'gemini-1.5-flash',
+            'gemini-1.0-pro'
+        ];
 
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
+        let lastError = 'Unknown Error';
 
-            // SURFACE THE EXACT ERROR RETURNED BY GOOGLE
-            if (data.error) throw new Error(data.error.message);
-            
-            if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-                return data.candidates[0].content.parts[0].text;
+        for (const model of modelsToTry) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+
+                if (data.error) {
+                    lastError = data.error.message;
+                    if (lastError.includes("API key not valid") || lastError.includes("API_KEY_INVALID")) {
+                        throw new Error("Invalid API Key. Please check the key you entered.");
+                    }
+                    continue; 
+                }
+
+                if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+            } catch (err) {
+                if (err.message.includes("Invalid API Key")) throw err;
+                lastError = err.message;
             }
-            throw new Error("Unexpected API response format");
-        } catch (err) {
-            console.error("Gemini API Error:", err);
-            throw new Error(err.message);
         }
+        
+        throw new Error("API Error: " + lastError);
     };
 
     window.openReportModal = async () => {
@@ -1434,7 +1487,7 @@
             const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
             container.innerHTML = data.map(i=>`<div class="${i.bg} border border-white p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
         } catch(e) {
-            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>API Error:</strong> ${e.message}</div>`;
+            container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>${e.message}</strong></div>`;
         }
     };
 
@@ -1470,7 +1523,7 @@
             msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">${aiText}</div></div>`;
         } catch(e) {
             typing.remove(); chatHistory.pop();
-            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]"><strong>API Error:</strong> ${e.message}</div></div>`;
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]"><strong>${e.message}</strong></div></div>`;
         }
         document.getElementById('chat-send-btn').disabled=false; inp.focus(); msgDiv.scrollTop = msgDiv.scrollHeight;
     };
