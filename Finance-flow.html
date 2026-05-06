@@ -91,6 +91,8 @@
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content { transform: scale(0.95) translateY(10px); transition: all 0.3s ease-out; }
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .shimmer { animation: shimmer 2s linear infinite; background: linear-gradient(to right, #4f46e5 4%, #7c3aed 25%, #4f46e5 36%); background-size: 1000px 100%; }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
     </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col relative overflow-x-hidden">
@@ -333,7 +335,13 @@
                     <h2 class="text-2xl font-bold text-slate-800">Detailed Projection Planner</h2>
                     <p class="text-sm text-slate-500">Plan your budget for the upcoming month.</p>
                 </div>
-                <button onclick="saveManualProjection()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">Calculate & Save</button>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="autoBudget()" class="w-full sm:w-auto bg-gradient-to-r from-fuchsia-600 to-pink-600 hover:from-fuchsia-700 hover:to-pink-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
+                        AI Auto-Budget
+                    </button>
+                    <button onclick="saveManualProjection()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm">Save</button>
+                </div>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
@@ -421,7 +429,11 @@
             <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-t-2xl text-white flex justify-between items-center shrink-0">
                 <div class="flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-300" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg>
-                    <h3 class="font-semibold text-sm">Gemini AI Assistant</h3>
+                    <!-- Chat Persona Selector -->
+                    <select id="chat-persona" class="bg-transparent text-white font-semibold text-sm outline-none cursor-pointer border-b border-white/30 pb-0.5">
+                        <option value="advisor" class="text-slate-800">Financial Advisor</option>
+                        <option value="roast" class="text-slate-800">🔥 Roast Mode</option>
+                    </select>
                 </div>
                 <button onclick="toggleChat()" class="text-indigo-100 hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -429,11 +441,14 @@
             </div>
             <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-3 bg-slate-50">
                 <div class="flex flex-col gap-1 items-start">
-                    <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Hi! I can analyze your spending and debt. Make sure your Gemini API Key is set via the key icon in the header first!</div>
+                    <div class="bg-white border border-slate-200 text-slate-700 text-sm p-3 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">Hi! I'm your AI Assistant. Tap the microphone to talk to me, or switch to Roast Mode if you're brave enough!</div>
                 </div>
             </div>
             <div class="p-3 bg-white border-t border-slate-100 rounded-b-2xl flex items-center gap-2 shrink-0">
-                <input type="text" id="chat-input" class="flex-grow bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm rounded-xl px-4 py-2.5 outline-none transition-all" placeholder="Ask about finances...">
+                <button onclick="startVoice()" class="text-slate-400 hover:text-indigo-600 transition-colors p-2" title="Voice Input">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                </button>
+                <input type="text" id="chat-input" class="flex-grow bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm rounded-xl px-4 py-2.5 outline-none transition-all" placeholder="Message or use voice...">
                 <button id="chat-send-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl transition-colors shrink-0 disabled:opacity-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
                 </button>
@@ -449,15 +464,30 @@
 <!-- ================= MODALS ================= -->
 <!-- Outside click handler applies to all .modal-overlay -->
 
-<!-- ADD TRANSACTION MODAL (Income/Expense) -->
+<!-- ADD TRANSACTION MODAL (Income/Expense/Receipt) -->
 <div id="expense-modal" class="modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
         <div class="flex justify-between items-center p-5 sm:p-6 border-b border-slate-100">
             <h3 class="text-xl font-bold text-slate-900">Log Transaction</h3>
-            <button onclick="closeModal('expense-modal')" class="text-slate-400 hover:text-slate-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <div class="flex items-center gap-3">
+                <!-- AI Receipt Scanner Button -->
+                <label class="cursor-pointer text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-xs font-semibold bg-indigo-50 px-3 py-1.5 rounded-full transition-colors" title="Scan receipt with AI">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Scan Bill
+                    <input type="file" accept="image/*" capture="environment" class="hidden" onchange="scanReceipt(this.files[0])">
+                </label>
+                <button onclick="closeModal('expense-modal')" class="text-slate-400 hover:text-slate-700"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            </div>
         </div>
+        
+        <!-- Loading State for Receipt Scan -->
+        <div id="receipt-scanner-overlay" class="hidden absolute inset-0 z-10 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center">
+            <svg class="animate-spin h-10 w-10 text-indigo-600 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <p class="text-sm font-bold text-slate-800">Reading Receipt via AI...</p>
+            <p class="text-xs text-slate-500 mt-1">Extracting amounts and categories</p>
+        </div>
+
         <form id="expense-form" class="p-5 sm:p-6 space-y-4">
-            
             <!-- Income vs Expense Toggle -->
             <div class="flex gap-4 p-1 bg-slate-100 rounded-xl">
                 <label class="flex-1 cursor-pointer">
@@ -579,7 +609,6 @@
             <button onclick="confirmReset()" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-medium py-3 rounded-xl">Reset</button>
         </div>
 
-        <!-- RECOVERY BUTTON (ALWAYS VISIBLE, CONDITIONALLY ENABLED) -->
         <div class="border-t border-slate-100 pt-4 mt-2">
             <button id="btn-recover" onclick="recoverReset()" class="w-full bg-emerald-50 text-emerald-700 font-medium py-2.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-50">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
@@ -593,7 +622,7 @@
 <div id="report-modal" class="modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="modal-content bg-white rounded-3xl shadow-2xl w-full max-w-2xl h-[90vh] sm:h-[80vh] flex flex-col overflow-hidden">
         <div class="bg-gradient-to-r from-indigo-700 to-purple-800 p-5 sm:p-6 text-white flex justify-between items-center shrink-0">
-            <div><h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg> Gemini AI Insights</h2></div>
+            <div><h2 id="report-modal-title" class="text-xl sm:text-2xl font-bold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg> Gemini AI Insights</h2></div>
             <button onclick="closeModal('report-modal')" class="text-white hover:text-indigo-200 bg-white/10 p-2 rounded-full"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
         </div>
         <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar flex-grow space-y-6">
@@ -694,8 +723,6 @@
         if(id === 'reset-modal') {
             document.getElementById('reset-input').value = '';
             const recBtn = document.getElementById('btn-recover');
-            
-            // Check if there is a backup available to enable the button
             if (state.backupExpenses && state.backupExpenses.length > 0) {
                 recBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                 recBtn.classList.add('hover:bg-emerald-100');
@@ -717,9 +744,7 @@
 
     window.confirmReset = () => {
         if (document.getElementById('reset-input').value.toLowerCase() === 'reset') {
-            // Create backup before wiping
             state.backupExpenses = JSON.parse(JSON.stringify(state.expenses)); 
-            
             state.expenses = state.expenses.filter(e => !isCurrentMonth(e.date));
             calculateDashboard(); syncDataToCloud(); closeModal('reset-modal'); showToast('Month reset successful');
         } else { showToast('Type reset to confirm'); }
@@ -812,9 +837,6 @@
         updateProjectionUI();
     };
 
-    // -----------------------------------------------------------
-    // TABS
-    // -----------------------------------------------------------
     window.switchTab = (tabId) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('[id^="tab-"]').forEach(el => { el.classList.remove('border-indigo-600', 'text-indigo-600'); el.classList.add('border-transparent', 'text-slate-500'); });
@@ -829,7 +851,6 @@
     // EXPORT & REPORTING LOGIC (MANUAL PDF / CSV)
     // -----------------------------------------------------------
     window.exportReport = (formatType) => {
-        // Sort strictly by Category First, then by Date (descending)
         const allTxns = [...state.expenses].sort((a, b) => {
             if (a.category !== b.category) return a.category.localeCompare(b.category);
             return new Date(b.date) - new Date(a.date);
@@ -864,7 +885,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            
             showToast('CSV Report Downloaded');
             
         } else if (formatType === 'pdf') {
@@ -892,8 +912,6 @@
                 doc.text(`Total Credit Card Debt: INR ${formatCurrency(ccDebt).replace('₹', '')}`, 14, 67);
                 
                 let tableStartY = 75;
-
-                // Create chart only for Expenses
                 const justExpenses = allTxns.filter(e => !e.type || e.type === 'expense');
 
                 if (justExpenses.length > 0) {
@@ -905,7 +923,6 @@
                     chartDiv.style.display = 'flex';
                     document.body.appendChild(chartDiv);
 
-                    // --- 1. PIE CHART ---
                     const canvasPie = document.createElement('canvas');
                     canvasPie.width = 800; canvasPie.height = 800;
                     chartDiv.appendChild(canvasPie);
@@ -922,7 +939,6 @@
                         options: { animation: false, responsive: false, plugins: { title: { display: true, text: 'Spending by Category', font: { size: 28 } }, legend: { labels: { font: { size: 20 } } } } }
                     });
 
-                    // --- 2. BAR CHART (DAILY AVG) ---
                     const canvasBar = document.createElement('canvas');
                     canvasBar.width = 1000; canvasBar.height = 800;
                     chartDiv.appendChild(canvasBar);
@@ -1030,7 +1046,6 @@
         const monthSpent = curExp.reduce((s, e) => s + e.amount, 0);
         const monthIncome = curInc.reduce((s, e) => s + e.amount, 0);
 
-        // Update Dashboard DOM
         document.getElementById('dash-liquid').textContent = formatCurrency(liquid);
         document.getElementById('dash-networth').textContent = formatCurrency(networth);
         document.getElementById('dash-assets').textContent = formatCurrency(totalAssets);
@@ -1045,14 +1060,11 @@
         document.getElementById('dash-month-inc').textContent = formatCurrency(monthIncome);
         document.getElementById('dash-exp-count').textContent = curTxns.length;
 
-        // Render Lists & Charts
         renderExpenseList(curTxns, 'expenses-container', 'empty-state');
         renderCCList();
         
-        // Main Expense Chart (Only charts expenses)
         dashboardChart = drawDoughnutChart(curExp, 'expenseChart', dashboardChart, 'chart-empty-state');
         
-        // CC Chart
         const ccData = [ { category: 'Debt', amount: ccDebt }, { category: 'Available', amount: Math.max(0, ccLimit - ccDebt) } ];
         const ccColors = ['#f43f5e', '#10b981']; 
         ccChart = drawCustomChart(ccData, ['Debt', 'Available'], ccColors, 'ccChart', ccChart);
@@ -1084,7 +1096,7 @@
 
     const drawCustomChart = (dataItems, labels, bgColors, canvasId, chartRef) => {
         const dataVals = dataItems.map(d => d.amount);
-        if(dataVals.reduce((a,b)=>a+b,0) === 0) return chartRef; // Skip if 0
+        if(dataVals.reduce((a,b)=>a+b,0) === 0) return chartRef; 
         return renderChartJs(canvasId, chartRef, labels, dataVals, bgColors);
     };
 
@@ -1367,7 +1379,7 @@
     window.deleteCC  = (id) => { state.creditCards = state.creditCards.filter(c => c.id !== id); state.ccPayments = state.ccPayments.filter(p => p.ccId !== id); updateCCDropdowns(); calculateDashboard(); syncDataToCloud(); };
 
     // -----------------------------------------------------------
-    // PROJECTIONS
+    // PROJECTIONS & AI AUTO BUDGET
     // -----------------------------------------------------------
     const updateProjectionUI = () => {
         const p = state.projections;
@@ -1384,6 +1396,29 @@
             state.projections[k] = parseFloat(el.value) || 0;
         });
         updateProjectionUI(); syncDataToCloud(); showToast('Projections saved');
+    };
+
+    window.autoBudget = async () => {
+        if(!state.expenses || state.expenses.length === 0) return showToast("Need some past expenses to analyze!");
+        showToast("✨ AI is generating your budget...");
+        
+        try {
+            const prompt = `Based on this user's historical transactions: ${JSON.stringify(state.expenses)}. Create a smart monthly budget projection. If they don't have certain expenses, estimate a reasonable minimal amount. Return ONLY valid JSON with EXACT keys (all numbers): "inSal", "inOther", "outRent", "outEmi", "outCc", "outFood", "outTrans", "outShop".`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+            
+            const raw = await fetchGemini(payload);
+            const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+            
+            Object.keys(data).forEach(k => {
+                const el = document.getElementById(`proj-${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`);
+                if(el) { el.value = data[k]; state.projections[k] = data[k]; }
+            });
+            updateProjectionUI();
+            syncDataToCloud();
+            showToast("✨ AI Budget Generated Successfully!");
+        } catch (e) {
+            showToast("AI Budget failed: " + e.message);
+        }
     };
 
     // -----------------------------------------------------------
@@ -1414,7 +1449,7 @@
     };
 
     // -----------------------------------------------------------
-    // SMART GEMINI AI INTEGRATION
+    // SMART GEMINI AI INTEGRATION (CHAT, RECEIPT SCAN, REPORT)
     // -----------------------------------------------------------
     const fetchGemini = async (payload) => {
         const key = localStorage.getItem('my_gemini_key') || window.firebaseUtils?.activeGeminiKey || "";
@@ -1460,6 +1495,47 @@
         throw new Error("API Error: " + lastError);
     };
 
+    // AI RECEIPT SCANNER (VISION)
+    window.scanReceipt = async (file) => {
+        if(!file) return;
+        
+        const overlay = document.getElementById('receipt-scanner-overlay');
+        overlay.classList.remove('hidden');
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64Data = reader.result.split(',')[1];
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: 'Extract receipt data. Return ONLY valid JSON with keys: "desc" (merchant name), "amount" (number), "date" (YYYY-MM-DD), "category" (Housing, Food, Transportation, Utilities, Shopping, Entertainment, Healthcare, Other). If date is missing, use today.' },
+                        { inlineData: { mimeType: file.type, data: base64Data } }
+                    ]
+                }],
+                generationConfig: { responseMimeType: "application/json" }
+            };
+            try {
+                const raw = await fetchGemini(payload);
+                const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+                
+                if(data.desc) document.getElementById('expense-desc').value = data.desc;
+                if(data.amount) document.getElementById('expense-amount').value = data.amount;
+                if(data.date) document.getElementById('expense-date').value = data.date;
+                if(data.category) document.getElementById('expense-category').value = data.category;
+                
+                document.querySelector('input[name="txn-type"][value="expense"]').checked = true;
+                toggleTxnType();
+                
+                showToast("✅ Receipt scanned successfully!");
+            } catch(e) {
+                showToast("Failed to scan receipt. Ensure API key supports Vision.");
+            } finally {
+                overlay.classList.add('hidden');
+            }
+        };
+    };
+
     window.openReportModal = async () => {
         openModal('report-modal');
         const container = document.getElementById('report-insights-container');
@@ -1477,12 +1553,7 @@
 
         try {
             const prompt = `Act as a financial advisor. Networth: ${document.getElementById('dash-networth').textContent}. Expenses: ${JSON.stringify(cats)}. Return JSON array of 3 objects with exact keys: "icon" (emoji), "text" (insight string), "color" (use "text-indigo-600"), "bg" (use "bg-indigo-50").`;
-            
-            const payload = { 
-                contents: [{ parts: [{ text: prompt }] }], 
-                generationConfig: { responseMimeType: "application/json" } 
-            };
-            
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
             const raw = await fetchGemini(payload);
             const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
             container.innerHTML = data.map(i=>`<div class="${i.bg} border border-white p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
@@ -1491,7 +1562,22 @@
         }
     };
 
-    // Chat Interface
+    // Chat Interface & Voice Recognition
+    window.startVoice = () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return showToast("Voice recognition not supported on this browser.");
+        
+        const rec = new SpeechRecognition();
+        rec.onstart = () => showToast("🎙️ Listening... Speak now.");
+        rec.onresult = (e) => {
+            const text = e.results[0][0].transcript;
+            document.getElementById('chat-input').value = text;
+            showToast("Voice captured! Hit send.");
+        };
+        rec.onerror = () => showToast("Voice recognition failed.");
+        rec.start();
+    };
+
     window.toggleChat = () => {
         const w = document.getElementById('chat-window');
         if (w.classList.contains('hidden')) {
@@ -1514,13 +1600,22 @@
 
         chatHistory.push({role:'user',parts:[{text}]});
         
+        // Persona Check
+        const isRoast = document.getElementById('chat-persona').value === 'roast';
+        const sysPrompt = isRoast 
+            ? `You are a brutal, sarcastic financial roaster like Gordon Ramsay. Roast the user's spending habits based on this data: ${JSON.stringify(state)}. Be funny but harsh. Keep it short.`
+            : `You are FinanceFlow AI, a polite financial advisor. Summarize data: ${JSON.stringify(state)}. Keep answers short.`;
+
         try {
             const aiText = await fetchGemini({ 
-                systemInstruction: { parts: [{ text: `You are FinanceFlow AI powered by Gemini. Summarize data: ${JSON.stringify(state)}. Keep answers short.` }] }, 
+                systemInstruction: { parts: [{ text: sysPrompt }] }, 
                 contents: chatHistory.slice(-MAX_CHAT_HISTORY) 
             });
             typing.remove(); chatHistory.push({role:'model',parts:[{text:aiText}]});
-            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]">${aiText}</div></div>`;
+            
+            const bgClass = isRoast ? 'bg-orange-50 text-orange-900 border-orange-200' : 'bg-white text-slate-700 border-slate-200';
+            
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 border rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] ${bgClass}">${aiText}</div></div>`;
         } catch(e) {
             typing.remove(); chatHistory.pop();
             msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 text-rose-700 border border-rose-100 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]"><strong>${e.message}</strong></div></div>`;
