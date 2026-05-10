@@ -5,8 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SpendSense AI (Enterprise Wealth)</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%234f46e5' /%3E%3Cstop offset='100%25' stop-color='%239333ea' /%3E%3C/linearGradient%3E%3Cfilter id='glow' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeDropShadow dx='0' dy='2' stdDeviation='4' flood-opacity='0.3' flood-color='%23000' /%3E%3C/filter%3E%3C/defs%3E%3Crect width='120' height='120' rx='32' fill='url(%23bgGrad)' /%3E%3Cg transform='translate(24, 24) scale(3)' filter='url(%23glow)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' fill='none' stroke='%23ffffff' stroke-width='2' /%3E%3C/g%3E%3C/svg%3E">
-
+    
     <!-- Tailwind Config for Enterprise Theming & Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -24,7 +23,18 @@
                         textMuted: 'var(--color-text-muted)',
                         bdr: 'var(--color-border)',
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                    fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        }
+                    }
                 }
             }
         }
@@ -32,7 +42,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- PDF Generation Libraries -->
+    <!-- PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     
@@ -53,8 +63,7 @@
             projectId: "financeflow-89cc0",
             storageBucket: "financeflow-89cc0.firebasestorage.app",
             messagingSenderId: "123998162746",
-            appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03",
-            measurementId: "G-QVMJW4KSWP"
+            appId: "1:123998162746:web:3184cb65b2eeeccc8f0a03"
         };
 
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
@@ -83,13 +92,11 @@
     <style>
         /* CSS Variables for Dynamic Enterprise Theming */
         :root {
-            /* Default Indigo Theme - Light Mode */
             --color-primary: #4f46e5; --color-primary-dark: #4338ca; --color-primary-light: #e0e7ff;
             --color-bg: #f8fafc; --color-card: #ffffff; 
             --color-text-main: #0f172a; --color-text-muted: #64748b; --color-border: #e2e8f0;
         }
         .dark {
-            /* Default Indigo Theme - Dark Mode */
             --color-bg: #0f172a; --color-card: #1e293b; 
             --color-text-main: #f8fafc; --color-text-muted: #94a3b8; --color-border: #334155;
             --color-primary: #6366f1; --color-primary-dark: #4f46e5; --color-primary-light: #312e81;
@@ -101,13 +108,13 @@
         [data-theme="rose"] { --color-primary: #e11d48; --color-primary-dark: #be123c; --color-primary-light: #ffe4e6; }
         .dark [data-theme="rose"] { --color-primary: #fb7185; --color-primary-dark: #e11d48; --color-primary-light: #881337; }
 
-        body { background-color: var(--color-bg); color: var(--color-text-main); transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--color-bg); color: var(--color-text-main); transition: background-color 0.3s, color 0.3s; padding-top: 28px; }
         .card { background-color: var(--color-card); border-color: var(--color-border); }
         .text-main { color: var(--color-text-main); }
         .text-muted { color: var(--color-text-muted); }
         .border-theme { border-color: var(--color-border); }
         
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px;}
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px;}
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
         .typing-dot { animation: typing 1.4s infinite ease-in-out; fill: var(--color-text-muted); }
@@ -121,61 +128,75 @@
         .pulse-border { animation: pulseBdr 2s infinite; }
         @keyframes pulseBdr { 0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); } 100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); } }
         
-        /* Goal Image Overlay */
         .goal-bg { background-size: cover; background-position: center; position: relative; }
         .goal-bg::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.3)); border-radius: inherit; z-index: 1; }
         .goal-content { position: relative; z-index: 2; }
+
+        .login-bg { background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop'); background-size: cover; background-position: center; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden">
 
-<!-- LOGIN OVERLAY -->
-<div id="login-overlay" class="fixed inset-0 z-50 bg-baseBg flex flex-col items-center justify-center transition-opacity duration-500 p-4">
-    <div class="card p-8 sm:p-10 rounded-3xl shadow-2xl border max-w-md w-full text-center relative overflow-hidden">
-        <div class="absolute -top-10 -right-10 w-32 h-32 bg-primaryLight rounded-full opacity-20"></div>
-        <div class="bg-primary p-4 rounded-2xl text-white shadow-lg inline-block mb-6 relative z-10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        </div>
-        <h1 class="text-3xl font-bold text-main mb-2 relative z-10">SpendSense AI</h1>
-        <p class="text-muted mb-8 relative z-10">Enterprise Wealth & AI Management</p>
-        <button id="btn-google-login" class="relative z-10 w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 font-semibold py-3 px-4 rounded-xl transition-all shadow-sm mb-3">
-            <svg viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google
-        </button>
-        <button id="btn-anon-login" class="relative z-10 w-full flex items-center justify-center gap-3 bg-primaryLight/20 hover:bg-primaryLight/40 text-primary font-semibold py-3 px-4 rounded-xl transition-all">Continue as Guest</button>
-        <div id="login-loading" class="hidden mt-4 text-sm text-primary font-medium animate-pulse">Authenticating securely...</div>
-    </div>
-</div>
-
-<!-- ENTERPRISE TOP BAR (Time, Quote, Theme) -->
-<div class="w-full bg-slate-900 text-white text-xs py-1.5 px-4 sm:px-8 flex justify-between items-center z-40 relative shadow-sm">
+<!-- MAC OS STYLE MENU BAR -->
+<div class="fixed top-0 left-0 w-full h-7 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[12px] flex justify-between items-center px-4 z-[60] border-b border-white/10 font-medium">
     <div class="flex items-center gap-4">
-        <span id="live-clock" class="font-mono font-medium tracking-wide">00:00:00</span>
-        <span class="hidden md:inline text-slate-400">|</span>
-        <span id="daily-quote" class="hidden md:inline italic text-slate-300">"Wealth is not about having a lot of money; it's about having a lot of options."</span>
+        <span class="text-white font-bold tracking-wide flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.64-2.25 1.64-1.74 0-2.26-.94-2.34-1.76H7.85c.08 1.65 1.15 2.82 3.05 3.19V19h2.34v-1.67c1.65-.28 2.8-1.25 2.8-2.96 0-2.11-1.69-2.79-3.73-3.23z"/></svg>
+            SpendSense OS
+        </span>
+        <span class="hidden md:inline opacity-60">|</span>
+        <span id="daily-quote" class="hidden md:inline italic text-emerald-400">Loading daily insight...</span>
     </div>
-    <div class="flex items-center gap-3">
-        <select id="theme-selector" onchange="changeTheme()" class="bg-transparent border-none outline-none text-slate-300 cursor-pointer font-medium hover:text-white transition-colors">
-            <option value="indigo" class="text-slate-800">Indigo (Default)</option>
+    <div class="flex items-center gap-4">
+        <select id="theme-selector" onchange="changeTheme()" class="bg-transparent border-none outline-none cursor-pointer hover:text-white transition-colors">
+            <option value="indigo" class="text-slate-800">Indigo</option>
             <option value="emerald" class="text-slate-800">Emerald</option>
             <option value="rose" class="text-slate-800">Rose</option>
         </select>
-        <button onclick="toggleDarkMode()" class="text-slate-300 hover:text-white transition-colors" title="Toggle Dark Mode">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        <button onclick="toggleDarkMode()" class="hover:text-white transition-colors flex items-center gap-1" title="Toggle Dark Mode">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
         </button>
+        <span id="mac-clock" class="text-white tracking-wider"></span>
     </div>
+</div>
+
+<!-- PREMIUM LOGIN OVERLAY -->
+<div id="login-overlay" class="fixed inset-0 z-50 bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-700 p-4 overflow-hidden">
+    <div class="absolute top-[-10%] left-[-10%] w-72 h-72 bg-primary/30 rounded-full blur-[100px] animate-blob"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-72 h-72 bg-emerald-500/20 rounded-full blur-[100px] animate-blob" style="animation-delay: 2s;"></div>
+    <div class="absolute top-[20%] right-[10%] w-56 h-56 bg-purple-500/20 rounded-full blur-[100px] animate-blob" style="animation-delay: 4s;"></div>
+
+    <div class="relative z-10 p-8 sm:p-10 rounded-[2rem] shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 max-w-md w-full text-center m-4 transition-all">
+        <div class="mx-auto w-16 h-16 bg-primaryLight/30 text-primary flex items-center justify-center rounded-2xl mb-6 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        </div>
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">SpendSense AI</h1>
+        <p class="text-slate-500 dark:text-slate-400 mb-8 font-medium">Enterprise Wealth Ecosystem</p>
+        
+        <div class="space-y-4">
+            <button id="btn-google-login" class="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold py-3.5 px-4 rounded-xl transition-all shadow-sm">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google
+            </button>
+            <button id="btn-anon-login" class="w-full bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold py-3.5 px-4 rounded-xl transition-all">
+                Continue as Guest
+            </button>
+        </div>
+        <div id="login-loading" class="hidden mt-6 text-sm text-primary font-medium flex justify-center items-center gap-2">
+            <svg class="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Authenticating...
+        </div>
+    </div>
+    <p class="absolute bottom-6 text-xs text-slate-400 dark:text-slate-500 font-medium tracking-wide">Enterprise Grade Security &bull; Bank Level Encryption</p>
 </div>
 
 <!-- MAIN APP CONTENT -->
 <div id="app-content" class="flex-grow flex flex-col hidden opacity-0 transition-opacity duration-500 relative">
     
-    <!-- Header -->
-    <header class="card border-b sticky top-0 z-30 shadow-sm backdrop-blur-md bg-opacity-90 dark:bg-opacity-90">
+    <header class="card border-b sticky top-[28px] z-30 shadow-sm backdrop-blur-md bg-opacity-90 dark:bg-opacity-90">
         <!-- MICRO QUEST ALERT BANNER -->
         <div id="ai-quest-banner" class="hidden w-full bg-gradient-to-r from-primary to-primaryDark text-white text-xs sm:text-sm py-2 px-4 flex justify-between items-center shadow-inner">
-            <div class="flex items-center gap-2">
-                <span class="animate-bounce">⚡</span> <span id="quest-text" class="font-medium">AI Alert: High spending detected.</span>
-            </div>
-            <button onclick="dismissQuest()" class="hover:text-primaryLight font-bold px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors">Accept Quest</button>
+            <div class="flex items-center gap-2"><span class="animate-bounce">⚡</span> <span id="quest-text" class="font-medium">AI Alert</span></div>
+            <button onclick="dismissQuest()" class="hover:text-primaryLight font-bold px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors">Dismiss</button>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
@@ -187,11 +208,9 @@
                 <span id="household-badge" class="hidden ml-2 bg-primaryLight text-primaryDark border border-primary/20 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide shadow-sm">Household</span>
             </div>
             <div class="flex items-center gap-2 sm:gap-4">
-                <!-- AUDIO BRIEFING BTN -->
                 <button onclick="playAudioBriefing()" id="btn-audio-brief" class="bg-primaryLight/30 text-primary hover:bg-primaryLight/50 p-2 rounded-xl transition-colors shadow-sm flex items-center gap-1 pulse-border" title="Play AI Morning Briefing">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </button>
-
                 <button onclick="openModal('expense-modal')" class="bg-primary hover:bg-primaryDark text-white px-3 sm:px-4 py-2 rounded-xl text-sm font-semibold transition-colors shadow-md flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     <span class="hidden sm:inline">Add Txn</span>
@@ -201,6 +220,9 @@
                 </button>
                 <button onclick="setAPIKey()" class="text-muted hover:text-primary transition-colors p-2" title="Set API Key">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4v-3.252a2 2 0 01.586-1.414l5.518-5.518A6 6 0 0117 9z" /></svg>
+                </button>
+                <button onclick="openModal('reset-modal')" class="text-muted hover:text-rose-500 transition-colors p-2" title="Reset Month">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                 </button>
                 <div class="flex items-center gap-3 pl-2 sm:pl-4 border-l border-theme">
                     <div class="flex flex-col items-end hidden sm:flex">
@@ -258,10 +280,10 @@
                         <span class="bg-emerald-100 text-emerald-700 p-1.5 rounded-lg"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></span>
                     </div>
                     <h2 class="text-2xl font-bold text-main" id="dash-liquid">₹0</h2>
-                    <p class="text-xs text-muted mt-2">Cash + Bank</p>
+                    <p class="text-xs text-muted mt-2">Accounts + Cash</p>
                 </div>
 
-                <!-- Zero Day Predictor (Burn Rate) -->
+                <!-- Zero Day Predictor -->
                 <div class="card rounded-2xl p-5 border shadow-sm flex flex-col justify-between relative overflow-hidden group">
                     <div class="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div class="flex justify-between items-start mb-2 relative z-10">
@@ -285,18 +307,21 @@
                 </div>
             </div>
 
-            <!-- 3 Col Layout -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-2">
-                
                 <!-- LEFT -->
                 <div class="flex flex-col gap-6 lg:col-span-1">
-                    <!-- Balances -->
+                    <!-- Balances / Bank Accounts -->
                     <div class="card rounded-2xl border shadow-sm p-5 sm:p-6">
-                        <h3 class="text-lg font-semibold text-main mb-4 flex items-center gap-2"><svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg> Account Balances</h3>
+                        <h3 class="text-lg font-semibold text-main mb-4 flex items-center gap-2"><svg class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg> Accounts & Cash</h3>
                         <div class="space-y-3">
-                            <div class="grid grid-cols-2 gap-3 pb-3 border-b border-theme">
-                                <div><label class="block text-xs font-medium text-muted mb-1">Bank Balance</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-muted sm:text-sm">₹</span></div><input type="number" id="bal-bank" class="pl-6 w-full rounded-xl border border-theme bg-transparent px-3 py-2.5 outline-none text-sm text-main" placeholder="0"></div></div>
-                                <div><label class="block text-xs font-medium text-muted mb-1">Cash in Hand</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-muted sm:text-sm">₹</span></div><input type="number" id="bal-cash" class="pl-6 w-full rounded-xl border border-theme bg-transparent px-3 py-2.5 outline-none text-sm text-main" placeholder="0"></div></div>
+                            <div class="pb-3 border-b border-theme">
+                                <label class="block text-xs font-medium text-muted mb-2">Bank Accounts</label>
+                                <div id="bank-acc-container" class="space-y-2 mb-2 max-h-32 overflow-y-auto custom-scrollbar"></div>
+                                <button onclick="openModal('add-bank-modal')" class="text-xs text-primary font-semibold hover:underline">+ Add Bank Account</button>
+                            </div>
+                            <div class="pb-3 border-b border-theme">
+                                <label class="block text-xs font-medium text-muted mb-1">Physical Cash in Hand</label>
+                                <div class="relative"><div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-muted sm:text-sm">₹</span></div><input type="number" id="bal-cash" class="pl-6 w-full rounded-xl border border-theme bg-transparent px-3 py-2.5 outline-none text-sm text-main" placeholder="0"></div>
                             </div>
                             <div class="grid grid-cols-2 gap-3">
                                 <div><label class="block text-xs font-medium text-muted mb-1">Total Savings</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none"><span class="text-muted sm:text-sm">₹</span></div><input type="number" id="bal-savings" class="pl-6 w-full rounded-xl border border-theme bg-transparent px-3 py-2.5 outline-none text-sm text-main" placeholder="0"></div></div>
@@ -316,6 +341,7 @@
                         <div id="cc-list" class="space-y-3 max-h-[250px] overflow-y-auto custom-scrollbar pr-1 mb-3"></div>
                         <div class="flex gap-2">
                             <button onclick="openModal('pay-cc-modal')" class="flex-1 bg-blue-600 text-white text-xs font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition-colors">Log Payment</button>
+                            <button onclick="generateDebtPlan()" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1"><svg class="w-3 h-3 text-yellow-300" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd"/></svg> AI Debt Plan</button>
                         </div>
                     </div>
 
@@ -497,6 +523,21 @@
 
 <!-- ================= MODALS ================= -->
 
+<!-- ADD BANK ACCOUNT MODAL -->
+<div id="add-bank-modal" class="modal-overlay fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-5 border border-theme">
+        <h3 class="text-xl font-bold text-main mb-4">Add Bank Account</h3>
+        <form id="add-bank-form" class="space-y-4">
+            <div><label class="block text-xs font-medium text-muted mb-1">Bank Name</label><input type="text" id="new-bank-name" required class="w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 outline-none text-sm focus:border-primary" placeholder="e.g. HDFC, Chase"></div>
+            <div><label class="block text-xs font-medium text-muted mb-1">Current Balance</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center"><span class="text-muted">₹</span></div><input type="number" id="new-bank-bal" required class="pl-7 w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 outline-none text-sm focus:border-primary" placeholder="0"></div></div>
+            <div class="flex gap-2">
+                <button type="button" onclick="closeModal('add-bank-modal')" class="flex-1 bg-baseBg text-main border border-theme py-3 rounded-xl font-medium">Cancel</button>
+                <button type="submit" class="flex-1 bg-primary hover:bg-primaryDark text-white py-3 rounded-xl font-medium">Add Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- ADD TRANSACTION MODAL -->
 <div id="expense-modal" class="modal-overlay fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="modal-content rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative border border-theme">
@@ -520,7 +561,7 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="block text-sm font-medium text-muted mb-1">Category</label><select id="expense-category" required class="w-full rounded-xl border border-theme bg-transparent text-main px-3 py-3 text-sm outline-none focus:border-primary"></select></div>
-                <div><label class="block text-sm font-medium text-muted mb-1">Account</label><select id="expense-payment" required class="w-full rounded-xl border border-theme bg-transparent text-main px-3 py-3 text-sm outline-none focus:border-primary" onchange="toggleCCSelect()"></select></div>
+                <div><label class="block text-sm font-medium text-muted mb-1">Account</label><select id="expense-payment" required class="bank-source-dropdown w-full rounded-xl border border-theme bg-transparent text-main px-3 py-3 text-sm outline-none focus:border-primary" onchange="toggleCCSelect()"></select></div>
             </div>
             <div id="cc-select-wrapper" class="hidden"><label class="block text-sm font-medium text-muted mb-1">Credit Card</label><select id="expense-cc-id" class="w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 text-sm outline-none"></select></div>
             
@@ -560,10 +601,7 @@
             <input type="hidden" id="fund-goal-id">
             <div><label class="text-xs font-medium text-muted">Amount to Add</label><input type="number" id="fund-amount" required min="1" class="w-full rounded-xl border border-theme bg-transparent text-main px-3 py-3 outline-none text-sm focus:border-primary" placeholder="₹"></div>
             <div><label class="text-xs font-medium text-muted">Fund From</label>
-                <select id="fund-source" class="w-full rounded-xl border border-theme bg-transparent text-main px-3 py-3 outline-none text-sm focus:border-primary">
-                    <option value="bank">Bank Balance</option>
-                    <option value="cash">Cash in Hand</option>
-                </select>
+                <select id="fund-source" class="bank-source-dropdown w-full rounded-xl border border-theme bg-transparent text-main px-3 py-3 outline-none text-sm focus:border-primary"></select>
             </div>
             <div class="flex gap-2">
                 <button type="button" onclick="closeModal('fund-goal-modal')" class="flex-1 bg-baseBg text-main border border-theme py-3 rounded-xl font-medium">Cancel</button>
@@ -631,7 +669,7 @@
         <form id="pay-cc-form" class="p-5 space-y-4">
             <div><label class="block text-sm font-medium text-muted mb-1">Select Card</label><select id="pay-cc-id" required class="w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 text-sm focus:border-primary outline-none"></select></div>
             <div><label class="block text-sm font-medium text-muted mb-1">Amount</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center"><span class="text-muted">₹</span></div><input type="number" id="pay-cc-amount" required min="1" class="pl-7 w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 outline-none focus:border-primary"></div></div>
-            <div><label class="block text-sm font-medium text-muted mb-1">Pay From</label><select id="pay-cc-source" required class="w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 text-sm outline-none focus:border-primary"><option value="bank">Bank Balance</option><option value="cash">Cash in Hand</option></select></div>
+            <div><label class="block text-sm font-medium text-muted mb-1">Pay From</label><select id="pay-cc-source" required class="bank-source-dropdown w-full rounded-xl border border-theme bg-transparent text-main px-4 py-3 text-sm outline-none focus:border-primary"></select></div>
             <button type="submit" class="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl">Record Payment</button>
         </form>
     </div>
@@ -736,64 +774,26 @@
     // 1. STATE & CORE VARIABLES
     // -----------------------------------------------------------
     let state = {
-        balances: { bank: 0, cash: 0, savings: 0, invest: 0 },
-        expenses: [],
-        emis: [],
-        creditCards: [], 
-        ccPayments: [],  
+        balances: { cash: 0, savings: 0, invest: 0 },
+        bankAccounts: [{ id: 'bank-default', name: 'Main Account', balance: 0 }],
+        expenses: [], emis: [], creditCards: [], ccPayments: [],  
         projections: { inSal:0, inOther:0, outRent:0, outEmi:0, outCc:0, outFood:0, outTrans:0, outShop:0 },
-        backupExpenses: null,
-        goals: [],       
-        wishlist: [],    
-        recurring: []    
+        backupExpenses: null, goals: [], wishlist: [], recurring: []    
     };
     
-    let dashboardChart = null;
-    let ccChart        = null;
-    let historyChart   = null;
-    let authUserId     = null;
-    let householdId    = localStorage.getItem('spend_household_id') || null;
-    let chatHistory    = [];
-    const MAX_CHAT_HISTORY = 10;
+    let dashboardChart = null; let ccChart = null; let historyChart = null;
+    let authUserId = null; let householdId = localStorage.getItem('spend_household_id') || null;
+    let chatHistory = []; const MAX_CHAT_HISTORY = 10;
     
-    let activeGeminiKey = localStorage.getItem('my_gemini_key') || "";
-
-    // Global scoping for UI hooks
-    window.setAPIKey = () => { document.getElementById('api-key-input').value = activeGeminiKey || ""; openModal('api-key-modal'); };
-    window.saveAPIKey = () => { const key = document.getElementById('api-key-input').value.trim(); localStorage.setItem('my_gemini_key', key); activeGeminiKey = key; if(window.firebaseUtils) window.firebaseUtils.activeGeminiKey = activeGeminiKey; closeModal('api-key-modal'); showToast("API Key saved securely!"); };
-
     // -----------------------------------------------------------
-    // 2. THEME & UI UTILS
+    // 2. THEME, CLOCK & UTILS
     // -----------------------------------------------------------
-    window.toggleDarkMode = () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme_mode', isDark ? 'dark' : 'light');
-        if(dashboardChart) dashboardChart.update();
-        if(ccChart) ccChart.update();
-    };
-
-    window.changeTheme = () => {
-        const t = document.getElementById('theme-selector').value;
-        document.documentElement.setAttribute('data-theme', t);
-        localStorage.setItem('color_theme', t);
-        if(dashboardChart) dashboardChart.update();
-    };
-
-    const loadTheme = () => {
-        const mode = localStorage.getItem('theme_mode');
-        if(mode === 'dark' || (!mode && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
-        const color = localStorage.getItem('color_theme') || 'indigo';
-        document.documentElement.setAttribute('data-theme', color);
-        const sel = document.getElementById('theme-selector'); if(sel) sel.value = color;
-    };
-    loadTheme();
-
     const updateClock = () => {
         const now = new Date();
-        const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
-        document.getElementById('live-clock').textContent = timeStr;
+        const opts = { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true };
+        document.getElementById('mac-clock').textContent = new Intl.DateTimeFormat('en-US', opts).format(now).replace(',', '');
     };
-    setInterval(updateClock, 1000); updateClock();
+    setInterval(updateClock, 60000); updateClock();
 
     const quotes = [
         "Wealth is not about having a lot of money; it's about having a lot of options.",
@@ -805,92 +805,61 @@
     document.getElementById('daily-quote').textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
 
     const formatCurrency = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
-    const formatDate     = (s) => new Date(s).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formatDate = (s) => new Date(s).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
     const isCurrentMonth = (s) => { const d = new Date(s), n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); };
 
     const showToast = (msg) => {
-        document.getElementById('toast-msg').textContent = msg;
-        const t = document.getElementById('toast');
-        t.classList.remove('-translate-y-20', 'opacity-0');
-        t.classList.add('translate-y-0', 'opacity-100');
+        document.getElementById('toast-msg').textContent = msg; const t = document.getElementById('toast');
+        t.classList.remove('-translate-y-20', 'opacity-0'); t.classList.add('translate-y-0', 'opacity-100');
         setTimeout(() => { t.classList.remove('translate-y-0', 'opacity-100'); t.classList.add('-translate-y-20', 'opacity-0'); }, 3000);
     };
 
     const getCategoryColor = (cat, type = 'class') => {
         const c = {
-            'Housing':        { class: 'bg-blue-100 text-blue-700',    hex: '#3b82f6', bgHex: '#eff6ff' },
-            'Food Delivery':  { class: 'bg-orange-100 text-orange-700', hex: '#f97316', bgHex: '#fff7ed' },
-            'Lunch':          { class: 'bg-amber-100 text-amber-700',   hex: '#f59e0b', bgHex: '#fffbeb' },
-            'Eat Out':        { class: 'bg-red-100 text-red-700',       hex: '#ef4444', bgHex: '#fef2f2' },
-            'Dining':         { class: 'bg-rose-100 text-rose-700',     hex: '#f43f5e', bgHex: '#fff1f2' },
-            'Food':           { class: 'bg-orange-100 text-orange-700', hex: '#f97316', bgHex: '#fff7ed' }, 
-            'Transportation': { class: 'bg-cyan-100 text-cyan-700',    hex: '#06b6d4', bgHex: '#ecfeff' },
-            'Utilities':      { class: 'bg-yellow-100 text-yellow-700', hex: '#eab308', bgHex: '#fefce8' },
-            'Shopping':       { class: 'bg-pink-100 text-pink-700',    hex: '#ec4899', bgHex: '#fdf2f8' },
-            'Entertainment':  { class: 'bg-purple-100 text-purple-700', hex: '#a855f7', bgHex: '#faf5ff' },
-            'Healthcare':     { class: 'bg-rose-100 text-rose-700',    hex: '#f43f5e', bgHex: '#fff1f2' },
-            'Salary':         { class: 'bg-emerald-100 text-emerald-700', hex: '#10b981', bgHex: '#d1fae5' },
-            'Incentive':      { class: 'bg-teal-100 text-teal-700', hex: '#14b8a6', bgHex: '#ccfbf1' },
-            'Refund':         { class: 'bg-lime-100 text-lime-700', hex: '#84cc16', bgHex: '#ecfccb' },
-            'Other':          { class: 'bg-slate-100 text-slate-700',  hex: '#64748b', bgHex: '#f8fafc' }
+            'Housing':        { class: 'bg-blue-100 text-blue-700',    hex: '#3b82f6' },
+            'Food Delivery':  { class: 'bg-orange-100 text-orange-700', hex: '#f97316' },
+            'Lunch':          { class: 'bg-amber-100 text-amber-700',   hex: '#f59e0b' },
+            'Eat Out':        { class: 'bg-red-100 text-red-700',       hex: '#ef4444' },
+            'Dining':         { class: 'bg-rose-100 text-rose-700',     hex: '#f43f5e' },
+            'Food':           { class: 'bg-orange-100 text-orange-700', hex: '#f97316' }, 
+            'Transportation': { class: 'bg-cyan-100 text-cyan-700',    hex: '#06b6d4' },
+            'Utilities':      { class: 'bg-yellow-100 text-yellow-700', hex: '#eab308' },
+            'Shopping':       { class: 'bg-pink-100 text-pink-700',    hex: '#ec4899' },
+            'Entertainment':  { class: 'bg-purple-100 text-purple-700', hex: '#a855f7' },
+            'Healthcare':     { class: 'bg-rose-100 text-rose-700',    hex: '#f43f5e' },
+            'Salary':         { class: 'bg-emerald-100 text-emerald-700', hex: '#10b981' },
+            'Incentive':      { class: 'bg-teal-100 text-teal-700', hex: '#14b8a6' },
+            'Refund':         { class: 'bg-lime-100 text-lime-700', hex: '#84cc16' },
+            'Other':          { class: 'bg-slate-100 text-slate-700',  hex: '#64748b' }
         };
         return (c[cat] || c['Other'])[type];
     };
 
     // -----------------------------------------------------------
-    // 3. MODAL LOGIC & RECOVERY LOGIC
+    // 3. AI QUESTS & ANOMALIES
     // -----------------------------------------------------------
-    window.openModal = (id) => {
-        document.getElementById(id).classList.add('active');
-        if(id === 'expense-modal') { document.getElementById('expense-date').valueAsDate = new Date(); toggleTxnType(); }
-        if(id === 'sync-modal') {
-            document.getElementById('my-sync-code').textContent = householdId || authUserId || "Log in first";
-            if(householdId) { document.getElementById('btn-leave-sync').classList.remove('hidden'); document.getElementById('partner-sync-code').value = householdId; } 
-            else { document.getElementById('btn-leave-sync').classList.add('hidden'); document.getElementById('partner-sync-code').value = ''; }
+    window.checkAnomalies = () => {
+        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const last30Exp = state.expenses.filter(e => (!e.type || e.type === 'expense') && new Date(e.date) >= thirtyDaysAgo);
+        const banner = document.getElementById('ai-quest-banner');
+        if (last30Exp.length > 5) {
+            const total = last30Exp.reduce((s,e)=>s+e.amount,0);
+            const food = last30Exp.filter(e => e.category.includes('Food') || e.category.includes('Dining') || e.category.includes('Eat Out')).reduce((s,e)=>s+e.amount,0);
+            if (food > (total * 0.25) && food > 0) {
+                document.getElementById('quest-text').textContent = `AI Watchdog: You spent ${formatCurrency(food)} on dining recently. Quest: No dining out this weekend!`;
+                banner.classList.remove('hidden'); return;
+            }
         }
-        if(id === 'reset-modal') {
-            document.getElementById('reset-input').value = '';
-            const recBtn = document.getElementById('btn-recover');
-            if (state.backupExpenses && state.backupExpenses.length > 0) { recBtn.classList.remove('opacity-50', 'cursor-not-allowed'); recBtn.classList.add('hover:bg-emerald-100'); recBtn.disabled = false; } 
-            else { recBtn.classList.add('opacity-50', 'cursor-not-allowed'); recBtn.classList.remove('hover:bg-emerald-100'); recBtn.disabled = true; }
-        }
-    };
-    window.closeModal = (id) => document.getElementById(id).classList.remove('active');
-    document.querySelectorAll('.modal-overlay').forEach(overlay => { overlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); }); });
-
-    window.confirmReset = () => {
-        if (document.getElementById('reset-input').value.toLowerCase() === 'reset') {
-            state.backupExpenses = JSON.parse(JSON.stringify(state.expenses)); 
-            state.expenses = state.expenses.filter(e => !isCurrentMonth(e.date));
-            calculateDashboard(); syncDataToCloud(); closeModal('reset-modal'); showToast('Month reset successful');
-        } else { showToast('Type reset to confirm'); }
+        banner.classList.add('hidden');
     };
 
-    window.recoverReset = () => {
-        if (state.backupExpenses && state.backupExpenses.length > 0) {
-            state.expenses = JSON.parse(JSON.stringify(state.backupExpenses));
-            state.backupExpenses = null;
-            calculateDashboard(); syncDataToCloud(); closeModal('reset-modal'); showToast('Expenses recovered successfully!');
-        } else { showToast('No backup found.'); }
+    window.dismissQuest = () => { 
+        document.getElementById('ai-quest-banner').classList.add('hidden'); 
+        showToast("Quest Accepted! Good luck."); 
     };
 
     // -----------------------------------------------------------
-    // 4. AUTH LOGIC
-    // -----------------------------------------------------------
-    window.showApp = (user) => {
-        document.getElementById('user-name').textContent = user.isAnonymous ? 'Guest' : (user.displayName || 'User');
-        if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
-        const overlay = document.getElementById('login-overlay'); const app = document.getElementById('app-content');
-        overlay.style.opacity = '0'; setTimeout(() => { overlay.classList.add('hidden'); app.classList.remove('hidden'); setTimeout(() => app.style.opacity = '1', 50); }, 300);
-    };
-
-    window.showLogin = () => {
-        const overlay = document.getElementById('login-overlay'); const app = document.getElementById('app-content');
-        app.style.opacity = '0'; setTimeout(() => { app.classList.add('hidden'); overlay.classList.remove('hidden'); setTimeout(() => overlay.style.opacity = '1', 50); }, 300);
-    };
-
-    // -----------------------------------------------------------
-    // 5. SYNC & AUTOMATION
+    // 4. FIREBASE SYNC & AUTOMATION
     // -----------------------------------------------------------
     const getDbRef = () => {
         const { db, appId, doc } = window.firebaseUtils;
@@ -905,29 +874,29 @@
         if(status === 'error') { bar.classList.replace('bg-emerald-400', 'bg-rose-400'); bar.style.width = '100%'; }
     };
 
+    const modifyBalance = (sourceId, amount, isIncome) => {
+        if(sourceId === 'Cash') {
+            state.balances.cash = isIncome ? (state.balances.cash + amount) : Math.max(0, state.balances.cash - amount);
+        } else if (sourceId.startsWith('acc_')) {
+            const accId = sourceId.replace('acc_', '');
+            const acc = state.bankAccounts.find(a => a.id === accId);
+            if(acc) acc.balance = isIncome ? (acc.balance + amount) : Math.max(0, acc.balance - amount);
+        }
+    };
+
     const processAutomations = () => {
         const todayStr = new Date().toISOString().split('T')[0];
         let changed = false;
-        
         state.recurring = state.recurring || [];
         state.recurring.forEach(r => {
             if (r.nextDate <= todayStr) {
-                if(r.type === 'expense') {
-                    if(r.payment === 'UPI') state.balances.bank = Math.max(0, state.balances.bank - r.amount);
-                    if(r.payment === 'Cash') state.balances.cash = Math.max(0, state.balances.cash - r.amount);
-                } else {
-                    if(r.payment === 'UPI') state.balances.bank += r.amount;
-                    if(r.payment === 'Cash') state.balances.cash += r.amount;
-                }
-                
+                modifyBalance(r.payment, r.amount, r.type === 'income');
                 state.expenses.push({ id: 'txn-'+Date.now()+Math.random(), type: r.type, description: r.desc + ' (Auto)', amount: r.amount, date: r.nextDate, category: r.category, payment: r.payment, ccId: r.ccId });
-                
                 const d = new Date(r.nextDate + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + 1);
                 r.nextDate = d.toISOString().split('T')[0];
                 changed = true;
             }
         });
-        
         if(changed) { showToast('✅ Automated recurring transactions processed.'); calculateDashboard(); syncDataToCloud(); }
     };
 
@@ -945,51 +914,185 @@
             if (snap.exists()) {
                 const d = snap.data();
                 state = {
-                    balances: d.balances || { bank: 0, cash: 0, savings: 0, invest: 0 }, expenses: d.expenses || [], emis: d.emis || [], creditCards: d.creditCards || [],
+                    balances: d.balances || { cash: 0, savings: 0, invest: 0 }, bankAccounts: d.bankAccounts || [], expenses: d.expenses || [], emis: d.emis || [], creditCards: d.creditCards || [],
                     ccPayments: d.ccPayments || [], projections: d.projections || { inSal:0, inOther:0, outRent:0, outEmi:0, outCc:0, outFood:0, outTrans:0, outShop:0 }, backupExpenses: d.backupExpenses || null,
                     goals: d.goals || [], wishlist: d.wishlist || [], recurring: d.recurring || []
                 };
+                if(d.balances && d.balances.bank !== undefined) { state.bankAccounts.push({id: 'acc-migrated', name: 'Main Account', balance: d.balances.bank}); delete state.balances.bank; syncDataToCloud(); }
+                if(state.bankAccounts.length === 0) state.bankAccounts.push({id: 'acc-default', name: 'Main Bank', balance: 0});
                 updateUIFromState(); processAutomations(); showToast('Cloud data synchronized');
             } else if (householdId) { showToast('Joined new household successfully.'); updateUIFromState(); }
         } catch (e) { console.error('Load error:', e); }
     };
 
     const updateUIFromState = () => {
-        document.getElementById('bal-bank').value = state.balances.bank || ''; document.getElementById('bal-cash').value = state.balances.cash || '';
-        document.getElementById('bal-savings').value = state.balances.savings || ''; document.getElementById('bal-invest').value = state.balances.invest || '';
+        document.getElementById('bal-cash').value = state.balances.cash || ''; document.getElementById('bal-savings').value = state.balances.savings || ''; document.getElementById('bal-invest').value = state.balances.invest || '';
         ['inSal','inOther','outRent','outEmi','outCc','outFood','outTrans','outShop'].forEach(k => { document.getElementById(`proj-${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`).value = state.projections[k] || ''; });
-        calculateDashboard(); updateCCDropdowns(); renderEMIs(); updateProjectionUI(); renderGoals(); renderWishlist(); checkAnomalies();
-    };
-
-    window.joinHousehold = () => {
-        const code = document.getElementById('partner-sync-code').value.trim();
-        if(code) { householdId = code; localStorage.setItem('spend_household_id', code); document.getElementById('household-badge').classList.remove('hidden'); closeModal('sync-modal'); loadDataFromCloud(); showToast("Household Synced!"); }
-    };
-    
-    window.leaveHousehold = () => {
-        householdId = null; localStorage.removeItem('spend_household_id'); document.getElementById('household-badge').classList.add('hidden'); closeModal('sync-modal'); loadDataFromCloud(); showToast("Switched to Personal Mode.");
+        
+        const bankCont = document.getElementById('bank-acc-container'); bankCont.innerHTML = '';
+        state.bankAccounts.forEach(acc => { bankCont.innerHTML += `<div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span class="text-muted text-xs font-semibold">${acc.name}</span></div><input type="number" onchange="updateBankBal('${acc.id}', this.value)" value="${acc.balance}" class="pl-24 w-full rounded-xl border border-theme bg-transparent px-3 py-2.5 outline-none text-sm text-main text-right" placeholder="0"></div>`; });
+        calculateDashboard(); updateCCDropdowns(); window.renderPaymentDropdowns(); renderEMIs(); updateProjectionUI(); renderGoals(); renderWishlist(); window.checkAnomalies();
     };
 
     // -----------------------------------------------------------
-    // 6. TABS
+    // 5. DASHBOARD & RENDER LOGIC
     // -----------------------------------------------------------
-    window.switchTab = (tabId) => {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('[id^="tab-"]').forEach(el => { el.classList.remove('border-primary', 'text-primary'); el.classList.add('border-transparent', 'text-muted'); });
-        document.getElementById(`view-${tabId}`).classList.add('active');
-        const btn = document.getElementById(`tab-${tabId}`);
-        btn.classList.remove('border-transparent', 'text-muted'); btn.classList.add('border-primary', 'text-primary');
-        if (tabId === 'history') filterHistory();
+    const calculateDashboard = () => {
+        const curTxns = state.expenses.filter(e => isCurrentMonth(e.date)); const curExp = curTxns.filter(e => !e.type || e.type === 'expense'); const curInc = curTxns.filter(e => e.type === 'income');
+        const b = state.balances; const totalBank = state.bankAccounts.reduce((s,a)=>s+a.balance, 0); const liquid = totalBank + (b.cash || 0); const totalAssets = liquid + (b.savings || 0) + (b.invest || 0);
+
+        let ccDebt = 0; let ccLimit = 0;
+        state.creditCards.forEach(cc => {
+            ccLimit += (cc.limit || 0);
+            const spent = state.expenses.filter(e => (!e.type || e.type === 'expense') && e.payment === 'Credit Card' && e.ccId === cc.id).reduce((s,e)=>s+e.amount,0);
+            const paid = state.ccPayments.filter(p => p.ccId === cc.id).reduce((s,p)=>s+p.amount,0);
+            ccDebt += Math.max(0, cc.due + spent - paid);
+        });
+
+        let loanDebt = state.emis.reduce((s, emi) => s + (emi.amount * emi.months), 0);
+        const totalLiabilities = ccDebt + loanDebt; const networth = totalAssets - totalLiabilities;
+        const monthSpent = curExp.reduce((s, e) => s + e.amount, 0); const monthIncome = curInc.reduce((s, e) => s + e.amount, 0);
+
+        document.getElementById('dash-liquid').textContent = formatCurrency(liquid); document.getElementById('dash-networth').textContent = formatCurrency(networth);
+        document.getElementById('dash-assets').textContent = formatCurrency(totalAssets); document.getElementById('dash-liabilities').textContent = formatCurrency(totalLiabilities);
+        document.getElementById('dash-cc-debt').textContent = formatCurrency(ccDebt); document.getElementById('dash-cc-limit').textContent = formatCurrency(ccLimit);
+        document.getElementById('dash-cc-bar').style.width = `${ccLimit > 0 ? Math.min((ccDebt/ccLimit)*100, 100) : 0}%`;
+        document.getElementById('dash-month-exp').textContent = formatCurrency(monthSpent); document.getElementById('dash-month-inc').textContent = formatCurrency(monthIncome);
+        document.getElementById('dash-exp-count').textContent = curTxns.length;
+
+        // Zero-Day Burn Rate
+        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const last30Exp = state.expenses.filter(e => (!e.type || e.type === 'expense') && new Date(e.date) >= thirtyDaysAgo);
+        const total30Spend = last30Exp.reduce((s,e)=>s+e.amount,0); const dailyBurn = total30Spend / 30; const zeroDays = dailyBurn > 0 ? Math.floor(liquid / dailyBurn) : 999;
+        
+        document.getElementById('dash-burn-rate').textContent = `${formatCurrency(dailyBurn)}/day`; document.getElementById('dash-zero-days').textContent = zeroDays > 999 ? "∞ Days" : `${zeroDays} Days`;
+        const zdEl = document.getElementById('dash-zero-days'); zdEl.className = `text-2xl font-bold relative z-10 ${zeroDays < 15 ? 'text-rose-600 animate-pulse' : (zeroDays < 45 ? 'text-orange-500' : 'text-emerald-500')}`;
+
+        renderExpenseList(curTxns, 'expenses-container', 'empty-state'); renderCCList();
+        dashboardChart = drawDoughnutChart(curExp, 'expenseChart', dashboardChart, 'chart-empty-state');
+        ccChart = drawCustomChart([ { category: 'Debt', amount: ccDebt }, { category: 'Available', amount: Math.max(0, ccLimit - ccDebt) } ], ['Debt', 'Available'], ['#f43f5e', '#10b981'], 'ccChart', ccChart);
+    };
+
+    const drawDoughnutChart = (expenses, canvasId, chartRef, emptyId) => {
+        const emptyEl = document.getElementById(emptyId); const wrapper = document.getElementById(canvasId)?.parentElement;
+        if (!wrapper) return;
+        if (expenses.length === 0) { if (emptyEl) emptyEl.classList.remove('hidden'); document.getElementById(canvasId).style.opacity = '0'; return chartRef; }
+        if (emptyEl) emptyEl.classList.add('hidden'); document.getElementById(canvasId).style.opacity = '1';
+
+        const catTotals = expenses.reduce((acc, e) => { acc[e.category] = (acc[e.category] || 0) + e.amount; return acc; }, {});
+        return renderChartJs(canvasId, chartRef, Object.keys(catTotals), Object.values(catTotals), Object.keys(catTotals).map(c => getCategoryColor(c, 'hex')));
+    };
+
+    const drawCustomChart = (dataItems, labels, bgColors, canvasId, chartRef) => {
+        const dataVals = dataItems.map(d => d.amount); if(dataVals.reduce((a,b)=>a+b,0) === 0) return chartRef; 
+        return renderChartJs(canvasId, chartRef, labels, dataVals, bgColors);
+    };
+
+    const renderChartJs = (canvasId, chartRef, labels, dataVals, bgColors) => {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        if (chartRef) { chartRef.data.labels = labels; chartRef.data.datasets[0].data = dataVals; chartRef.data.datasets[0].backgroundColor = bgColors; chartRef.update(); return chartRef; }
+        return new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: { family: "'Inter', sans-serif" } } } } } });
+    };
+
+    const renderExpenseList = (txns, containerId, emptyId) => {
+        const container = document.getElementById(containerId); const emptyState = document.getElementById(emptyId);
+        if (!container) return; Array.from(container.children).forEach(c => { if (c.id !== emptyId) c.remove(); });
+        if (txns.length === 0) { if (emptyState) emptyState.classList.remove('hidden'); return; }
+        if (emptyState) emptyState.classList.add('hidden');
+
+        [...txns].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-3 border border-theme rounded-xl mb-2 hover:bg-baseBg transition-colors group bg-card';
+            let paymentText = exp.payment;
+            if (exp.payment === 'Credit Card') { const cc = state.creditCards.find(c => c.id === exp.ccId); paymentText = cc ? `CC: ${cc.bank}` : 'Credit Card'; }
+            else if (exp.payment.startsWith('acc_')) { const acc = state.bankAccounts.find(a => a.id === exp.payment.replace('acc_','')); paymentText = acc ? `Bank: ${acc.name}` : 'Bank'; }
+            
+            const badgeClass = (exp.payment === 'Credit Card') ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+            const isIncome = exp.type === 'income'; const amountColor = isIncome ? 'text-emerald-600' : 'text-main'; const amountPrefix = isIncome ? '+' : '-';
+            item.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${getCategoryColor(exp.category)}">${exp.category.substring(0,2).toUpperCase()}</div>
+                    <div><p class="font-semibold text-main text-sm leading-tight">${exp.description}</p><p class="text-xs text-muted mt-0.5">${formatDate(exp.date)} &bull; <span class="px-1.5 py-0.5 rounded border ${badgeClass} text-[10px] ml-1">${paymentText}</span></p></div>
+                </div>
+                <div class="flex items-center gap-3"><span class="font-bold ${amountColor} text-sm">${amountPrefix}${formatCurrency(exp.amount)}</span><button onclick="window.deleteExpense('${exp.id}')" class="text-muted hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-colors p-1"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div>`;
+            container.appendChild(item);
+        });
+    };
+
+    const renderCCList = () => {
+        const list = document.getElementById('cc-list'); list.innerHTML = '';
+        if (state.creditCards.length === 0) { list.innerHTML = `<p class="text-xs text-muted text-center py-2">No credit cards added.</p>`; return; }
+        state.creditCards.forEach(cc => {
+            const spent = state.expenses.filter(e => (!e.type || e.type === 'expense') && e.payment === 'Credit Card' && e.ccId === cc.id).reduce((s,e)=>s+e.amount,0);
+            const paid = state.ccPayments.filter(p => p.ccId === cc.id).reduce((s,p)=>s+p.amount,0);
+            const debt = Math.max(0, cc.due + spent - paid); const avail = Math.max(0, (cc.limit || 0) - debt);
+            list.innerHTML += `<div class="bg-baseBg p-3 rounded-xl border border-theme text-sm relative group"><div class="flex justify-between items-center mb-1"><p class="font-bold text-main">${cc.bank}</p><button onclick="window.deleteCC('${cc.id}')" class="text-muted hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><div class="flex justify-between text-xs mb-1"><span class="text-muted">Debt: <strong class="text-rose-600">${formatCurrency(debt)}</strong></span><span class="text-muted">Avail: <strong class="text-emerald-600">${formatCurrency(avail)}</strong></span></div></div>`;
+        });
+    };
+
+    const renderEMIs = () => {
+        const list = document.getElementById('emi-list'); list.innerHTML = '';
+        if (state.emis.length === 0) { list.innerHTML = `<p class="text-xs text-muted text-center py-2">No active EMIs added.</p>`; return; }
+        state.emis.forEach(emi => {
+            list.innerHTML += `<div class="flex justify-between items-center bg-orange-500/10 p-3 rounded-lg border border-orange-500/20 text-sm mb-2"><div><p class="font-semibold text-main">${emi.name}</p><p class="text-xs text-orange-600">${emi.months} months left</p></div><div class="flex items-center gap-2"><span class="font-bold text-main mr-2">${formatCurrency(emi.amount)}</span><button onclick="window.payEMI('${emi.id}')" class="bg-primary hover:bg-primaryDark text-white text-xs font-semibold px-2 py-1 rounded transition-colors shadow-sm">Pay Now</button><button onclick="window.deleteEMI('${emi.id}')" class="text-muted hover:text-rose-500 p-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>`;
+        });
     };
 
     // -----------------------------------------------------------
-    // 7. EXPORT & REPORTING LOGIC
+    // 6. GOALS & WISHLIST
     // -----------------------------------------------------------
+    const renderGoals = () => {
+        const cont = document.getElementById('goals-container'); cont.innerHTML = '';
+        state.goals.forEach(g => {
+            const pct = Math.min((g.current / g.target) * 100, 100).toFixed(1);
+            const styleStr = g.imgUrl ? `background-image: url('${g.imgUrl}');` : '';
+            const cardClass = g.imgUrl ? 'goal-bg text-white' : 'bg-card text-main';
+            const muteClass = g.imgUrl ? 'text-slate-300' : 'text-muted';
+            
+            cont.innerHTML += `
+            <div class="rounded-2xl border border-theme shadow-sm p-5 relative overflow-hidden group ${cardClass}" style="${styleStr}">
+                <div class="goal-content">
+                    <div class="flex justify-between items-start mb-2 relative z-10">
+                        <div><h4 class="font-bold text-lg">${g.name}</h4><p class="text-xs ${muteClass}">Target: ${formatDate(g.date)}</p></div>
+                        <button onclick="window.deleteGoal('${g.id}')" class="text-white hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    </div>
+                    <div class="mt-4 relative z-10">
+                        <div class="flex justify-between text-sm font-semibold mb-1"><span class="${g.imgUrl?'text-emerald-400':'text-primary'}">${formatCurrency(g.current)}</span><span class="${muteClass}">${formatCurrency(g.target)}</span></div>
+                        <div class="w-full bg-slate-800/50 rounded-full h-2 mb-4"><div class="${g.imgUrl?'bg-emerald-400':'bg-primary'} h-2 rounded-full transition-all" style="width: ${pct}%"></div></div>
+                        <button onclick="window.openFundGoal('${g.id}')" class="w-full ${g.imgUrl?'bg-white/20 hover:bg-white/30 text-white':'bg-primaryLight/20 text-primary hover:bg-primaryLight/40'} font-semibold py-2 rounded-xl text-sm transition-colors backdrop-blur-sm">Add Funds</button>
+                    </div>
+                </div>
+            </div>`;
+        });
+    };
+
+    const renderWishlist = () => {
+        const cont = document.getElementById('wishlist-container'); cont.innerHTML = ''; const now = Date.now();
+        state.wishlist.forEach(w => {
+            const diff = now - w.dateAdded; const hoursLeft = 48 - (diff / (1000 * 60 * 60)); const isLocked = hoursLeft > 0;
+            const btnHtml = isLocked 
+                ? `<button disabled class="w-full bg-baseBg text-muted font-semibold py-2 rounded-xl text-sm cursor-not-allowed flex justify-center items-center gap-1 border border-theme"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg> Locked (${Math.ceil(hoursLeft)}h left)</button>`
+                : `<button onclick="window.buyWishlist('${w.id}')" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-sm shadow-sm transition-colors flex justify-center items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg> Unlock & Buy</button>`;
+
+            cont.innerHTML += `<div class="card rounded-2xl border shadow-sm p-5 relative group"><button onclick="window.deleteWishlist('${w.id}')" class="absolute top-3 right-3 text-muted hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button><div class="mb-4"><h4 class="font-bold text-main text-lg pr-5">${w.name}</h4><p class="text-2xl font-bold text-rose-500 mt-1">${formatCurrency(w.amount)}</p></div>${btnHtml}</div>`;
+        });
+    };
+
+    // -----------------------------------------------------------
+    // 7. EXPORT, AI ACTION PLAN & PROJECTIONS
+    // -----------------------------------------------------------
+    const updateProjectionUI = () => {
+        const p = state.projections; const inflow = (p.inSal||0) + (p.inOther||0); const outflow = (p.outRent||0) + (p.outEmi||0) + (p.outCc||0) + (p.outFood||0) + (p.outTrans||0) + (p.outShop||0);
+        document.getElementById('res-in').textContent = formatCurrency(inflow); document.getElementById('res-out').textContent = `- ${formatCurrency(outflow)}`; document.getElementById('res-left').textContent = formatCurrency(inflow - outflow);
+    };
+
+    window.saveManualProjection = () => { ['inSal','inOther','outRent','outEmi','outCc','outFood','outTrans','outShop'].forEach(k => { const el = document.getElementById(`proj-${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`); state.projections[k] = parseFloat(el.value) || 0; }); updateProjectionUI(); syncDataToCloud(); showToast('Projections saved'); };
+
     window.exportReport = (formatType, customTxns = null, customTitle = null) => {
         const baseTxns = customTxns || state.expenses;
         const allTxns = [...baseTxns].sort((a, b) => { if (a.category !== b.category) return a.category.localeCompare(b.category); return new Date(b.date) - new Date(a.date); });
         
-        const b = state.balances; const liquid = (b.bank || 0) + (b.cash || 0); const totalAssets = liquid + (b.savings || 0) + (b.invest || 0);
+        const b = state.balances; const totalBank = state.bankAccounts.reduce((s,a)=>s+a.balance, 0); const liquid = totalBank + (b.cash || 0); const totalAssets = liquid + (b.savings || 0) + (b.invest || 0);
         let ccDebt = 0; state.creditCards.forEach(cc => { const spent = state.expenses.filter(e => (!e.type || e.type === 'expense') && e.payment === 'Credit Card' && e.ccId === cc.id).reduce((s,e)=>s+e.amount,0); const paid = state.ccPayments.filter(p => p.ccId === cc.id).reduce((s,p)=>s+p.amount,0); ccDebt += Math.max(0, cc.due + spent - paid); });
 
         const dateStr = new Date().toISOString().split('T')[0];
@@ -997,7 +1100,7 @@
 
         if (formatType === 'csv') {
             let csvContent = "Type,Category,Date,Description,Payment Method,Amount (INR)\n";
-            allTxns.forEach(e => { let desc = (e.description || '').replace(/"/g, '""'); let tType = e.type === 'income' ? 'Income' : 'Expense'; csvContent += `"${tType}","${e.category}","${e.date}","${desc}","${e.payment}","${e.amount}"\n`; });
+            allTxns.forEach(e => { let desc = (e.description || '').replace(/"/g, '""'); let tType = e.type === 'income' ? 'Income' : 'Expense'; csvContent += `"${tType}","${e.category}","${e.date}","${desc}","${e.payment.replace('acc_','Bank:')}","${e.amount}"\n`; });
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `${filenamePrefix}_${dateStr}.csv`; document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast('CSV Report Downloaded');
         } else if (formatType === 'pdf') {
             try {
@@ -1037,315 +1140,16 @@
     };
 
     window.downloadActionPlanPDF = () => {
-        const doc = new window.jspdf.jsPDF();
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
         const content = document.getElementById('report-insights-container').innerText;
-        doc.setFontSize(16); doc.text("SpendSense AI Strategic Action Plan", 14, 20);
-        doc.setFontSize(11);
+        doc.setFontSize(16); doc.setTextColor(15, 23, 42); doc.text("SpendSense AI Strategic Action Plan", 14, 20);
+        doc.setFontSize(11); doc.setTextColor(51, 65, 85);
         const splitText = doc.splitTextToSize(content, 180);
-        doc.text(splitText, 14, 30);
-        doc.save(`SpendSense_Action_Plan_${new Date().toISOString().split('T')[0]}.pdf`);
-        showToast('Action Plan PDF Downloaded');
+        let y = 30;
+        for (let i = 0; i < splitText.length; i++) { if (y > 280) { doc.addPage(); y = 20; } doc.text(splitText[i], 14, y); y += 6; }
+        doc.save(`SpendSense_Action_Plan_${new Date().toISOString().split('T')[0]}.pdf`); showToast('Action Plan PDF Downloaded');
     };
 
-    // -----------------------------------------------------------
-    // 8. CORE DASHBOARD & METRICS
-    // -----------------------------------------------------------
-    const calculateDashboard = () => {
-        const curTxns = state.expenses.filter(e => isCurrentMonth(e.date));
-        const curExp = curTxns.filter(e => !e.type || e.type === 'expense');
-        const curInc = curTxns.filter(e => e.type === 'income');
-        
-        const b = state.balances;
-        const liquid = (b.bank || 0) + (b.cash || 0);
-        const totalAssets = liquid + (b.savings || 0) + (b.invest || 0);
-
-        let ccDebt = 0; let ccLimit = 0;
-        state.creditCards.forEach(cc => {
-            ccLimit += (cc.limit || 0);
-            const spent = state.expenses.filter(e => (!e.type || e.type === 'expense') && e.payment === 'Credit Card' && e.ccId === cc.id).reduce((s,e)=>s+e.amount,0);
-            const paid = state.ccPayments.filter(p => p.ccId === cc.id).reduce((s,p)=>s+p.amount,0);
-            ccDebt += Math.max(0, cc.due + spent - paid);
-        });
-
-        let loanDebt = state.emis.reduce((s, emi) => s + (emi.amount * emi.months), 0);
-        const totalLiabilities = ccDebt + loanDebt; const networth = totalAssets - totalLiabilities;
-        const monthSpent = curExp.reduce((s, e) => s + e.amount, 0); const monthIncome = curInc.reduce((s, e) => s + e.amount, 0);
-
-        document.getElementById('dash-liquid').textContent = formatCurrency(liquid); document.getElementById('dash-networth').textContent = formatCurrency(networth);
-        document.getElementById('dash-assets').textContent = formatCurrency(totalAssets); document.getElementById('dash-liabilities').textContent = formatCurrency(totalLiabilities);
-        document.getElementById('dash-cc-debt').textContent = formatCurrency(ccDebt); document.getElementById('dash-cc-limit').textContent = formatCurrency(ccLimit);
-        document.getElementById('dash-cc-bar').style.width = `${ccLimit > 0 ? Math.min((ccDebt/ccLimit)*100, 100) : 0}%`;
-        document.getElementById('dash-month-exp').textContent = formatCurrency(monthSpent); document.getElementById('dash-month-inc').textContent = formatCurrency(monthIncome);
-        document.getElementById('dash-exp-count').textContent = curTxns.length;
-
-        // Zero-Day Burn Rate Logic
-        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const last30Exp = state.expenses.filter(e => (!e.type || e.type === 'expense') && new Date(e.date) >= thirtyDaysAgo);
-        const total30Spend = last30Exp.reduce((s,e)=>s+e.amount,0);
-        const dailyBurn = total30Spend / 30;
-        const zeroDays = dailyBurn > 0 ? Math.floor(liquid / dailyBurn) : 999;
-        
-        document.getElementById('dash-burn-rate').textContent = `${formatCurrency(dailyBurn)}/day`;
-        document.getElementById('dash-zero-days').textContent = zeroDays > 999 ? "∞ Days" : `${zeroDays} Days`;
-        const zdEl = document.getElementById('dash-zero-days');
-        zdEl.className = `text-2xl font-bold relative z-10 ${zeroDays < 15 ? 'text-rose-600 animate-pulse' : (zeroDays < 45 ? 'text-orange-500' : 'text-emerald-500')}`;
-
-        renderExpenseList(curTxns, 'expenses-container', 'empty-state'); renderCCList();
-        dashboardChart = drawDoughnutChart(curExp, 'expenseChart', dashboardChart, 'chart-empty-state');
-        ccChart = drawCustomChart([ { category: 'Debt', amount: ccDebt }, { category: 'Available', amount: Math.max(0, ccLimit - ccDebt) } ], ['Debt', 'Available'], ['#f43f5e', '#10b981'], 'ccChart', ccChart);
-    };
-
-    // -----------------------------------------------------------
-    // 9. CHARTS
-    // -----------------------------------------------------------
-    const drawDoughnutChart = (expenses, canvasId, chartRef, emptyId) => {
-        const emptyEl = document.getElementById(emptyId); const wrapper = document.getElementById(canvasId)?.parentElement;
-        if (!wrapper) return;
-        if (expenses.length === 0) { if (emptyEl) emptyEl.classList.remove('hidden'); document.getElementById(canvasId).style.opacity = '0'; return chartRef; }
-        if (emptyEl) emptyEl.classList.add('hidden'); document.getElementById(canvasId).style.opacity = '1';
-
-        const catTotals = expenses.reduce((acc, e) => { acc[e.category] = (acc[e.category] || 0) + e.amount; return acc; }, {});
-        return renderChartJs(canvasId, chartRef, Object.keys(catTotals), Object.values(catTotals), Object.keys(catTotals).map(c => getCategoryColor(c, 'hex')));
-    };
-
-    const drawCustomChart = (dataItems, labels, bgColors, canvasId, chartRef) => {
-        const dataVals = dataItems.map(d => d.amount);
-        if(dataVals.reduce((a,b)=>a+b,0) === 0) return chartRef; 
-        return renderChartJs(canvasId, chartRef, labels, dataVals, bgColors);
-    };
-
-    const renderChartJs = (canvasId, chartRef, labels, dataVals, bgColors) => {
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        if (chartRef) { chartRef.data.labels = labels; chartRef.data.datasets[0].data = dataVals; chartRef.data.datasets[0].backgroundColor = bgColors; chartRef.update(); return chartRef; }
-        return new Chart(ctx, { type: 'doughnut', data: { labels, datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { position: 'right', labels: { usePointStyle: true, font: { family: "'Inter', sans-serif" } } } } } });
-    };
-
-    // -----------------------------------------------------------
-    // 10. LIST RENDERING
-    // -----------------------------------------------------------
-    const renderExpenseList = (txns, containerId, emptyId) => {
-        const container = document.getElementById(containerId); const emptyState = document.getElementById(emptyId);
-        if (!container) return; Array.from(container.children).forEach(c => { if (c.id !== emptyId) c.remove(); });
-        if (txns.length === 0) { if (emptyState) emptyState.classList.remove('hidden'); return; }
-        if (emptyState) emptyState.classList.add('hidden');
-
-        [...txns].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(exp => {
-            const item = document.createElement('div');
-            item.className = 'flex items-center justify-between p-3 border border-theme rounded-xl mb-2 hover:bg-baseBg transition-colors group bg-card';
-            let paymentText = exp.payment; if (exp.payment === 'Credit Card') { const cc = state.creditCards.find(c => c.id === exp.ccId); paymentText = cc ? `CC: ${cc.bank}` : 'Credit Card'; }
-            const badgeClass = (exp.payment === 'UPI' || exp.payment === 'Cash' || exp.type === 'income') ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-            const isIncome = exp.type === 'income'; const amountColor = isIncome ? 'text-emerald-600' : 'text-main'; const amountPrefix = isIncome ? '+' : '-';
-            item.innerHTML = `
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${getCategoryColor(exp.category)}">${exp.category.substring(0,2).toUpperCase()}</div>
-                    <div><p class="font-semibold text-main text-sm leading-tight">${exp.description}</p><p class="text-xs text-muted mt-0.5">${formatDate(exp.date)} &bull; <span class="px-1.5 py-0.5 rounded border ${badgeClass} text-[10px] ml-1">${paymentText}</span></p></div>
-                </div>
-                <div class="flex items-center gap-3"><span class="font-bold ${amountColor} text-sm">${amountPrefix}${formatCurrency(exp.amount)}</span><button onclick="deleteExpense('${exp.id}')" class="text-muted hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-colors p-1"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div>`;
-            container.appendChild(item);
-        });
-    };
-
-    const renderCCList = () => {
-        const list = document.getElementById('cc-list'); list.innerHTML = '';
-        if (state.creditCards.length === 0) { list.innerHTML = `<p class="text-xs text-muted text-center py-2">No credit cards added.</p>`; return; }
-        state.creditCards.forEach(cc => {
-            const spent = state.expenses.filter(e => (!e.type || e.type === 'expense') && e.payment === 'Credit Card' && e.ccId === cc.id).reduce((s,e)=>s+e.amount,0);
-            const paid = state.ccPayments.filter(p => p.ccId === cc.id).reduce((s,p)=>s+p.amount,0);
-            const debt = Math.max(0, cc.due + spent - paid); const avail = Math.max(0, (cc.limit || 0) - debt);
-            list.innerHTML += `<div class="bg-baseBg p-3 rounded-xl border border-theme text-sm relative group"><div class="flex justify-between items-center mb-1"><p class="font-bold text-main">${cc.bank}</p><button onclick="deleteCC('${cc.id}')" class="text-muted hover:text-rose-500 sm:opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><div class="flex justify-between text-xs mb-1"><span class="text-muted">Debt: <strong class="text-rose-600">${formatCurrency(debt)}</strong></span><span class="text-muted">Avail: <strong class="text-emerald-600">${formatCurrency(avail)}</strong></span></div></div>`;
-        });
-    };
-
-    const renderEMIs = () => {
-        const list = document.getElementById('emi-list'); list.innerHTML = '';
-        if (state.emis.length === 0) { list.innerHTML = `<p class="text-xs text-muted text-center py-2">No active EMIs added.</p>`; return; }
-        state.emis.forEach(emi => {
-            list.innerHTML += `<div class="flex justify-between items-center bg-orange-500/10 p-3 rounded-lg border border-orange-500/20 text-sm mb-2"><div><p class="font-semibold text-main">${emi.name}</p><p class="text-xs text-orange-600">${emi.months} months left</p></div><div class="flex items-center gap-2"><span class="font-bold text-main mr-2">${formatCurrency(emi.amount)}</span><button onclick="payEMI('${emi.id}')" class="bg-primary hover:bg-primaryDark text-white text-xs font-semibold px-2 py-1 rounded transition-colors shadow-sm">Pay Now</button><button onclick="deleteEMI('${emi.id}')" class="text-muted hover:text-rose-500 p-1"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div></div>`;
-        });
-    };
-
-    // -----------------------------------------------------------
-    // 11. GOALS (WITH IMAGEN AI) & WISHLIST LOGIC
-    // -----------------------------------------------------------
-    const renderGoals = () => {
-        const cont = document.getElementById('goals-container'); cont.innerHTML = '';
-        state.goals.forEach(g => {
-            const pct = Math.min((g.current / g.target) * 100, 100).toFixed(1);
-            const styleStr = g.imgUrl ? `background-image: url('${g.imgUrl}');` : '';
-            const cardClass = g.imgUrl ? 'goal-bg text-white' : 'bg-card text-main';
-            const muteClass = g.imgUrl ? 'text-slate-300' : 'text-muted';
-            
-            cont.innerHTML += `
-            <div class="rounded-2xl border border-theme shadow-sm p-5 relative overflow-hidden group ${cardClass}" style="${styleStr}">
-                <div class="goal-content">
-                    <div class="flex justify-between items-start mb-2 relative z-10">
-                        <div><h4 class="font-bold text-lg">${g.name}</h4><p class="text-xs ${muteClass}">Target: ${formatDate(g.date)}</p></div>
-                        <button onclick="deleteGoal('${g.id}')" class="text-white hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-                    </div>
-                    <div class="mt-4 relative z-10">
-                        <div class="flex justify-between text-sm font-semibold mb-1"><span class="${g.imgUrl?'text-emerald-400':'text-primary'}">${formatCurrency(g.current)}</span><span class="${muteClass}">${formatCurrency(g.target)}</span></div>
-                        <div class="w-full bg-slate-800/50 rounded-full h-2 mb-4"><div class="${g.imgUrl?'bg-emerald-400':'bg-primary'} h-2 rounded-full transition-all" style="width: ${pct}%"></div></div>
-                        <button onclick="openFundGoal('${g.id}')" class="w-full ${g.imgUrl?'bg-white/20 hover:bg-white/30 text-white':'bg-primaryLight/20 text-primary hover:bg-primaryLight/40'} font-semibold py-2 rounded-xl text-sm transition-colors backdrop-blur-sm">Add Funds</button>
-                    </div>
-                </div>
-            </div>`;
-        });
-    };
-
-    const renderWishlist = () => {
-        const cont = document.getElementById('wishlist-container'); cont.innerHTML = ''; const now = Date.now();
-        state.wishlist.forEach(w => {
-            const diff = now - w.dateAdded; const hoursLeft = 48 - (diff / (1000 * 60 * 60)); const isLocked = hoursLeft > 0;
-            const btnHtml = isLocked 
-                ? `<button disabled class="w-full bg-baseBg text-muted font-semibold py-2 rounded-xl text-sm cursor-not-allowed flex justify-center items-center gap-1 border border-theme"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg> Locked (${Math.ceil(hoursLeft)}h left)</button>`
-                : `<button onclick="buyWishlist('${w.id}')" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-sm shadow-sm transition-colors flex justify-center items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg> Unlock & Buy</button>`;
-
-            cont.innerHTML += `<div class="card rounded-2xl border shadow-sm p-5 relative group"><button onclick="deleteWishlist('${w.id}')" class="absolute top-3 right-3 text-muted hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button><div class="mb-4"><h4 class="font-bold text-main text-lg pr-5">${w.name}</h4><p class="text-2xl font-bold text-rose-500 mt-1">${formatCurrency(w.amount)}</p></div>${btnHtml}</div>`;
-        });
-    };
-
-    document.getElementById('goal-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const goalName = document.getElementById('goal-name').value;
-        const goalId = 'gol-'+Date.now();
-        state.goals.push({ id: goalId, name: goalName, target: parseFloat(document.getElementById('goal-target').value), current: 0, date: document.getElementById('goal-date').value, imgUrl: null });
-        e.target.reset(); closeModal('add-goal-modal'); renderGoals(); syncDataToCloud(); showToast('Goal created! Generating AI Vision...');
-
-        // Background Image Generation (Imagen 4.0 fallback to flash-image-preview)
-        try {
-            const key = activeGeminiKey || window.firebaseUtils?.activeGeminiKey;
-            if (key) {
-                const payload = { instances: [{ prompt: `A cinematic, highly detailed, beautifully lit inspiring photograph representing the personal financial goal: ${goalName}. Clean, modern, vibrant, no text.` }], parameters: { sampleCount: 1 } };
-                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${key}`;
-                const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-                const data = await res.json();
-                if(data.predictions && data.predictions[0]) {
-                    const goal = state.goals.find(g => g.id === goalId);
-                    if(goal) { goal.imgUrl = `data:image/png;base64,${data.predictions[0].bytesBase64Encoded}`; renderGoals(); syncDataToCloud(); }
-                }
-            }
-        } catch(err) { console.warn("Imagen generation failed:", err); }
-    });
-
-    window.openFundGoal = (id) => { document.getElementById('fund-goal-id').value = id; openModal('fund-goal-modal'); };
-
-    document.getElementById('fund-goal-form').addEventListener('submit', (e) => {
-        e.preventDefault(); const id = document.getElementById('fund-goal-id').value; const amt = parseFloat(document.getElementById('fund-amount').value); const source = document.getElementById('fund-source').value;
-        const goal = state.goals.find(g => g.id === id); if(!goal) return;
-        if(source === 'bank') state.balances.bank = Math.max(0, (state.balances.bank || 0) - amt);
-        if(source === 'cash') state.balances.cash = Math.max(0, (state.balances.cash || 0) - amt);
-        document.getElementById('bal-bank').value = state.balances.bank; document.getElementById('bal-cash').value = state.balances.cash;
-        goal.current += amt; e.target.reset(); closeModal('fund-goal-modal'); calculateDashboard(); renderGoals(); syncDataToCloud(); showToast(`Added ${formatCurrency(amt)} to goal!`);
-    });
-
-    document.getElementById('wishlist-form').addEventListener('submit', (e) => {
-        e.preventDefault(); state.wishlist.push({ id: 'wsh-'+Date.now(), name: document.getElementById('wish-name').value, amount: parseFloat(document.getElementById('wish-amount').value), dateAdded: Date.now() });
-        e.target.reset(); closeModal('add-wishlist-modal'); renderWishlist(); syncDataToCloud(); showToast('Item locked in wishlist!');
-    });
-
-    window.buyWishlist = (id) => {
-        const item = state.wishlist.find(w => w.id === id); if(!item) return;
-        document.getElementById('expense-desc').value = item.name; document.getElementById('expense-amount').value = item.amount; document.getElementById('expense-date').valueAsDate = new Date();
-        document.querySelector('input[name="txn-type"][value="expense"]').checked = true; toggleTxnType(); openModal('expense-modal'); deleteWishlist(id);
-    };
-
-    window.deleteGoal = (id) => { state.goals = state.goals.filter(e => e.id !== id); renderGoals(); syncDataToCloud(); };
-    window.deleteWishlist = (id) => { state.wishlist = state.wishlist.filter(e => e.id !== id); renderWishlist(); syncDataToCloud(); };
-
-    // -----------------------------------------------------------
-    // 12. FORMS & ACTIONS
-    // -----------------------------------------------------------
-    window.toggleTxnType = () => {
-        const type = document.querySelector('input[name="txn-type"]:checked').value; const catSelect = document.getElementById('expense-category'); const paySelect = document.getElementById('expense-payment'); const ccWrapper = document.getElementById('cc-select-wrapper'); const btn = document.getElementById('txn-submit-btn');
-        if (type === 'income') {
-            catSelect.innerHTML = `<option value="Salary">Salary</option><option value="Incentive">Incentive / Bonus</option><option value="Refund">Refund / Return</option><option value="Other">Other Income</option>`;
-            paySelect.innerHTML = `<option value="UPI">Bank Account</option><option value="Cash">Cash</option>`;
-            ccWrapper.classList.add('hidden'); btn.textContent = "Add Income";
-            btn.className = "w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 rounded-xl shadow-md transition-colors";
-        } else {
-            catSelect.innerHTML = `<option value="Housing">Housing</option><option value="Food Delivery">Food Delivery (Swiggy/Zomato)</option><option value="Lunch">Lunch</option><option value="Eat Out">Eat Out (Casual)</option><option value="Dining">Dining (Restaurants)</option><option value="Transportation">Transportation</option><option value="Utilities">Utilities</option><option value="Shopping">Shopping</option><option value="Entertainment">Entertainment</option><option value="Healthcare">Healthcare</option><option value="Other">Other</option>`;
-            paySelect.innerHTML = `<option value="UPI">UPI / Bank</option><option value="Cash">Cash</option><option value="Credit Card">Credit Card</option>`;
-            if(paySelect.value === 'Credit Card') ccWrapper.classList.remove('hidden');
-            btn.textContent = "Add Expense";
-            btn.className = "w-full mt-4 bg-primary hover:bg-primaryDark text-white font-medium py-3 rounded-xl shadow-md transition-colors";
-        }
-    };
-
-    window.toggleCCSelect = () => {
-        const pmt = document.getElementById('expense-payment').value; const wrap = document.getElementById('cc-select-wrapper'); const ccSelect = document.getElementById('expense-cc-id');
-        if(pmt === 'Credit Card') { wrap.classList.remove('hidden'); ccSelect.required = true; } else { wrap.classList.add('hidden'); ccSelect.required = false; }
-    };
-
-    const updateCCDropdowns = () => {
-        const html = state.creditCards.map(c => `<option value="${c.id}">${c.bank}</option>`).join('');
-        document.getElementById('expense-cc-id').innerHTML = html; document.getElementById('pay-cc-id').innerHTML = html;
-    };
-
-    document.getElementById('save-balances-btn').addEventListener('click', () => {
-        state.balances = { bank: parseFloat(document.getElementById('bal-bank').value) || 0, cash: parseFloat(document.getElementById('bal-cash').value) || 0, savings: parseFloat(document.getElementById('bal-savings').value) || 0, invest: parseFloat(document.getElementById('bal-invest').value) || 0 };
-        calculateDashboard(); syncDataToCloud(); showToast('Balances updated');
-    });
-
-    document.getElementById('expense-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const type = document.querySelector('input[name="txn-type"]:checked').value; const amt = parseFloat(document.getElementById('expense-amount').value); const payment = document.getElementById('expense-payment').value; const ccId = payment === 'Credit Card' ? document.getElementById('expense-cc-id').value : null; const date = document.getElementById('expense-date').value; const desc = document.getElementById('expense-desc').value; let catValue = document.getElementById('expense-category').value; const isRecurring = document.getElementById('txn-recurring').checked;
-
-        if (type === 'income') { if(payment === 'UPI') state.balances.bank = (state.balances.bank || 0) + amt; if(payment === 'Cash') state.balances.cash = (state.balances.cash || 0) + amt; } 
-        else { if(payment === 'UPI') state.balances.bank = Math.max(0, (state.balances.bank || 0) - amt); if(payment === 'Cash') state.balances.cash = Math.max(0, (state.balances.cash || 0) - amt); }
-        
-        document.getElementById('bal-bank').value = state.balances.bank; document.getElementById('bal-cash').value = state.balances.cash;
-        state.expenses.push({ id: 'txn-'+Date.now(), type: type, description: desc, amount: amt, date: date, category: catValue, payment: payment, ccId: ccId });
-        if(isRecurring) { const nextD = new Date(date + 'T00:00:00Z'); nextD.setUTCMonth(nextD.getUTCMonth() + 1); state.recurring.push({ id: 'rec-'+Date.now(), type, desc, amount: amt, category: catValue, payment, ccId, nextDate: nextD.toISOString().split('T')[0] }); }
-        
-        e.target.reset(); document.querySelector('input[name="txn-type"][value="expense"]').checked = true; toggleTxnType(); closeModal('expense-modal'); calculateDashboard(); if (document.getElementById('view-history').classList.contains('active')) filterHistory(); syncDataToCloud(); showToast(isRecurring ? 'Transaction logged & Automation Setup!' : 'Transaction logged!');
-    });
-
-    window.payEMI = (id) => {
-        const emi = state.emis.find(e => e.id === id); if(!emi) return;
-        state.balances.bank = Math.max(0, (state.balances.bank || 0) - emi.amount); document.getElementById('bal-bank').value = state.balances.bank;
-        state.expenses.push({ id: 'txn-'+Date.now(), type: 'expense', description: `EMI Payment: ${emi.name}`, amount: emi.amount, date: new Date().toISOString().split('T')[0], category: 'Housing', payment: 'UPI' });
-        emi.months -= 1; if(emi.months <= 0) { state.emis = state.emis.filter(e => e.id !== id); showToast('EMI Paid & fully cleared!'); } else { showToast(`EMI Paid! ${emi.months} months remaining.`); }
-        renderEMIs(); calculateDashboard(); if (document.getElementById('view-history').classList.contains('active')) filterHistory(); syncDataToCloud();
-    };
-
-    document.getElementById('pay-cc-form').addEventListener('submit', (e) => {
-        e.preventDefault(); const amt = parseFloat(document.getElementById('pay-cc-amount').value); const source = document.getElementById('pay-cc-source').value; const ccId = document.getElementById('pay-cc-id').value;
-        if(source === 'bank') state.balances.bank = Math.max(0, (state.balances.bank || 0) - amt); if(source === 'cash') state.balances.cash = Math.max(0, (state.balances.cash || 0) - amt);
-        document.getElementById('bal-bank').value = state.balances.bank; document.getElementById('bal-cash').value = state.balances.cash;
-        state.ccPayments.push({ id: 'ccp-'+Date.now(), ccId, amount: amt, source, date: new Date().toISOString() });
-        e.target.reset(); closeModal('pay-cc-modal'); calculateDashboard(); syncDataToCloud(); showToast('CC Payment recorded');
-    });
-
-    document.getElementById('cc-form').addEventListener('submit', (e) => { e.preventDefault(); state.creditCards.push({ id: 'cc-'+Date.now(), bank: document.getElementById('cc-bank').value, limit: parseFloat(document.getElementById('cc-limit').value), due: parseFloat(document.getElementById('cc-due').value) }); e.target.reset(); closeModal('add-cc-modal'); updateCCDropdowns(); calculateDashboard(); syncDataToCloud(); showToast('Card Added'); });
-    document.getElementById('emi-form').addEventListener('submit', (e) => { e.preventDefault(); state.emis.push({ id: 'emi-'+Date.now(), name: document.getElementById('emi-name').value, amount: parseFloat(document.getElementById('emi-amount').value), months: parseInt(document.getElementById('emi-months').value) }); e.target.reset(); closeModal('add-emi-modal'); renderEMIs(); calculateDashboard(); syncDataToCloud(); showToast('EMI Added'); });
-    window.deleteExpense = (id) => { state.expenses = state.expenses.filter(e => e.id !== id); calculateDashboard(); if (document.getElementById('view-history').classList.contains('active')) filterHistory(); syncDataToCloud(); };
-    window.deleteEMI = (id) => { state.emis = state.emis.filter(e => e.id !== id); renderEMIs(); calculateDashboard(); syncDataToCloud(); };
-    window.deleteCC  = (id) => { state.creditCards = state.creditCards.filter(c => c.id !== id); state.ccPayments = state.ccPayments.filter(p => p.ccId !== id); updateCCDropdowns(); calculateDashboard(); syncDataToCloud(); };
-
-    // -----------------------------------------------------------
-    // 13. PROJECTIONS & AI AUTO BUDGET
-    // -----------------------------------------------------------
-    const updateProjectionUI = () => {
-        const p = state.projections; const inflow = (p.inSal||0) + (p.inOther||0); const outflow = (p.outRent||0) + (p.outEmi||0) + (p.outCc||0) + (p.outFood||0) + (p.outTrans||0) + (p.outShop||0);
-        document.getElementById('res-in').textContent = formatCurrency(inflow); document.getElementById('res-out').textContent = `- ${formatCurrency(outflow)}`; document.getElementById('res-left').textContent = formatCurrency(inflow - outflow);
-    };
-
-    window.saveManualProjection = () => { ['inSal','inOther','outRent','outEmi','outCc','outFood','outTrans','outShop'].forEach(k => { const el = document.getElementById(`proj-${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`); state.projections[k] = parseFloat(el.value) || 0; }); updateProjectionUI(); syncDataToCloud(); showToast('Projections saved'); };
-
-    window.autoBudget = async () => {
-        if(!state.expenses || state.expenses.length === 0) return showToast("Need some past expenses to analyze!"); showToast("✨ AI is generating your budget...");
-        try {
-            const prompt = `Based on this user's historical transactions: ${JSON.stringify(state.expenses)}. Create a smart monthly budget projection. Return ONLY valid JSON with EXACT keys (all numbers): "inSal", "inOther", "outRent", "outEmi", "outCc", "outFood", "outTrans", "outShop".`;
-            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
-            const raw = await fetchGemini(payload); const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
-            Object.keys(data).forEach(k => { const el = document.getElementById(`proj-${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`); if(el) { el.value = data[k]; state.projections[k] = data[k]; } });
-            updateProjectionUI(); syncDataToCloud(); showToast("✨ AI Budget Generated Successfully!");
-        } catch (e) { showToast("AI Budget failed: " + e.message); }
-    };
-
-    // -----------------------------------------------------------
-    // 14. HISTORY
-    // -----------------------------------------------------------
     const filterHistory = () => {
         const from = document.getElementById('hist-from').value; const to   = document.getElementById('hist-to').value;
         let filtered = state.expenses.filter(e => !e.type || e.type === 'expense'); 
@@ -1355,6 +1159,7 @@
         let allFiltered = state.expenses; if (from) allFiltered = allFiltered.filter(e => e.date >= from); if (to) allFiltered = allFiltered.filter(e => e.date <= to);
         renderExpenseList(allFiltered, 'hist-container', 'empty-state-placeholder');
     };
+    window.filterHistory = filterHistory;
 
     const initHistoryDates = () => {
         const now  = new Date(); const first = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -1363,7 +1168,7 @@
     };
 
     // -----------------------------------------------------------
-    // 15. SMART GEMINI AI INTEGRATION (Multy-Modality)
+    // 8. AI MULTI-MODAL & CHAT
     // -----------------------------------------------------------
     const fetchGeminiWithBackoff = async (model, key, payload) => {
         const delays = [1000, 2000, 4000, 8000, 16000]; let lastError;
@@ -1374,7 +1179,7 @@
                 const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const data = await res.json();
                 if (data.error) throw new Error(data.error.message);
-                return data; // Return full object to handle TTS inlineData or Text
+                return data; 
             } catch (err) {
                 lastError = err; if (err.message.includes("API_KEY_INVALID") || err.message.includes("API key not valid")) throw new Error("Invalid API Key.");
                 if (i < delays.length) await new Promise(r => setTimeout(r, delays[i]));
@@ -1391,9 +1196,7 @@
         for (const model of modelsToTry) {
             try { 
                 const data = await fetchGeminiWithBackoff(model, key, payload); 
-                if (isAudio && data?.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
-                    return data.candidates[0].content.parts[0].inlineData;
-                }
+                if (isAudio && data?.candidates?.[0]?.content?.parts?.[0]?.inlineData) return data.candidates[0].content.parts[0].inlineData;
                 return data.candidates[0].content.parts[0].text;
             } 
             catch (err) { if (err.message.includes("Invalid API Key")) throw err; lastErrorMsg = err.message; }
@@ -1401,7 +1204,6 @@
         throw new Error("API Error: " + lastErrorMsg);
     };
 
-    // --- AI AUDIO TTS PCM-to-WAV CONVERTER ---
     function pcmToWav(pcmData, sampleRate = 24000) {
         const numChannels = 1; const byteRate = sampleRate * numChannels * 2; const blockAlign = numChannels * 2;
         const buffer = new ArrayBuffer(44 + pcmData.byteLength); const view = new DataView(buffer);
@@ -1414,11 +1216,9 @@
     }
 
     window.playAudioBriefing = async () => {
-        const btn = document.getElementById('btn-audio-brief');
-        btn.classList.add('animate-pulse');
-        showToast("Generating Audio Briefing...");
+        const btn = document.getElementById('btn-audio-brief'); btn.classList.add('animate-pulse'); showToast("Generating Audio Briefing...");
         try {
-            const prompt = `Act as VaultMind, a professional AI wealth advisor. Today is ${new Date().toLocaleDateString()}. The user has a net worth of ${document.getElementById('dash-networth').textContent}. Provide a very short, highly engaging 20-second morning audio script summarizing their financial standing. Be enthusiastic!`;
+            const prompt = `Act as SpendSense, a professional AI wealth advisor. Today is ${new Date().toLocaleDateString()}. The user has a net worth of ${document.getElementById('dash-networth').textContent}. Provide a very short, highly engaging 20-second morning audio script summarizing their financial standing. Be enthusiastic!`;
             const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } } };
             const inlineData = await fetchGemini(payload, true);
             
@@ -1427,60 +1227,96 @@
                 for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
                 const rateMatch = inlineData.mimeType.match(/rate=(\d+)/); const sampleRate = rateMatch ? parseInt(rateMatch[1]) : 24000;
                 const wavBuffer = pcmToWav(bytes.buffer, sampleRate);
-                const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-                const url = URL.createObjectURL(blob);
-                const audio = document.getElementById('tts-audio-player');
-                audio.src = url; audio.play();
-                showToast("🔊 Playing Briefing");
+                const blob = new Blob([wavBuffer], { type: 'audio/wav' }); const url = URL.createObjectURL(blob);
+                const audio = document.getElementById('tts-audio-player'); audio.src = url; audio.play(); showToast("🔊 Playing Briefing");
             }
-        } catch(e) {
-            showToast("Failed to generate audio: " + e.message);
-        } finally {
-            btn.classList.remove('animate-pulse');
-        }
+        } catch(e) { showToast("Failed to generate audio: " + e.message); } finally { btn.classList.remove('animate-pulse'); }
     };
 
     window.generateActionPlan = async () => {
-        document.getElementById('btn-download-action-plan').classList.remove('hidden');
-        openReportModal(null, "AI Strategic Action Plan");
+        document.getElementById('btn-download-action-plan').classList.remove('hidden'); openReportModal(null, "AI Strategic Action Plan");
         try {
             const prompt = `Act as a top-tier Wealth Manager. Analyze this user's data: ${JSON.stringify(state)}. Generate a detailed, highly structured 3-step action plan to optimize their wealth, clear debt (if any), and fund their goals. Format the output entirely in clean Markdown with bolding and bullet points.`;
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             const raw = await fetchGemini(payload);
-            
-            // Basic Markdown to HTML parsing for display
-            let html = raw.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                          .replace(/\n\n/g, '<br><br>')
-                          .replace(/\n\* /g, '<br>&bull; ')
-                          .replace(/^# (.*$)/gim, '<h2 class="text-xl font-bold text-main mt-4 mb-2">$1</h2>')
-                          .replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold text-primary mt-3 mb-2">$1</h3>');
-
-            document.getElementById('report-insights-container').innerHTML = `<div class="bg-card border border-theme p-6 rounded-xl text-main text-sm leading-relaxed shadow-sm">${html}</div>`;
+            let html = raw.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '<br><br>').replace(/\n\* /g, '<br>&bull; ').replace(/^# (.*$)/gim, '<h2 class="text-xl font-bold text-main mt-4 mb-2">$1</h2>').replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold text-primary mt-3 mb-2">$1</h3>');
+            document.getElementById('report-insights-container').innerHTML = `<div class="bg-card border border-theme p-6 rounded-xl text-main text-sm leading-relaxed shadow-sm" id="action-plan-content">${html}</div>`;
             document.getElementById('report-bars-wrapper').classList.add('hidden');
         } catch(e) { document.getElementById('report-insights-container').innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>${e.message}</strong></div>`; }
     };
 
-    window.checkAnomalies = () => {
-        const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const last30Exp = state.expenses.filter(e => (!e.type || e.type === 'expense') && new Date(e.date) >= thirtyDaysAgo);
-        const banner = document.getElementById('ai-quest-banner');
-        if (last30Exp.length > 5) {
-            const total = last30Exp.reduce((s,e)=>s+e.amount,0);
-            const food = last30Exp.filter(e => e.category.includes('Food') || e.category.includes('Dining') || e.category.includes('Eat Out')).reduce((s,e)=>s+e.amount,0);
-            if (food > (total * 0.25)) {
-                document.getElementById('quest-text').textContent = `AI Watchdog: You spent ${formatCurrency(food)} on food recently! Quest: No dining out this weekend!`;
-                banner.classList.remove('hidden'); return;
-            }
-        }
-        banner.classList.add('hidden');
+    window.openReportModal = async (customTxns = null, customTitle = "SpendSense AI Insights") => {
+        openModal('report-modal'); document.getElementById('report-modal-title').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd" /></svg> ${customTitle}`;
+        const container = document.getElementById('report-insights-container'); const bars = document.getElementById('report-bars-container');
+        bars.innerHTML = ''; container.innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-muted"><svg class="animate-spin h-8 w-8 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing patterns...</p></div>`;
+        document.getElementById('btn-download-action-plan').classList.add('hidden');
+        document.getElementById('report-bars-wrapper').classList.remove('hidden');
+
+        const curExp = customTxns || state.expenses.filter(e => isCurrentMonth(e.date) && (!e.type || e.type === 'expense'));
+        const total = curExp.reduce((s,e)=>s+e.amount,0); const cats = curExp.reduce((acc,e)=>{acc[e.category]=(acc[e.category]||0)+e.amount; return acc;}, {});
+        
+        Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([cat,amt]) => { const pct = total > 0 ? ((amt/total)*100).toFixed(1) : 0; bars.innerHTML += `<div class="mb-3"><div class="flex justify-between text-sm mb-1"><span class="font-medium text-main">${cat}</span><span class="text-muted">${formatCurrency(amt)} (${pct}%)</span></div><div class="w-full h-2 rounded-full" style="background-color:${getCategoryColor(cat,'bgHex')}"><div class="h-2 rounded-full" style="width:${pct}%;background-color:${getCategoryColor(cat,'hex')}"></div></div></div>`; });
+
+        try {
+            const prompt = `Act as a financial advisor. Here is my expense data for the requested period: ${JSON.stringify(cats)}. Return JSON array of 3 objects with exact keys: "icon" (emoji), "text" (insight string), "color" (use "text-indigo-600"), "bg" (use "bg-indigo-50"). Analyze patterns and provide useful financial advice based on these exact numbers.`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+            const raw = await fetchGemini(payload); const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+            container.innerHTML = data.map(i=>`<div class="${i.bg} border border-theme p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
+        } catch(e) { container.innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>${e.message}</strong></div>`; }
     };
 
-    window.dismissQuest = () => { document.getElementById('ai-quest-banner').classList.add('hidden'); showToast("Quest Accepted! Good luck."); };
+    window.generateHistoryReport = () => {
+        const from = document.getElementById('hist-from').value; const to   = document.getElementById('hist-to').value;
+        let filtered = state.expenses.filter(e => !e.type || e.type === 'expense'); 
+        if (from) filtered = filtered.filter(e => e.date >= from); if (to) filtered = filtered.filter(e => e.date <= to);
+        openReportModal(filtered, (from && to) ? `Insights: ${formatDate(from)} to ${formatDate(to)}` : "Historical AI Insights");
+    };
 
-    // Chat Interface
+    window.generateDebtPlan = async () => {
+        if(state.creditCards.length === 0 && state.emis.length === 0) return showToast("You have no active debts to analyze! 🎉");
+        openReportModal(null, "AI Debt Freedom Strategy");
+        document.getElementById('btn-download-action-plan').classList.add('hidden'); // Not full plan
+        try {
+            const prompt = `Act as an expert financial advisor. Here is my debt data. Credit Cards: ${JSON.stringify(state.creditCards)}. EMIs: ${JSON.stringify(state.emis)}. Bank Accounts: ${JSON.stringify(state.bankAccounts)}. Create a strategic debt payoff plan (compare Snowball vs Avalanche if applicable). Return ONLY a JSON array of 3-4 objects with exact keys: "icon" (emoji), "text" (advice string), "color" (use "text-indigo-600"), "bg" (use "bg-indigo-50").`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+            const raw = await fetchGemini(payload); const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+            document.getElementById('report-insights-container').innerHTML = data.map(i=>`<div class="${i.bg} border border-theme p-4 rounded-xl flex gap-3 shadow-sm items-center"><div class="text-2xl">${i.icon}</div><p class="text-sm ${i.color} font-medium leading-relaxed">${i.text}</p></div>`).join('');
+            document.getElementById('report-bars-wrapper').classList.add('hidden');
+        } catch(e) { document.getElementById('report-insights-container').innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>${e.message}</strong></div>`; }
+    };
+
+    window.autoBudget = async () => {
+        if(!state.expenses || state.expenses.length === 0) return showToast("Need some past expenses to analyze!"); showToast("✨ AI is generating your budget...");
+        try {
+            const prompt = `Based on this user's historical transactions: ${JSON.stringify(state.expenses)}. Create a smart monthly budget projection. Return ONLY valid JSON with EXACT keys (all numbers): "inSal", "inOther", "outRent", "outEmi", "outCc", "outFood", "outTrans", "outShop".`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" } };
+            const raw = await fetchGemini(payload); const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+            Object.keys(data).forEach(k => { const el = document.getElementById(`proj-${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}`); if(el) { el.value = data[k]; state.projections[k] = data[k]; } });
+            updateProjectionUI(); syncDataToCloud(); showToast("✨ AI Budget Generated Successfully!");
+        } catch (e) { showToast("AI Budget failed: " + e.message); }
+    };
+
+    window.scanReceipt = async (file) => {
+        if(!file) return;
+        const overlay = document.getElementById('receipt-scanner-overlay'); overlay.classList.remove('hidden');
+        const reader = new FileReader(); reader.readAsDataURL(file);
+        reader.onload = async () => {
+            const base64Data = reader.result.split(',')[1];
+            const promptInstruction = 'Extract receipt data. Return ONLY valid JSON with keys: "desc" (merchant name), "amount" (number), "date" (YYYY-MM-DD), "category". IMPORTANT: You MUST intelligently assign the "category" to EXACTLY one of these values based on the merchant (e.g., Swiggy/Zomato/UberEats = "Food Delivery", Fine Dining = "Dining", Casual Restaurant = "Eat Out"): ["Housing", "Food Delivery", "Lunch", "Eat Out", "Dining", "Transportation", "Utilities", "Shopping", "Entertainment", "Healthcare", "Other"]. If date is missing, use today.';
+            const payload = { contents: [{ parts: [{ text: promptInstruction }, { inlineData: { mimeType: file.type, data: base64Data } }] }], generationConfig: { responseMimeType: "application/json" } };
+            try {
+                const raw = await fetchGemini(payload); const data = JSON.parse(raw.replace(/```json|```/g,'').trim());
+                if(data.desc) document.getElementById('expense-desc').value = data.desc; if(data.amount) document.getElementById('expense-amount').value = data.amount; if(data.date) document.getElementById('expense-date').value = data.date;
+                document.querySelector('input[name="txn-type"][value="expense"]').checked = true; toggleTxnType();
+                if(data.category) { const sel = document.getElementById('expense-category'); for(let i=0; i<sel.options.length; i++) { if(sel.options[i].value === data.category || sel.options[i].text.includes(data.category)) { sel.selectedIndex = i; break; } } }
+                showToast("✅ Receipt scanned successfully!");
+            } catch(e) { showToast("Failed to scan receipt. Ensure API key supports Vision."); } finally { overlay.classList.add('hidden'); }
+        };
+    };
+
     window.startVoice = () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return showToast("Voice recognition not supported on this browser.");
+        if (!SpeechRecognition) return showToast("Voice recognition not supported.");
         const rec = new SpeechRecognition(); rec.onstart = () => showToast("🎙️ Listening... Speak now.");
         rec.onresult = (e) => { document.getElementById('chat-input').value = e.results[0][0].transcript; showToast("Voice captured! Hit send."); };
         rec.onerror = () => showToast("Voice recognition failed."); rec.start();
@@ -1488,11 +1324,11 @@
 
     window.toggleChat = () => {
         const w = document.getElementById('chat-window');
-        if (w.classList.contains('hidden')) { w.classList.remove('hidden'); setTimeout(() => w.classList.remove('scale-95','opacity-0'), 10); const ping = document.querySelector('#chat-toggle-btn .animate-ping'); if(ping) ping.parentElement.remove(); } 
+        if (w.classList.contains('hidden')) { w.classList.remove('hidden'); setTimeout(() => w.classList.remove('scale-95','opacity-0'), 10); } 
         else { w.classList.add('scale-95','opacity-0'); setTimeout(() => w.classList.add('hidden'), 150); }
     };
 
-    const handleChat = async () => {
+    window.handleChat = async () => {
         const inp = document.getElementById('chat-input'); const text = inp.value.trim(); if(!text) return;
         const msgDiv = document.getElementById('chat-messages'); const useWebSearch = document.getElementById('chat-web-search').checked;
         
@@ -1500,111 +1336,66 @@
         inp.value=''; document.getElementById('chat-send-btn').disabled=true;
         
         const typing = document.createElement('div'); typing.id='typing'; typing.innerHTML=`<div class="flex flex-col gap-1 w-full items-start"><div class="bg-card border border-theme p-3 rounded-2xl shadow-sm max-w-[85%] flex gap-1 h-10"><svg height="8" width="32" class="opacity-70"><circle class="typing-dot" cx="4" cy="4" r="3"/><circle class="typing-dot" cx="16" cy="4" r="3"/><circle class="typing-dot" cx="28" cy="4" r="3"/></svg></div></div>`;
-        msgDiv.appendChild(typing); msgDiv.scrollTop = msgDiv.scrollHeight; 
-
-        chatHistory.push({role:'user',parts:[{text}]});
+        msgDiv.appendChild(typing); msgDiv.scrollTop = msgDiv.scrollHeight; chatHistory.push({role:'user',parts:[{text}]});
         
-        const personaChoice = document.getElementById('chat-persona').value;
-        const todayStr = new Date().toISOString().split('T')[0];
-        
-        let sysPrompt = `You are VaultMind AI, a polite enterprise wealth advisor. Today's date is ${todayStr}. Current Data: ${JSON.stringify(state)}. Keep answers short. 
-        CRITICAL LOGGING RULE: If the user explicitly asks you to log, add, or record a transaction (expense or income), you MUST append this exact string at the very end of your response:
-        LOG_JSON: {"type": "expense" or "income", "amount": number, "desc": "description", "category": "Category", "payment": "UPI" or "Cash" or "Credit Card", "date": "YYYY-MM-DD"}
-        - Categories must be one of: Housing, Food Delivery, Lunch, Eat Out, Dining, Food, Transportation, Utilities, Shopping, Entertainment, Healthcare, Salary, Incentive, Refund, Other.
-        - Payment must be one of: UPI, Cash, Credit Card.`;
-
+        const personaChoice = document.getElementById('chat-persona').value; const todayStr = new Date().toISOString().split('T')[0];
+        let sysPrompt = `You are SpendSense AI, a polite enterprise wealth advisor. Today's date is ${todayStr}. Current Data: ${JSON.stringify(state)}. Keep answers short. CRITICAL LOGGING RULE: If the user asks you to log a transaction, append: LOG_JSON: {"type": "expense" or "income", "amount": number, "desc": "description", "category": "Category", "payment": "UPI", "date": "YYYY-MM-DD"}`;
         let bgClass = 'bg-card text-main border-theme';
-        
-        if (personaChoice === 'roast') {
-            sysPrompt = `You are a brutal, sarcastic financial roaster like Gordon Ramsay. Roast the user's spending habits based on this data: ${JSON.stringify(state)}. Be funny but harsh. Keep it short. CRITICAL LOGGING RULE: If the user explicitly asks you to log or add a transaction, append LOG_JSON: {"type": "expense" or "income", "amount": number, "desc": "description", "category": "Category", "payment": "UPI", "date": "YYYY-MM-DD"} to the end of your response.`;
-            bgClass = 'bg-rose-50 dark:bg-rose-900/30 text-rose-900 dark:text-rose-100 border-rose-200 dark:border-rose-800';
-        } else if (personaChoice === 'board') {
-            sysPrompt = `You act as a "Board of Directors" consisting of 3 people: The Aggressive Investor, The Cautious Accountant, and The Lifestyle Advocate. Answer financial questions by having all 3 personas give a short 1-sentence opinion formatted with emojis. CRITICAL LOGGING RULE: If the user explicitly asks you to log a transaction, append LOG_JSON: {"type": "expense" or "income", "amount": number, "desc": "description", "category": "Category", "payment": "UPI", "date": "YYYY-MM-DD"} to the end of your response.`;
-            bgClass = 'bg-slate-800 text-white border-slate-900';
-        }
+        if (personaChoice === 'roast') { sysPrompt = `You are a brutal, sarcastic financial roaster. Roast the user's spending habits: ${JSON.stringify(state)}. Be funny but harsh. Keep it short. CRITICAL LOGGING RULE: append LOG_JSON for transactions.`; bgClass = 'bg-rose-50 dark:bg-rose-900/30 text-rose-900 dark:text-rose-100 border-rose-200 dark:border-rose-800'; } 
+        else if (personaChoice === 'board') { sysPrompt = `Act as a "Board of Directors" consisting of 3 people: Aggressive Investor, Cautious Accountant, Lifestyle Advocate. Answer by having all 3 give a 1-sentence opinion. CRITICAL LOGGING RULE: append LOG_JSON for transactions.`; bgClass = 'bg-slate-800 text-white border-slate-900'; }
 
         try {
             let payload = { systemInstruction: { parts: [{ text: sysPrompt }] }, contents: chatHistory.slice(-MAX_CHAT_HISTORY) };
             if(useWebSearch) payload.tools = [{ "google_search": {} }];
-            const aiText = await fetchGemini(payload);
-            typing.remove(); 
-            
-            let displayMsg = aiText;
+            const aiText = await fetchGemini(payload); typing.remove(); let displayMsg = aiText;
             
             if (aiText.includes("LOG_JSON:")) {
                 try {
-                    const parts = aiText.split(/LOG_JSON:/i);
-                    displayMsg = parts[0].trim();
-                    const txnData = JSON.parse(parts[1].trim().replace(/```json|```/g,''));
-
-                    const type = txnData.type || 'expense'; const amt = parseFloat(txnData.amount); const pmt = txnData.payment || 'UPI';
-
-                    if (type === 'income') { if(pmt === 'UPI') state.balances.bank = (state.balances.bank || 0) + amt; if(pmt === 'Cash') state.balances.cash = (state.balances.cash || 0) + amt; } 
-                    else { if(pmt === 'UPI') state.balances.bank = Math.max(0, (state.balances.bank || 0) - amt); if(pmt === 'Cash') state.balances.cash = Math.max(0, (state.balances.cash || 0) - amt); }
+                    const parts = aiText.split(/LOG_JSON:/i); displayMsg = parts[0].trim(); const txnData = JSON.parse(parts[1].trim().replace(/```json|```/g,''));
+                    const type = txnData.type || 'expense'; const amt = parseFloat(txnData.amount); let pmt = txnData.payment || 'UPI';
+                    if(pmt === 'UPI' && state.bankAccounts.length > 0) pmt = `acc_${state.bankAccounts[0].id}`; 
                     
-                    document.getElementById('bal-bank').value = state.balances.bank; document.getElementById('bal-cash').value = state.balances.cash;
-
+                    modifyBalance(pmt, amt, type === 'income'); document.getElementById('bal-cash').value = state.balances.cash;
                     state.expenses.push({ id: 'txn-'+Date.now(), type: type, description: txnData.desc || 'AI Logged Item', amount: amt, date: txnData.date || todayStr, category: txnData.category || 'Other', payment: pmt, ccId: null });
-
-                    calculateDashboard(); if (document.getElementById('view-history').classList.contains('active')) filterHistory(); syncDataToCloud();
+                    updateUIFromState(); if (document.getElementById('view-history').classList.contains('active')) filterHistory(); syncDataToCloud();
                     displayMsg += "\n\n*(✅ I have automatically logged this transaction for you!)*"; showToast("Transaction automatically added by AI.");
-                } catch (e) { console.error("AI Logging Failed:", e); displayMsg += "\n\n*(❌ I tried to log this transaction but the data format was incorrect.)*"; }
+                } catch (e) { console.error(e); displayMsg += "\n\n*(❌ I tried to log this transaction but the data format was incorrect.)*"; }
             }
             
-            chatHistory.push({role:'model',parts:[{text:aiText}]});
-            displayMsg = displayMsg.replace(/\n/g, '<br/>');
-            
+            chatHistory.push({role:'model',parts:[{text:aiText}]}); displayMsg = displayMsg.replace(/\n/g, '<br/>');
             msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 border rounded-2xl rounded-tl-sm shadow-sm max-w-[85%] ${bgClass}">${displayMsg}</div></div>`;
         } catch(e) {
-            typing.remove(); chatHistory.pop();
-            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-800 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]"><strong>${e.message}</strong></div></div>`;
+            typing.remove(); chatHistory.pop(); msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3 bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 border border-rose-100 dark:border-rose-800 rounded-2xl rounded-tl-sm shadow-sm max-w-[85%]"><strong>${e.message}</strong></div></div>`;
         }
         document.getElementById('chat-send-btn').disabled=false; inp.focus(); msgDiv.scrollTop = msgDiv.scrollHeight;
     };
-    document.getElementById('chat-send-btn').addEventListener('click', handleChat);
-    document.getElementById('chat-input').addEventListener('keypress', e => e.key==='Enter'&&handleChat());
 
     // -----------------------------------------------------------
-    // 18. INIT
+    // 16. INIT
     // -----------------------------------------------------------
-    const initApp = async () => {
+    window.onload = async () => {
         document.getElementById('current-month-display').textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
         initHistoryDates();
+        
+        // Chat Listeners
+        document.getElementById('chat-send-btn').addEventListener('click', window.handleChat);
+        document.getElementById('chat-input').addEventListener('keypress', e => { if(e.key === 'Enter') window.handleChat() });
 
-        const checkFirebase = () => new Promise(resolve => {
-            if(window.firebaseUtils) resolve(); else window.addEventListener('firebaseReady', resolve, {once:true});
-        });
+        const checkFirebase = () => new Promise(resolve => { if(window.firebaseUtils) resolve(); else window.addEventListener('firebaseReady', resolve, {once:true}); });
         await checkFirebase();
 
         const { auth, onAuthStateChanged, signInWithCustomToken, GoogleAuthProvider, signInWithPopup, signInAnonymously } = window.firebaseUtils;
 
         const authStateFlow = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
-            }
-            onAuthStateChanged(auth, user => {
-                if (user) { authUserId = user.uid; showApp(user); loadDataFromCloud(); }
-                else { showLogin(); }
-            });
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) await signInWithCustomToken(auth, __initial_auth_token).catch(console.error);
+            onAuthStateChanged(auth, user => { if (user) { authUserId = user.uid; window.showApp(user); loadDataFromCloud(); } else { window.showLogin(); } });
         };
         authStateFlow();
 
-        document.getElementById('btn-google-login').addEventListener('click', async () => {
-            document.getElementById('login-loading').classList.remove('hidden');
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { document.getElementById('login-loading').classList.add('hidden'); }
-        });
-        
-        document.getElementById('btn-anon-login').addEventListener('click', async () => {
-            document.getElementById('login-loading').classList.remove('hidden');
-            try { await signInAnonymously(auth); } catch (e) { document.getElementById('login-loading').classList.add('hidden'); }
-        });
-
-        document.getElementById('btn-logout').addEventListener('click', () => {
-            window.firebaseUtils.signOut(auth).then(() => window.location.reload());
-        });
+        document.getElementById('btn-google-login').addEventListener('click', async () => { document.getElementById('login-loading').classList.remove('hidden'); try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { document.getElementById('login-loading').classList.add('hidden'); } });
+        document.getElementById('btn-anon-login').addEventListener('click', async () => { document.getElementById('login-loading').classList.remove('hidden'); try { await signInAnonymously(auth); } catch (e) { document.getElementById('login-loading').classList.add('hidden'); } });
+        document.getElementById('btn-logout').addEventListener('click', () => { window.firebaseUtils.signOut(auth).then(() => window.location.reload()); });
     };
-
-    window.onload = initApp;
 
 </script>
 </body>
