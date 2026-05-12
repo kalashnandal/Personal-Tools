@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="en" class="light">
 <head>
@@ -1438,6 +1438,41 @@
         } finally {
             btn.classList.remove('animate-pulse');
         }
+    };
+    // Add these two missing functions right before `window.generateActionPlan`
+
+    window.openReportModal = async (ignore, customTitle) => {
+        const title = customTitle || "SpendSense AI Insights";
+        document.getElementById('report-modal-title').innerHTML = `<svg class="h-6 w-6 text-yellow-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.381z" clip-rule="evenodd"/></svg> ${title}`;
+        openModal('report-modal');
+
+        // If called straight from Dashboard button, run a generic current-month insight
+        if (!customTitle) {
+            document.getElementById('btn-download-action-plan').classList.remove('hidden');
+            document.getElementById('report-bars-wrapper').classList.add('hidden');
+            document.getElementById('report-insights-container').innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-muted"><svg class="animate-spin h-8 w-8 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing patterns...</p></div>`;
+            try {
+                const prompt = `Act as a Wealth Manager. Analyze this month's data: ${JSON.stringify(state.expenses.filter(e => isCurrentMonth(e.date)))}. Give a quick brief summary of their financial health. Format in Markdown.`;
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+                const raw = await fetchGemini(payload);
+                let html = raw.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '<br><br>').replace(/\n\* /g, '<br>&bull; ').replace(/^# (.*$)/gim, '<h2 class="text-xl font-bold text-main mt-4 mb-2">$1</h2>').replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold text-primary mt-3 mb-2">$1</h3>');
+                document.getElementById('report-insights-container').innerHTML = `<div class="bg-card border border-theme p-6 rounded-xl text-main text-sm leading-relaxed shadow-sm">${html}</div>`;
+            } catch(e) { document.getElementById('report-insights-container').innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>${e.message}</strong></div>`; }
+        }
+    };
+
+    window.generateHistoryReport = async () => {
+        document.getElementById('btn-download-action-plan').classList.remove('hidden');
+        window.openReportModal(null, "AI History Insights");
+        document.getElementById('report-bars-wrapper').classList.add('hidden');
+        document.getElementById('report-insights-container').innerHTML = `<div id="ai-loading" class="flex flex-col items-center justify-center py-10 text-muted"><svg class="animate-spin h-8 w-8 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm font-medium">Analyzing patterns...</p></div>`;
+        try {
+            const prompt = `Act as a top-tier Wealth Manager. Analyze this user's transaction history: ${JSON.stringify(state.expenses)}. Provide a deep analytical breakdown of their spending patterns, highlight anomalies, and offer 3 strategic suggestions. Format in Markdown.`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            const raw = await fetchGemini(payload);
+            let html = raw.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '<br><br>').replace(/\n\* /g, '<br>&bull; ').replace(/^# (.*$)/gim, '<h2 class="text-xl font-bold text-main mt-4 mb-2">$1</h2>').replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold text-primary mt-3 mb-2">$1</h3>');
+            document.getElementById('report-insights-container').innerHTML = `<div class="bg-card border border-theme p-6 rounded-xl text-main text-sm leading-relaxed shadow-sm">${html}</div>`;
+        } catch(e) { document.getElementById('report-insights-container').innerHTML = `<div class="bg-rose-50 p-4 rounded-xl text-sm text-rose-600"><strong>${e.message}</strong></div>`; }
     };
 
     window.generateActionPlan = async () => {
