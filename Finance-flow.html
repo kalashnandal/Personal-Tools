@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="light">
 <head>
@@ -83,23 +82,61 @@
     <style>
         /* CSS Variables for Dynamic Enterprise Theming */
         :root {
-            /* Default Indigo Theme - Light Mode */
-            --color-primary: #4f46e5; --color-primary-dark: #4338ca; --color-primary-light: #e0e7ff;
+            /* Default Base Colors */
             --color-bg: #f8fafc; --color-card: #ffffff; 
             --color-text-main: #0f172a; --color-text-muted: #64748b; --color-border: #e2e8f0;
+            /* Default Indigo Theme */
+            --color-primary: #4f46e5; --color-primary-dark: #4338ca; --color-primary-light: #e0e7ff;
         }
         .dark {
-            /* Default Indigo Theme - Dark Mode */
+            /* Default Dark Base Colors */
             --color-bg: #0f172a; --color-card: #1e293b; 
             --color-text-main: #f8fafc; --color-text-muted: #94a3b8; --color-border: #334155;
+            /* Default Dark Indigo Theme */
             --color-primary: #6366f1; --color-primary-dark: #4f46e5; --color-primary-light: #312e81;
         }
         
+        /* 20 Color Themes (Light Mode) */
         [data-theme="emerald"] { --color-primary: #10b981; --color-primary-dark: #059669; --color-primary-light: #d1fae5; }
-        .dark [data-theme="emerald"] { --color-primary: #34d399; --color-primary-dark: #10b981; --color-primary-light: #064e3b; }
-        
         [data-theme="rose"] { --color-primary: #e11d48; --color-primary-dark: #be123c; --color-primary-light: #ffe4e6; }
+        [data-theme="blue"] { --color-primary: #3b82f6; --color-primary-dark: #2563eb; --color-primary-light: #dbeafe; }
+        [data-theme="cyan"] { --color-primary: #06b6d4; --color-primary-dark: #0891b2; --color-primary-light: #cffafe; }
+        [data-theme="sky"] { --color-primary: #0ea5e9; --color-primary-dark: #0284c7; --color-primary-light: #e0f2fe; }
+        [data-theme="teal"] { --color-primary: #14b8a6; --color-primary-dark: #0d9488; --color-primary-light: #ccfbf1; }
+        [data-theme="fuchsia"] { --color-primary: #d946ef; --color-primary-dark: #c026d3; --color-primary-light: #fae8ff; }
+        [data-theme="purple"] { --color-primary: #a855f7; --color-primary-dark: #9333ea; --color-primary-light: #f3e8ff; }
+        [data-theme="violet"] { --color-primary: #8b5cf6; --color-primary-dark: #7c3aed; --color-primary-light: #ede9fe; }
+        [data-theme="pink"] { --color-primary: #ec4899; --color-primary-dark: #db2777; --color-primary-light: #fce7f3; }
+        [data-theme="red"] { --color-primary: #ef4444; --color-primary-dark: #dc2626; --color-primary-light: #fee2e2; }
+        [data-theme="orange"] { --color-primary: #f97316; --color-primary-dark: #ea580c; --color-primary-light: #ffedd5; }
+        [data-theme="amber"] { --color-primary: #f59e0b; --color-primary-dark: #d97706; --color-primary-light: #fef3c7; }
+        [data-theme="yellow"] { --color-primary: #eab308; --color-primary-dark: #ca8a04; --color-primary-light: #fef9c3; }
+        [data-theme="lime"] { --color-primary: #84cc16; --color-primary-dark: #65a30d; --color-primary-light: #ecfccb; }
+        [data-theme="gray"] { --color-primary: #6b7280; --color-primary-dark: #4b5563; --color-primary-light: #f3f4f6; }
+        [data-theme="slate"] { --color-primary: #64748b; --color-primary-dark: #475569; --color-primary-light: #f1f5f9; }
+        [data-theme="zinc"] { --color-primary: #71717a; --color-primary-dark: #52525b; --color-primary-light: #f4f4f5; }
+        [data-theme="stone"] { --color-primary: #78716c; --color-primary-dark: #57534e; --color-primary-light: #f5f5f4; }
+
+        /* 20 Color Themes (Dark Mode overrides) */
+        .dark [data-theme="emerald"] { --color-primary: #34d399; --color-primary-dark: #10b981; --color-primary-light: #064e3b; }
         .dark [data-theme="rose"] { --color-primary: #fb7185; --color-primary-dark: #e11d48; --color-primary-light: #881337; }
+        .dark [data-theme="blue"] { --color-primary: #60a5fa; --color-primary-dark: #3b82f6; --color-primary-light: #1e3a8a; }
+        .dark [data-theme="cyan"] { --color-primary: #22d3ee; --color-primary-dark: #06b6d4; --color-primary-light: #164e63; }
+        .dark [data-theme="sky"] { --color-primary: #38bdf8; --color-primary-dark: #0ea5e9; --color-primary-light: #0c4a6e; }
+        .dark [data-theme="teal"] { --color-primary: #2dd4bf; --color-primary-dark: #14b8a6; --color-primary-light: #134e4a; }
+        .dark [data-theme="fuchsia"] { --color-primary: #e879f9; --color-primary-dark: #d946ef; --color-primary-light: #701a75; }
+        .dark [data-theme="purple"] { --color-primary: #c084fc; --color-primary-dark: #a855f7; --color-primary-light: #581c87; }
+        .dark [data-theme="violet"] { --color-primary: #a78bfa; --color-primary-dark: #8b5cf6; --color-primary-light: #4c1d95; }
+        .dark [data-theme="pink"] { --color-primary: #f472b6; --color-primary-dark: #ec4899; --color-primary-light: #831843; }
+        .dark [data-theme="red"] { --color-primary: #f87171; --color-primary-dark: #ef4444; --color-primary-light: #7f1d1d; }
+        .dark [data-theme="orange"] { --color-primary: #fb923c; --color-primary-dark: #f97316; --color-primary-light: #7c2d12; }
+        .dark [data-theme="amber"] { --color-primary: #fbbf24; --color-primary-dark: #f59e0b; --color-primary-light: #78350f; }
+        .dark [data-theme="yellow"] { --color-primary: #facc15; --color-primary-dark: #eab308; --color-primary-light: #713f12; }
+        .dark [data-theme="lime"] { --color-primary: #a3e635; --color-primary-dark: #84cc16; --color-primary-light: #3f6212; }
+        .dark [data-theme="gray"] { --color-primary: #9ca3af; --color-primary-dark: #6b7280; --color-primary-light: #1f2937; }
+        .dark [data-theme="slate"] { --color-primary: #94a3b8; --color-primary-dark: #64748b; --color-primary-light: #0f172a; }
+        .dark [data-theme="zinc"] { --color-primary: #a1a1aa; --color-primary-dark: #71717a; --color-primary-light: #18181b; }
+        .dark [data-theme="stone"] { --color-primary: #a8a29e; --color-primary-dark: #78716c; --color-primary-light: #1c1917; }
 
         body { background-color: var(--color-bg); color: var(--color-text-main); transition: background-color 0.3s, color 0.3s; }
         .card { background-color: var(--color-card); border-color: var(--color-border); }
@@ -131,23 +168,36 @@
 
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay" class="fixed inset-0 z-50 bg-baseBg flex flex-col items-center justify-center transition-opacity duration-500 p-4">
-    <div class="card p-8 sm:p-10 rounded-3xl shadow-2xl border max-w-md w-full text-center relative overflow-hidden">
+    <div class="card p-8 sm:p-10 rounded-3xl shadow-2xl border max-w-md w-full text-center relative overflow-hidden flex flex-col items-center min-h-[400px] justify-center">
         <div class="absolute -top-10 -right-10 w-32 h-32 bg-primaryLight rounded-full opacity-20"></div>
-        <div class="bg-primary p-4 rounded-2xl text-white shadow-lg inline-block mb-6 relative z-10">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+
+        <div id="auth-buffering" class="flex flex-col items-center justify-center w-full transition-opacity duration-300">
+            <svg class="animate-spin h-12 w-12 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <p class="text-xl font-bold text-main mb-1 relative z-10">SpendSense AI</p>
+            <p class="text-sm text-muted animate-pulse relative z-10" id="buffering-text">Checking credentials...</p>
         </div>
-        <h1 class="text-3xl font-bold text-main mb-2 relative z-10">SpendSense AI</h1>
-        <p class="text-muted mb-8 relative z-10">Enterprise Wealth & AI Management</p>
-        <button id="btn-google-login" class="relative z-10 w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 font-semibold py-3 px-4 rounded-xl transition-all shadow-sm mb-3">
-            <svg viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google
-        </button>
-        <button id="btn-anon-login" class="relative z-10 w-full flex items-center justify-center gap-3 bg-primaryLight/20 hover:bg-primaryLight/40 text-primary font-semibold py-3 px-4 rounded-xl transition-all">Continue as Guest</button>
-        <div id="login-loading" class="hidden mt-4 text-sm text-primary font-medium animate-pulse">Authenticating securely...</div>
+
+        <div id="auth-login-ui" class="hidden flex-col items-center w-full transition-opacity duration-300">
+            <div class="bg-primary p-4 rounded-2xl text-white shadow-lg inline-block mb-4 relative z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <h1 class="text-3xl font-bold text-main mb-2 relative z-10">SpendSense AI</h1>
+            <p class="text-muted mb-8 relative z-10">Enterprise Wealth & AI Management</p>
+            
+            <button id="btn-google-login" class="relative z-10 w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 font-semibold py-3 px-4 rounded-xl transition-all shadow-sm mb-6">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google
+            </button>
+
+            <div class="relative z-10 bg-primaryLight/10 border border-primary/10 rounded-xl p-4 w-full">
+                <p class="text-xs font-bold text-primary uppercase tracking-wider mb-1">Did you know?</p>
+                <p id="financial-fact" class="text-sm text-muted italic min-h-[40px] flex items-center justify-center transition-opacity duration-300">Loading insight...</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- ENTERPRISE TOP BAR (Time, Quote, Theme) -->
-<div class="w-full bg-slate-900 text-white text-xs py-1.5 px-4 sm:px-8 flex justify-between items-center z-40 relative shadow-sm">
+<div class="w-full bg-slate-900 text-white text-xs py-1.5 px-4 sm:px-8 flex justify-between items-center z-[60] relative shadow-sm">
     <div class="flex items-center gap-4">
         <span id="live-clock" class="font-mono font-medium tracking-wide">00:00:00</span>
         <span class="hidden md:inline text-slate-400">|</span>
@@ -158,6 +208,23 @@
             <option value="indigo" class="text-slate-800">Indigo (Default)</option>
             <option value="emerald" class="text-slate-800">Emerald</option>
             <option value="rose" class="text-slate-800">Rose</option>
+            <option value="blue" class="text-slate-800">Blue</option>
+            <option value="cyan" class="text-slate-800">Cyan</option>
+            <option value="sky" class="text-slate-800">Sky</option>
+            <option value="teal" class="text-slate-800">Teal</option>
+            <option value="fuchsia" class="text-slate-800">Fuchsia</option>
+            <option value="purple" class="text-slate-800">Purple</option>
+            <option value="violet" class="text-slate-800">Violet</option>
+            <option value="pink" class="text-slate-800">Pink</option>
+            <option value="red" class="text-slate-800">Red</option>
+            <option value="orange" class="text-slate-800">Orange</option>
+            <option value="amber" class="text-slate-800">Amber</option>
+            <option value="yellow" class="text-slate-800">Yellow</option>
+            <option value="lime" class="text-slate-800">Lime</option>
+            <option value="gray" class="text-slate-800">Gray</option>
+            <option value="slate" class="text-slate-800">Slate</option>
+            <option value="zinc" class="text-slate-800">Zinc</option>
+            <option value="stone" class="text-slate-800">Stone</option>
         </select>
         <button onclick="toggleDarkMode()" class="text-slate-300 hover:text-white transition-colors" title="Toggle Dark Mode">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -804,6 +871,31 @@
     ];
     document.getElementById('daily-quote').textContent = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
 
+const finFacts = [
+        "The 50/30/20 rule suggests spending 50% on needs, 30% on wants, and 20% on savings/investments.",
+        "Compound interest is the 8th wonder of the world. He who understands it, earns it.",
+        "An emergency fund should ideally cover 3 to 6 months of your essential living expenses.",
+        "Automating your investments is the easiest way to ensure consistent wealth growth over time.",
+        "Paying off high-interest credit card debt yields a guaranteed, tax-free return on your money."
+    ];
+    let factInterval;
+    window.startFinancialFacts = () => {
+        const factEl = document.getElementById('financial-fact');
+        if (!factEl) return;
+        
+        const setFact = () => {
+            factEl.style.opacity = 0;
+            setTimeout(() => {
+                factEl.textContent = finFacts[Math.floor(Math.random() * finFacts.length)];
+                factEl.style.opacity = 1;
+            }, 300);
+        };
+        
+        setFact(); // Set the first fact immediately
+        clearInterval(factInterval);
+        factInterval = setInterval(setFact, 6000); // Rotate every 6 seconds
+    };
+
     const formatCurrency = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
     const formatDate     = (s) => new Date(s).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
     const isCurrentMonth = (s) => { const d = new Date(s), n = new Date(); return d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear(); };
@@ -885,8 +977,26 @@
     };
 
     window.showLogin = () => {
-        const overlay = document.getElementById('login-overlay'); const app = document.getElementById('app-content');
-        app.style.opacity = '0'; setTimeout(() => { app.classList.add('hidden'); overlay.classList.remove('hidden'); setTimeout(() => overlay.style.opacity = '1', 50); }, 300);
+        const overlay = document.getElementById('login-overlay'); 
+        const app = document.getElementById('app-content');
+        const buffering = document.getElementById('auth-buffering');
+        const loginUi = document.getElementById('auth-login-ui');
+
+        app.style.opacity = '0'; 
+        setTimeout(() => { 
+            app.classList.add('hidden'); 
+            overlay.classList.remove('hidden'); 
+            
+            // Switch from buffering spinner to the Login UI
+            buffering.classList.add('hidden');
+            loginUi.classList.remove('hidden');
+            loginUi.classList.add('flex');
+            
+            setTimeout(() => overlay.style.opacity = '1', 50); 
+            
+            // Start rotating financial facts
+            startFinancialFacts();
+        }, 300);
     };
 
     // -----------------------------------------------------------
@@ -937,7 +1047,7 @@
         try { syncStatus('syncing'); await setDoc(getDbRef(), state); syncStatus('done'); } catch (e) { console.error(e); syncStatus('error'); }
     };
 
-    const loadDataFromCloud = async () => {
+const loadDataFromCloud = async () => {
         if (!authUserId || !window.firebaseUtils?.db) return;
         const { getDoc } = window.firebaseUtils;
         try {
@@ -950,7 +1060,13 @@
                     goals: d.goals || [], wishlist: d.wishlist || [], recurring: d.recurring || []
                 };
                 updateUIFromState(); processAutomations(); showToast('Cloud data synchronized');
-            } else if (householdId) { showToast('Joined new household successfully.'); updateUIFromState(); }
+            } else if (householdId) { 
+                showToast('Joined new household successfully.'); 
+                updateUIFromState(); 
+            } else {
+                // Initialize empty states for brand new users without cloud data
+                updateUIFromState();
+            }
         } catch (e) { console.error('Load error:', e); }
     };
 
@@ -1071,12 +1187,22 @@
         const totalLiabilities = ccDebt + loanDebt; const networth = totalAssets - totalLiabilities;
         const monthSpent = curExp.reduce((s, e) => s + e.amount, 0); const monthIncome = curInc.reduce((s, e) => s + e.amount, 0);
 
-        document.getElementById('dash-liquid').textContent = formatCurrency(liquid); document.getElementById('dash-networth').textContent = formatCurrency(networth);
-        document.getElementById('dash-assets').textContent = formatCurrency(totalAssets); document.getElementById('dash-liabilities').textContent = formatCurrency(totalLiabilities);
-        document.getElementById('dash-cc-debt').textContent = formatCurrency(ccDebt); document.getElementById('dash-cc-limit').textContent = formatCurrency(ccLimit);
-        document.getElementById('dash-cc-bar').style.width = `${ccLimit > 0 ? Math.min((ccDebt/ccLimit)*100, 100) : 0}%`;
-        document.getElementById('dash-month-exp').textContent = formatCurrency(monthSpent); document.getElementById('dash-month-inc').textContent = formatCurrency(monthIncome);
-        document.getElementById('dash-exp-count').textContent = curTxns.length;
+// Safely update DOM elements only if they exist in the HTML
+        const updateText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        
+        updateText('dash-liquid', formatCurrency(liquid)); 
+        updateText('dash-networth', formatCurrency(networth));
+        updateText('dash-assets', formatCurrency(totalAssets)); 
+        updateText('dash-liabilities', formatCurrency(totalLiabilities));
+        updateText('dash-cc-debt', formatCurrency(ccDebt)); 
+        updateText('dash-cc-limit', formatCurrency(ccLimit));
+        
+        const ccBar = document.getElementById('dash-cc-bar');
+        if (ccBar) ccBar.style.width = `${ccLimit > 0 ? Math.min((ccDebt/ccLimit)*100, 100) : 0}%`;
+        
+        updateText('dash-month-exp', formatCurrency(monthSpent)); 
+        updateText('dash-month-inc', formatCurrency(monthIncome));
+        updateText('dash-exp-count', curTxns.length);
 
         // Zero-Day Burn Rate Logic
         const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -1623,15 +1749,22 @@
             });
         };
         authStateFlow();
-
-        document.getElementById('btn-google-login').addEventListener('click', async () => {
-            document.getElementById('login-loading').classList.remove('hidden');
-            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { document.getElementById('login-loading').classList.add('hidden'); }
-        });
         
-        document.getElementById('btn-anon-login').addEventListener('click', async () => {
-            document.getElementById('login-loading').classList.remove('hidden');
-            try { await signInAnonymously(auth); } catch (e) { document.getElementById('login-loading').classList.add('hidden'); }
+        document.getElementById('btn-google-login').addEventListener('click', async () => {
+            // Show buffering state while Firebase popup opens
+            document.getElementById('auth-login-ui').classList.add('hidden');
+            document.getElementById('auth-login-ui').classList.remove('flex');
+            document.getElementById('auth-buffering').classList.remove('hidden');
+            document.getElementById('buffering-text').textContent = "Authenticating securely...";
+            
+            try { 
+                await signInWithPopup(auth, new GoogleAuthProvider()); 
+            } catch (e) { 
+                // Revert to login buttons if they close the popup or it fails
+                document.getElementById('auth-buffering').classList.add('hidden');
+                document.getElementById('auth-login-ui').classList.remove('hidden');
+                document.getElementById('auth-login-ui').classList.add('flex');
+            }
         });
 
         document.getElementById('btn-logout').addEventListener('click', () => {
