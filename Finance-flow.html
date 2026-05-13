@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" class="light">
 <head>
@@ -1509,22 +1510,72 @@ const loadDataFromCloud = async () => {
         throw lastError;
     };
 
+// 1. Cache to store available models so we only ask Google once per session
+    let discoveredModels = [];
+
     const fetchGemini = async (payload, isAudio = false) => {
         const key = localStorage.getItem('my_gemini_key') || window.firebaseUtils?.activeGeminiKey || "";
-        const modelsToTry = isAudio ? ['gemini-2.5-flash-preview-tts'] : (key ? ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-flash-latest'] : ['gemini-2.5-flash-preview-09-2025']); 
+        if (!key) throw new Error("API Key is missing. Please set it in the top bar.");
+
+        // 2. DYNAMIC DISCOVERY: Ask Google what models exist right now
+        if (discoveredModels.length === 0) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+                const data = await res.json();
+                if (data.models) {
+                    // Filter for active models that can generate content
+                    discoveredModels = data.models
+                        .filter(m => m.supportedGenerationMethods.includes("generateContent"))
+                        .map(m => m.name.replace('models/', ''));
+                }
+            } catch(e) {
+                console.warn("Auto-discover failed, using safe defaults.");
+            }
+        }
+
+        // 3. SMART SELECTION: Automatically pick the newest/best model
+        let modelsToTry = [];
+        
+        if (discoveredModels.length > 0) {
+            // Future-proofing: Look for 3.0 first, then 2.0, then 1.5
+            const flash3 = discoveredModels.find(m => m.includes('3.0-flash'));
+            const flash2 = discoveredModels.find(m => m.includes('2.0-flash'));
+            const flash15 = discoveredModels.find(m => m === 'gemini-1.5-flash');
+            
+            if (flash3) modelsToTry.push(flash3);
+            if (flash2) modelsToTry.push(flash2);
+            if (flash15) modelsToTry.push(flash15);
+            
+            // If somehow none match our exact naming, just use the first available valid model
+            if (modelsToTry.length === 0) modelsToTry.push(discoveredModels[0]);
+        } else {
+            // Hard fallback if the network discovery request failed
+            modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+        }
+
         let lastErrorMsg = '';
 
+        // 4. EXECUTE: Try the best models in order
         for (const model of modelsToTry) {
             try { 
                 const data = await fetchGeminiWithBackoff(model, key, payload); 
+                
+                // Handle Audio Output
                 if (isAudio && data?.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
                     return data.candidates[0].content.parts[0].inlineData;
                 }
-                return data.candidates[0].content.parts[0].text;
+                // Handle Text Output
+                if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    return data.candidates[0].content.parts[0].text;
+                }
+                throw new Error("Unexpected API Response format.");
             } 
-            catch (err) { if (err.message.includes("Invalid API Key")) throw err; lastErrorMsg = err.message; }
+            catch (err) { 
+                if (err.message.includes("Invalid API Key") || err.message.includes("API_KEY_INVALID")) throw err; 
+                lastErrorMsg = err.message; 
+            }
         }
-        throw new Error("API Error: " + lastErrorMsg);
+        throw new Error("API Error: All models failed. " + lastErrorMsg);
     };
 
     // --- AI AUDIO TTS PCM-to-WAV CONVERTER ---
