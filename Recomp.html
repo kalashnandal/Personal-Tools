@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -5,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PM Recovery OS & AI Tracker</title>
     
-    <!-- Tailwind CSS for utility styles -->
+    <!-- Tailwind Config -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -21,40 +22,27 @@
             }
         }
     </script>
-    <!-- Premium Font Family Integration -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- ChartJS for interactive macro representation -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body { transition: background-color 0.3s, color 0.3s; }
         
-        /* Modern scrollbar styling */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px;}
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
         
-        /* Smooth tab animations */
-        .tab-content { display: none; } 
-        .tab-content.active { display: flex; animation: fadeIn 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content { display: none; } .tab-content.active { display: flex; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Pulse and glow effects */
-        @keyframes motionPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.15); }
-            50%       { box-shadow: 0 0 16px 4px rgba(20, 184, 166, 0.3); }
-        }
-        .motivation-banner { animation: motionPulse 4s ease-in-out infinite; }
-
-        @keyframes badgeBounce {
-            0%, 100% { transform: scale(1); }
-            40%      { transform: scale(1.15); }
-            60%      { transform: scale(0.95); }
-        }
-        .badge-bounce { animation: badgeBounce 0.5s ease; }
+        .meal-card, .workout-card { transition: all 0.2s ease; }
+        .meal-card.completed { opacity: 0.6; border-left-width: 4px; border-left-color: #14b8a6; background-color: rgba(20, 184, 166, 0.05); }
         
-        /* Custom styled checkboxes */
+        .typing-dot { animation: typing 1.4s infinite ease-in-out; fill: #94a3b8; }
+        .typing-dot:nth-child(1) { animation-delay: 0s; } .typing-dot:nth-child(2) { animation-delay: 0.2s; } .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        
         .custom-checkbox {
             appearance: none; background-color: #f8fafc; margin: 0; font: inherit; color: currentColor;
             width: 1.5em; height: 1.5em; border: 2px solid #cbd5e1; border-radius: 0.35em;
@@ -70,65 +58,79 @@
         .custom-checkbox:checked::before { transform: scale(1); }
         .custom-checkbox:checked { border-color: #14b8a6; background-color: rgba(20, 184, 166, 0.1); }
 
-        /* Custom active modes styling */
-        #btn-mode-ai.active-mode { background-color: white; color: #14b8a6; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .dark #btn-mode-ai.active-mode { background-color: #334155; color: #2dd4bf; }
-        #btn-mode-manual.active-mode { background-color: white; color: #14b8a6; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .dark #btn-mode-manual.active-mode { background-color: #334155; color: #2dd4bf; }
+        /* Logger mode toggle active states */
+        #btn-mode-ai.active-mode { background-color: white; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .dark #btn-mode-ai.active-mode { background-color: #334155; color: #818cf8; }
+        #btn-mode-manual.active-mode { background-color: white; color: #4f46e5; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .dark #btn-mode-manual.active-mode { background-color: #334155; color: #818cf8; }
 
-        /* Dynamic fading and transitions */
-        #live-quote { transition: opacity 0.6s ease, transform 0.6s ease; }
-        #live-quote.fade-out { opacity: 0; transform: translateY(-4px); }
-        #live-quote.fade-in { opacity: 1; transform: translateY(0); }
-        
-        /* Toast notification setup */
-        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; max-width: 90%; }
-        .toast { padding: 12px 20px; border-radius: 12px; color: white; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(20px); transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
-        .toast.show { opacity: 1; transform: translateY(0); }
-        .toast.success { background-color: #14b8a6; border-left: 4px solid #0f766e; }
-        .toast.info { background-color: #6366f1; border-left: 4px solid #4338ca; }
-        .toast.error { background-color: #f43f5e; border-left: 4px solid #be123c; }
+        /* Dynamic quote fade */
+        #live-quote {
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        #live-quote.fade-out {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+        #live-quote.fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Motivation banner pulse glow */
+        @keyframes motionPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.15); }
+            50%       { box-shadow: 0 0 18px 4px rgba(99, 102, 241, 0.22); }
+        }
+        .motivation-banner { animation: motionPulse 4s ease-in-out infinite; }
+
+        /* Progress milestone flash */
+        @keyframes milestoneFlash {
+            0%   { background-color: rgba(20,184,166,0); }
+            30%  { background-color: rgba(20,184,166,0.18); }
+            100% { background-color: rgba(20,184,166,0); }
+        }
+        .milestone-flash { animation: milestoneFlash 1.2s ease forwards; }
+
+        /* Streak badge bounce */
+        @keyframes badgeBounce {
+            0%, 100% { transform: scale(1); }
+            40%      { transform: scale(1.18); }
+            60%      { transform: scale(0.95); }
+        }
+        .badge-bounce { animation: badgeBounce 0.5s ease; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col relative overflow-x-hidden bg-slate-50 text-slate-900 dark:bg-[#0f172a] dark:text-[#f8fafc]">
-    
-    <!-- Top Bar: Highly responsive, icons on mobile, label tags on desktop -->
-    <div class="w-full bg-slate-200 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-xs py-2 px-4 flex justify-between items-center z-[60] relative border-b border-slate-300 dark:border-slate-800 transition-colors">
-        <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-            <span id="live-clock" class="font-mono font-semibold tracking-wide text-brand-600 dark:text-brand-500 whitespace-nowrap">00:00:00</span>
-            <!-- Separator and Quote: Explicitly hidden on mobile viewport to prevent clutter -->
+
+    <!-- Top Bar -->
+    <div class="w-full bg-slate-200 dark:bg-slate-950 text-slate-700 dark:text-slate-300 text-xs py-2 px-4 sm:px-8 flex justify-between items-center z-[60] relative border-b border-slate-300 dark:border-slate-800 transition-colors">
+        <div class="flex items-center gap-4">
+            <span id="live-clock" class="font-mono font-medium tracking-wide text-brand-600 dark:text-brand-500">00:00:00</span>
             <span class="hidden md:inline text-slate-400 dark:text-slate-600">|</span>
             <span id="live-quote" class="hidden md:inline italic text-slate-600 dark:text-slate-400 fade-in max-w-xs truncate"></span>
         </div>
-        <div class="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
-            <!-- Theme Toggler -->
-            <button onclick="toggleTheme()" class="text-xs bg-slate-300 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-400 dark:border-slate-700 p-1.5 sm:px-2.5 sm:py-1 rounded-lg hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5" title="Toggle Dark/Light Mode">
-                <svg id="theme-icon-light" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg id="theme-icon-dark" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                <span class="hidden sm:inline">Theme</span>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="text-xs bg-slate-300 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-400 dark:border-slate-700 px-2 py-1 rounded hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors flex items-center gap-1">
+                <svg id="theme-icon-light" class="w-3 h-3 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="theme-icon-dark" class="w-3 h-3 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                Theme
             </button>
-            <!-- API Settings Button -->
-            <button onclick="openAPIModal()" class="text-xs bg-slate-300 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-400 dark:border-slate-700 p-1.5 sm:px-2.5 sm:py-1 rounded-lg hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-1.5" title="Gemini API Key Settings">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span class="hidden sm:inline">API Settings</span>
+            <button onclick="openAPIModal()" class="text-xs bg-slate-300 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-400 dark:border-slate-700 px-2 py-1 rounded hover:bg-slate-400 dark:hover:bg-slate-700 transition-colors flex items-center gap-1" title="API Settings">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                API
             </button>
-            <!-- AI Coach Chat Trigger -->
-            <button onclick="toggleCoach()" class="text-xs bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/30 p-1.5 sm:px-2.5 sm:py-1 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-500/20 transition-colors flex items-center justify-center gap-1.5 font-bold">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg> 
-                <span class="hidden sm:inline">AI Coach</span>
+            <button onclick="toggleChat()" class="text-xs bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 px-2 py-1 rounded hover:bg-indigo-200 dark:hover:bg-indigo-500/20 transition-colors flex items-center gap-1 font-bold">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg> AI Coach
             </button>
-            <!-- Reset Button -->
-            <button onclick="confirmReset()" class="text-xs bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 p-1.5 sm:px-2.5 sm:py-1 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-500/20 transition-colors flex items-center justify-center gap-1" title="Reset Current Day Status">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span class="hidden sm:inline">Reset Day</span>
-            </button>
+            <button onclick="resetDay()" class="text-xs bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 px-2 py-1 rounded hover:bg-rose-200 dark:hover:bg-rose-500/20 transition-colors">Reset Tracker</button>
         </div>
     </div>
 
-    <!-- Header: NOT STICKY ON MOBILE, STICKY ON DESKTOP (relative md:sticky) -->
-    <header class="bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-slate-800 relative md:sticky md:top-0 z-40 shadow-sm backdrop-blur-md bg-opacity-95 transition-colors">
+    <!-- Header & Dashboard Summary -->
+    <header class="bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-opacity-95 transition-colors">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex items-center gap-3">
                 <div class="bg-brand-600 p-2.5 rounded-xl text-white shadow-lg shadow-brand-500/20">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                 </div>
@@ -136,92 +138,77 @@
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white leading-none">Recomp OS</h1>
                     <p class="text-[10px] text-brand-600 dark:text-brand-500 font-mono tracking-wider uppercase mt-1">Project Manager Edition</p>
                 </div>
-                <!-- Mini view for mobile screens so goals are always transparent -->
-                <div class="ml-auto sm:hidden flex items-center bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1.5">
-                     <div class="px-2 border-r border-slate-200 dark:border-slate-700">
-                        <p class="text-[8px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Goal</p>
-                        <p class="text-xs font-mono text-slate-900 dark:text-white">3,320</p>
-                    </div>
-                    <div class="px-2">
-                        <p class="text-[8px] text-brand-600 dark:text-brand-400 uppercase tracking-wider font-bold">Protein</p>
-                        <p class="text-xs font-mono text-slate-900 dark:text-white">165g</p>
-                    </div>
-                </div>
             </div>
             
-            <!-- Standard Desktop / Tablet view parameters -->
-            <div class="hidden sm:flex items-center bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2">
+            <div class="flex items-center bg-slate-50 dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2 w-full sm:w-auto">
                 <div class="px-3 border-r border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Goal Limit</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Goal</p>
                     <p class="text-sm font-mono text-slate-900 dark:text-white">3,320 kcal</p>
                 </div>
                 <div class="px-3">
-                    <p class="text-[10px] text-brand-600 dark:text-brand-400 uppercase tracking-wider font-bold">Protein Target</p>
+                    <p class="text-[10px] text-brand-600 dark:text-brand-400 uppercase tracking-wider font-bold">Protein</p>
                     <p class="text-sm font-mono text-slate-900 dark:text-white">165g</p>
                 </div>
             </div>
         </div>
 
-        <!-- Live Progress Cards Section: Formatted gracefully across standard desktop rows & dual column mobile views -->
+        <!-- Live Progress Bar Section -->
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
-            <div class="bg-slate-50 dark:bg-dark-800 rounded-xl p-3 sm:p-4 grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
-                <div class="absolute right-0 top-0 w-32 h-32 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-xl pointer-events-none"></div>
+            <div class="bg-slate-50 dark:bg-dark-800 rounded-xl p-3 sm:p-4 grid grid-cols-2 md:grid-cols-5 gap-4 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden transition-colors">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-xl"></div>
                 
-                <!-- Card 1: Food In -->
-                <div class="text-center bg-white dark:bg-slate-900 p-2 sm:p-0 rounded-lg sm:bg-transparent border sm:border-0 border-slate-200 dark:border-slate-800">
+                <div class="text-center">
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Food In</p>
-                    <p class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white"><span id="live-cal-in">0</span></p>
+                    <p class="font-bold text-xl text-slate-900 dark:text-white"><span id="live-cal-in">0</span></p>
                     <div class="w-full bg-slate-200 dark:bg-slate-700 h-1 mt-2 rounded-full overflow-hidden"><div id="bar-cal" class="bg-brand-500 h-full transition-all" style="width: 0%"></div></div>
                 </div>
                 
-                <!-- Card 2: Active Burn -->
-                <div class="text-center bg-white dark:bg-slate-900 p-2 sm:p-0 rounded-lg sm:bg-transparent border sm:border-0 border-slate-200 dark:border-slate-800 relative">
-                    <div class="absolute top-1.5 right-1.5 sm:top-0 sm:right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse" id="active-burn-dot" style="display: none;"></div>
+                <div class="text-center border-l border-slate-200 dark:border-slate-700 relative">
+                    <div class="absolute top-0 right-2 w-2 h-2 bg-rose-500 rounded-full animate-pulse" id="active-burn-dot" style="display: none;"></div>
                     <p class="text-xs text-rose-500 dark:text-rose-400 font-medium mb-1">Active Burn</p>
-                    <p class="font-bold text-lg sm:text-xl text-rose-600 dark:text-rose-400">-<span id="live-cal-out">0</span></p>
-                    <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Apple Watch/Manual</p>
+                    <p class="font-bold text-xl text-rose-600 dark:text-rose-400">-<span id="live-cal-out">0</span></p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Apple Health/Manual</p>
                 </div>
 
-                <!-- Card 3: Net Calories -->
-                <div class="text-center bg-white dark:bg-slate-900 p-2 sm:p-0 rounded-lg sm:bg-transparent border sm:border-0 border-slate-200 dark:border-slate-800 col-span-2 sm:col-span-1">
+                <div class="text-center border-l border-slate-200 dark:border-slate-700">
                     <p class="text-xs text-brand-600 dark:text-brand-400 font-medium mb-1">Net Calories</p>
                     <p class="font-bold text-xl text-brand-600 dark:text-brand-400" id="live-net-cal">0</p>
-                    <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Goal Limit: 3320</p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Goal: 3320</p>
                 </div>
 
-                <!-- Card 4: Protein tracker -->
-                <div class="text-center bg-white dark:bg-slate-900 p-2 sm:p-0 rounded-lg sm:bg-transparent border sm:border-0 border-slate-200 dark:border-slate-800">
+                <div class="text-center border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-700 pt-3 md:pt-0">
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Protein</p>
-                    <p class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white"><span id="live-pro">0</span>g <span class="text-[10px] font-normal text-slate-400 dark:text-slate-500">/ 165g</span></p>
+                    <p class="font-bold text-xl text-slate-900 dark:text-white"><span id="live-pro">0</span>g <span class="text-xs font-normal text-slate-400 dark:text-slate-500">/ 165g</span></p>
                     <div class="w-full bg-slate-200 dark:bg-slate-700 h-1 mt-2 rounded-full overflow-hidden"><div id="bar-pro" class="bg-blue-500 dark:bg-blue-400 h-full transition-all" style="width: 0%"></div></div>
                 </div>
                 
-                <!-- Card 5: Estimated Cost tracker -->
-                <div class="text-center bg-white dark:bg-slate-900 p-2 sm:p-0 rounded-lg sm:bg-transparent border sm:border-0 border-slate-200 dark:border-slate-800">
+                <div class="text-center border-t md:border-t-0 border-l border-slate-200 dark:border-slate-700 pt-3 md:pt-0">
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">Est. Cost</p>
-                    <p class="font-bold text-lg sm:text-xl text-emerald-600 dark:text-emerald-400">₹<span id="live-cost">0</span></p>
-                    <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-1">Daily Limit: ₹420</p>
+                    <p class="font-bold text-xl text-emerald-600 dark:text-emerald-400">₹<span id="live-cost">0</span></p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Budget: ~₹420</p>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Motivation Banner Section -->
+    <!-- Motivation Banner -->
     <div id="motivation-banner" class="motivation-banner bg-gradient-to-r from-indigo-600/90 to-brand-600/90 dark:from-indigo-900/60 dark:to-brand-900/60 border-b border-indigo-500/30 dark:border-indigo-700/40 px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 transition-colors">
         <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
                 <span id="motivation-emoji" class="text-lg shrink-0">💪</span>
-                <p id="motivation-text" class="text-white text-xs sm:text-sm font-medium truncate">Protecting the wrist. Dominating the project timeline.</p>
+                <p id="motivation-text" class="text-white text-xs sm:text-sm font-medium truncate"></p>
             </div>
             <div class="flex items-center gap-3 shrink-0">
+                <!-- Streak badge -->
                 <div id="streak-badge" class="flex items-center gap-1.5 bg-white/20 dark:bg-white/10 border border-white/30 rounded-full px-3 py-1">
                     <span class="text-sm">🔥</span>
-                    <span class="text-white text-xs font-bold"><span id="streak-count">12</span> day streak</span>
+                    <span class="text-white text-xs font-bold"><span id="streak-count">0</span> day streak</span>
                 </div>
+                <!-- Progress % pill -->
                 <div class="hidden sm:flex items-center gap-1.5 bg-white/20 dark:bg-white/10 border border-white/30 rounded-full px-3 py-1">
                     <span class="text-white text-xs font-bold"><span id="goal-pct">0</span>% to goal</span>
                 </div>
-                <button onclick="refreshMotivation()" title="Generate new reminder message" class="text-white/70 hover:text-white transition-colors">
+                <button onclick="refreshMotivation()" title="Get new message" class="text-white/70 hover:text-white transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                 </button>
             </div>
@@ -230,97 +217,86 @@
 
     <!-- Navigation Tabs -->
     <div class="bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 lg:px-8 overflow-x-auto custom-scrollbar transition-colors">
-        <div class="max-w-7xl mx-auto flex gap-6 min-w-max pb-1">
-            <button onclick="switchTab('nutrition')" id="tab-nutrition" class="py-4 text-sm font-semibold border-b-2 border-brand-500 text-brand-600 dark:text-brand-500 transition-colors whitespace-nowrap flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> 
-                Nutrition & Diary
-            </button>
-            <button onclick="switchTab('workout')" id="tab-workout" class="py-4 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> 
-                Training & Apple Health
-            </button>
-            <button onclick="switchTab('systems')" id="tab-systems" class="py-4 text-sm font-semibold border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg> 
-                Efficiency Systems
-            </button>
+        <div class="max-w-7xl mx-auto flex gap-6 min-w-max">
+            <button onclick="switchTab('nutrition')" id="tab-nutrition" class="py-4 text-sm font-medium border-b-2 border-brand-500 text-brand-600 dark:text-brand-500 transition-colors whitespace-nowrap flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Nutrition & Diary</button>
+            <button onclick="switchTab('workout')" id="tab-workout" class="py-4 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Training & Apple Health</button>
+            <button onclick="switchTab('systems')" id="tab-systems" class="py-4 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg> Efficiency Systems</button>
         </div>
     </div>
 
-    <!-- MAIN APP CONTENT CONTAINER -->
+    <!-- MAIN APP CONTENT -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full pb-32">
 
-        <!-- ================== VIEW 1: NUTRITION LOG ================== -->
+        <!-- VIEW: NUTRITION LOG -->
         <div id="view-nutrition" class="tab-content active flex-col gap-6">
             
-            <!-- DUAL FOOD LOGGER (AI Smart Parser vs Manual Input Forms) -->
+            <!-- DUAL FOOD LOGGER (AI vs Manual) -->
             <div class="bg-white dark:bg-gradient-to-r dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 shadow-sm dark:shadow-lg relative overflow-hidden transition-colors">
-                <div class="absolute -right-10 -bottom-10 bg-brand-500/10 w-40 h-40 rounded-full blur-2xl hidden dark:block pointer-events-none"></div>
+                <div class="absolute -right-10 -bottom-10 bg-indigo-500/10 w-40 h-40 rounded-full blur-2xl hidden dark:block"></div>
                 
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 relative z-10 gap-3">
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <svg class="w-4 h-4 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        Food Intake Logger
+                        <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Food Logger
                     </h3>
                     
                     <!-- Toggle Switch -->
                     <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 w-full sm:w-auto">
-                        <button onclick="toggleLogMode('ai')" id="btn-mode-ai" class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-md active-mode bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm transition-all">✨ AI Smart</button>
-                        <button onclick="toggleLogMode('manual')" id="btn-mode-manual" class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">✍️ Manual Form</button>
+                        <button onclick="toggleLogMode('ai')" id="btn-mode-ai" class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-md active-mode bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm transition-all">✨ AI Smart</button>
+                        <button onclick="toggleLogMode('manual')" id="btn-mode-manual" class="flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">✍️ Manual Exact</button>
                     </div>
                 </div>
 
-                <!-- Mode: AI Smart Natural Language Parser -->
+                <!-- Mode: AI Smart Log -->
                 <div id="logger-ai" class="relative z-10 block transition-opacity duration-300">
                     <div class="flex flex-col sm:flex-row gap-2">
-                        <input type="text" id="ai-food-input" class="flex-grow bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 outline-none focus:border-brand-500 text-sm placeholder-slate-400 dark:placeholder-slate-500" placeholder="e.g., '150g chicken breast with 2 cups of white rice' or 'whey protein scoop'">
-                        <button id="btn-add-ai-food" onclick="logAIFood()" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-md flex justify-center items-center gap-2 whitespace-nowrap min-w-[120px] w-full sm:w-auto mt-2 sm:mt-0">
+                        <input type="text" id="ai-food-input" class="flex-grow bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 outline-none focus:border-indigo-500 text-sm placeholder-slate-400 dark:placeholder-slate-500" placeholder="e.g., '1 whole egg and a piece of bread' or '150g cooked rice'">
+                        <button id="btn-add-ai-food" onclick="logAIFood()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-md flex justify-center items-center gap-2 whitespace-nowrap min-w-[120px] w-full sm:w-auto mt-2 sm:mt-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Auto-Log
                         </button>
                     </div>
-                    <p class="text-[10px] text-slate-500 mt-2 font-mono">Gemini AI automatically parses macro variables (Protein, Carbs, Fats, Calories, Costs) in real-time.</p>
+                    <p class="text-[10px] text-slate-500 mt-2 font-mono">Gemini AI will automatically calculate exact macros and append it to your diary.</p>
                 </div>
 
-                <!-- Mode: Manual Exact Manual Form -->
+                <!-- Mode: Manual Exact Log -->
                 <div id="logger-manual" class="relative z-10 hidden transition-opacity duration-300 space-y-3">
-                    <div class="flex flex-col lg:flex-row gap-3">
-                        <input type="text" id="man-food-name" class="flex-grow bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-2.5 outline-none focus:border-brand-500 text-sm" placeholder="Food Name (e.g., Eggs, Rice, Paneer)">
-                        <div class="flex gap-2">
-                            <input type="text" id="man-food-weight" class="w-full sm:w-32 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-2.5 outline-none focus:border-brand-500 text-sm" placeholder="Weight (e.g., 100g)">
-                            <button onclick="autoFillMacros()" id="btn-autofill" class="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-semibold px-3 py-2.5 rounded-xl transition-all text-xs whitespace-nowrap border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center gap-1 hover:bg-indigo-200">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> AI Fill Macros
-                            </button>
-                        </div>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <input type="text" id="man-food-name" class="flex-grow bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 text-sm" placeholder="Food Name (e.g. Oats)">
+                        <input type="text" id="man-food-weight" class="w-full sm:w-32 bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-2.5 outline-none focus:border-indigo-500 text-sm" placeholder="Weight (e.g. 50g)">
+                        <button onclick="autoFillMacros()" id="btn-autofill" class="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 font-semibold px-4 py-2.5 rounded-xl transition-colors text-xs whitespace-nowrap border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> AI Fetch Macros
+                        </button>
                     </div>
                     <div class="grid grid-cols-5 gap-2">
-                        <div><label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Calories</label><input type="number" id="man-cal" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-brand-500 text-sm text-center" placeholder="0"></div>
-                        <div><label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Pro (g)</label><input type="number" id="man-pro" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-brand-500 text-sm text-center" placeholder="0"></div>
-                        <div><label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Carb (g)</label><input type="number" id="man-carb" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-brand-500 text-sm text-center" placeholder="0"></div>
-                        <div><label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Fat (g)</label><input type="number" id="man-fat" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-brand-500 text-sm text-center" placeholder="0"></div>
-                        <div><label class="block text-[9px] text-slate-500 font-bold uppercase mb-1">Cost (₹)</label><input type="number" id="man-cost" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-brand-500 text-sm text-center" placeholder="0"></div>
+                        <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Kcal</label><input type="number" id="man-cal" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-indigo-500 text-sm text-center" placeholder="0"></div>
+                        <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Pro (g)</label><input type="number" id="man-pro" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-indigo-500 text-sm text-center" placeholder="0"></div>
+                        <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Carb (g)</label><input type="number" id="man-carb" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-indigo-500 text-sm text-center" placeholder="0"></div>
+                        <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Fat (g)</label><input type="number" id="man-fat" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-indigo-500 text-sm text-center" placeholder="0"></div>
+                        <div><label class="block text-[10px] text-slate-500 font-bold uppercase mb-1">Cost (₹)</label><input type="number" id="man-cost" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-2 py-2 outline-none focus:border-indigo-500 text-sm text-center" placeholder="0"></div>
                     </div>
-                    <button onclick="logManualFood()" class="w-full bg-slate-800 dark:bg-brand-600 hover:bg-slate-700 dark:hover:bg-brand-500 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-md flex justify-center items-center gap-2 mt-2">
-                        Add Manual Diary entry
+                    <button onclick="logManualFood()" class="w-full bg-slate-800 dark:bg-indigo-600 hover:bg-slate-700 dark:hover:bg-indigo-500 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-md flex justify-center items-center gap-2 mt-2">
+                        Add Manual Log
                     </button>
                 </div>
             </div>
 
-            <!-- Diet Chart Rendered dynamically via javascript -->
-            <div class="space-y-3" id="meal-container">
-                <!-- Logged Foods append here dynamically -->
+            <!-- Diet Chart Rendered via JS -->
+            <div class="space-y-4" id="meal-container">
+                <!-- Meals will be injected here -->
             </div>
             
-            <!-- Macro Breakdown Interactive Graphical Section -->
+            <!-- Macro Breakdown Chart -->
             <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mt-4 flex flex-col md:flex-row items-center gap-6 shadow-sm transition-colors">
                 <div class="w-full md:w-1/2">
-                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wider text-center md:text-left">Macros Balance</h3>
+                    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wider">Macros vs Goal</h3>
                     <div class="relative h-48 w-full flex justify-center"><canvas id="macroChart"></canvas></div>
                 </div>
                 <div class="w-full md:w-1/2 grid grid-cols-2 gap-4">
-                    <div class="bg-slate-50 dark:bg-dark-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
+                    <div class="bg-slate-50 dark:bg-dark-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                         <p class="text-xs text-slate-500 dark:text-slate-400">Total Carbs</p>
                         <p class="text-lg font-bold text-blue-500 dark:text-blue-400"><span id="sum-carb">0</span>g</p>
                     </div>
-                    <div class="bg-slate-50 dark:bg-dark-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700 text-center">
+                    <div class="bg-slate-50 dark:bg-dark-900 p-3 rounded-lg border border-slate-200 dark:border-slate-700">
                         <p class="text-xs text-slate-500 dark:text-slate-400">Total Fats</p>
                         <p class="text-lg font-bold text-yellow-500 dark:text-yellow-400"><span id="sum-fat">0</span>g</p>
                     </div>
@@ -328,44 +304,43 @@
             </div>
         </div>
 
-
-        <!-- ================== VIEW 2: WORKOUT & HEALTH SYNC ================== -->
+        <!-- VIEW: WORKOUT & HEALTH SYNC -->
         <div id="view-workout" class="tab-content flex-col gap-6">
             
-            <!-- Apple Health Sync Simulator & Manual Entry Panel -->
+            <!-- Apple Health Sync Simulator -->
             <div class="bg-white dark:bg-gradient-to-r dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm dark:shadow-lg relative overflow-hidden transition-colors">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
                     <div class="flex items-center gap-3">
                         <div class="bg-slate-900 dark:bg-black p-3 rounded-xl border border-slate-700 dark:border-slate-700">
                             <svg class="w-6 h-6 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Apple Health & Watch Integration</h3>
-                            <p class="text-xs text-slate-500 dark:text-slate-400">Sync active energy parameters & wrist health data</p>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Apple Health & Watch</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Sync active energy & workouts</p>
                         </div>
                     </div>
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <!-- Fully functional manual entry trigger! -->
-                        <button onclick="openManualWorkout()" class="flex-1 md:flex-none bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-medium px-4 py-2.5 rounded-xl transition-colors text-sm border border-slate-300 dark:border-slate-600">Manual Entry</button>
-                        <button id="btn-sync-health" onclick="syncAppleHealth()" class="flex-1 md:flex-none bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-black font-bold px-5 py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="openManualWorkout()" class="flex-1 sm:flex-none bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-white font-medium px-4 py-2.5 rounded-xl transition-colors text-sm border border-slate-300 dark:border-slate-600">Manual Entry</button>
+                        <button id="btn-sync-health" onclick="syncAppleHealth()" class="flex-1 sm:flex-none bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-black font-bold px-5 py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg> Sync Watch
                         </button>
                     </div>
                 </div>
                 
+                <!-- Logged Workouts Container -->
                 <div id="workout-log-container" class="mt-4 space-y-2 relative z-10">
-                    <!-- Synced logs render here dynamically -->
+                    <!-- Logs generated via JS -->
                 </div>
             </div>
 
-            <!-- Medical Safety Directive Callout -->
+            <!-- Medical Warning -->
             <div class="bg-amber-100 dark:bg-amber-900/40 border border-amber-300 dark:border-amber-700/50 rounded-xl p-4 text-amber-800 dark:text-amber-200 text-sm flex items-start gap-3 transition-colors">
                 <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 <div>
-                    <strong class="block mb-1 text-amber-900 dark:text-amber-100 font-bold">Kienböck's Post-Surgery Rehabilitation Directive:</strong>
+                    <strong class="block mb-1 text-amber-900 dark:text-amber-100">Kienböck's Post-Surgery Directives:</strong>
                     <ul class="list-disc pl-4 space-y-1">
-                        <li>Strictly NO heavy wrist compression or barbell press exercises. Execute chest movements using machines pressing on the heel of your palms.</li>
-                        <li>MANDATORY Figure-8 pulling strap implementation on pulls (Rows, Lat pulldowns) to completely bypass bone weight-bearing loads.</li>
+                        <li>Absolutely NO heavy pressing (barbell bench, OHP). Use machines pushing with the heel of your palm.</li>
+                        <li>MANDATORY use of Figure-8 lifting straps for all pulling movements (RDLs, Lat Pulldowns, Rows) to bypass wrist bones.</li>
                     </ul>
                 </div>
             </div>
@@ -375,763 +350,878 @@
                 <h2 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">7-Day Rehab Matrix</h2>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="workout-matrix-container">
-                <!-- Training schedules render dynamically here -->
+                <!-- Workouts will be injected here -->
             </div>
         </div>
 
-
-        <!-- ================== VIEW 3: SYSTEMS ================== -->
+        <!-- VIEW: SYSTEMS -->
         <div id="view-systems" class="tab-content flex-col gap-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
-                <!-- Sunday Prep Protocols -->
+                <!-- Sunday Prep -->
                 <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm dark:shadow-lg transition-colors">
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 p-3 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                        </div>
+                        <div class="bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 p-3 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
                         <h3 class="text-xl font-bold text-slate-900 dark:text-white">Sunday Prep Protocol</h3>
                     </div>
-                    <ul class="space-y-4 text-sm text-slate-700 dark:text-slate-300">
+                    <ul class="space-y-5 text-sm text-slate-700 dark:text-slate-300">
                         <li class="flex items-start gap-3">
-                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">1</span>
-                            Batch cook 1kg chicken breast & 3 cups of rice. Separate into clean food boxes.
+                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0">1</span>
+                            <div><strong class="text-slate-900 dark:text-white block mb-1 text-base">Bulk Chicken (Saves 45m daily)</strong>Buy ~1.2kg chicken breast. Marinate and cook entirely. Weigh into ~100g cooked portions (equals 150g raw). Store in 7 separate containers.</div>
                         </li>
                         <li class="flex items-start gap-3">
-                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">2</span>
-                            Audit calendar timelines for work-meeting conflicts with meal frequencies.
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full w-5 h-5 flex items-center justify-center text-xs shrink-0 mt-0.5">3</span>
-                            Inspect straps, wrap packs, and set out rehab gym-wear early.
+                            <span class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full w-6 h-6 flex items-center justify-center font-bold text-xs shrink-0">2</span>
+                            <div><strong class="text-slate-900 dark:text-white block mb-1 text-base">Inventory Checklist</strong><span class="grid grid-cols-2 gap-2 mt-2"><span class="bg-slate-50 dark:bg-slate-900 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded text-xs flex items-center gap-1"><input type="checkbox" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"> 35 Eggs</span><span class="bg-slate-50 dark:bg-slate-900 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded text-xs flex items-center gap-1"><input type="checkbox" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"> 14 Bananas</span><span class="bg-slate-50 dark:bg-slate-900 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded text-xs flex items-center gap-1"><input type="checkbox" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"> Paneer Block</span><span class="bg-slate-50 dark:bg-slate-900 px-2 py-1 border border-slate-200 dark:border-slate-700 rounded text-xs flex items-center gap-1"><input type="checkbox" class="rounded bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600"> Whey Stock</span></span></div>
                         </li>
                     </ul>
-                    <button onclick="markDone(this)" class="mt-6 w-full py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-lg text-sm font-semibold transition-colors">Mark Complete</button>
                 </div>
 
-                <!-- Daily PM Night Routines -->
+                <!-- Daily Automation -->
                 <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm dark:shadow-lg transition-colors">
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">PM Shutdown Sequence</h3>
+                        <div class="bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 p-3 rounded-xl"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Daily Execution (Mon-Fri)</h3>
                     </div>
-                    <ul class="space-y-4 text-sm text-slate-700 dark:text-slate-300">
+                    <ul class="space-y-5 text-sm text-slate-700 dark:text-slate-300">
                         <li class="flex items-start gap-3">
-                            <input type="checkbox" class="custom-checkbox shrink-0 mt-0.5" onclick="incrementProgress()"> 
-                            <span>Log all meal diaries & trigger health metrics syncer.</span>
+                            <div class="mt-0.5"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                            <div><strong class="text-slate-900 dark:text-white block">6:15 AM Trigger</strong>Put 6 cups of rice in the cooker. Hit start. Make your 5-egg bread omelette.</div>
                         </li>
                         <li class="flex items-start gap-3">
-                            <input type="checkbox" class="custom-checkbox shrink-0 mt-0.5" onclick="incrementProgress()"> 
-                            <span>Execute 10 minutes hot compress & gentle wrist mobilization.</span>
+                            <div class="mt-0.5"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                            <div><strong class="text-slate-900 dark:text-white block">The "Two Shaker" Rule</strong>Pack two dry shaker bottles with 1 scoop of whey each. Keep them at your desk. Just add water at 11 AM and 6 PM.</div>
                         </li>
                         <li class="flex items-start gap-3">
-                            <input type="checkbox" class="custom-checkbox shrink-0 mt-0.5" onclick="incrementProgress()"> 
-                            <span>Device shutdown, black out, read 10 book pages.</span>
+                            <div class="mt-0.5"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                            <div><strong class="text-slate-900 dark:text-white block">Permanent Desk Stash</strong>Keep peanut butter, almonds, and walnuts permanently in your office drawer. Never pack them daily.</div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="mt-0.5"><svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>
+                            <div><strong class="text-slate-900 dark:text-white block">8:30 PM Recovery</strong>Rice is done. Seared paneer takes 5 mins. Eat, sleep, recover.</div>
                         </li>
                     </ul>
                 </div>
             </div>
         </div>
+
     </main>
 
-
-    <!-- ================== FULLY DYNAMIC MODALS & SLIDE-OUTS ================== -->
-
-    <!-- API Settings Modal -->
-    <div id="api-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-dark-800 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700 shadow-2xl animate-fadeIn">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Gemini API Settings</h3>
-            <p class="text-xs text-slate-500 mb-4">Integrate your Google Gemini API token to power the natural language food parser and rehab assistance directly.</p>
-            <input type="password" id="api-key-input" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:border-brand-500 focus:outline-none mb-4 font-mono text-slate-900 dark:text-white" placeholder="AIzaSy...">
-            <div class="flex justify-end gap-3 text-sm font-semibold">
-                <button onclick="closeAPIModal()" class="px-4 py-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">Cancel</button>
-                <button onclick="saveAPIKey()" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl shadow-md transition-colors">Save Token</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Manual Workout Logger Modal -->
-    <div id="workout-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-dark-800 rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-700 shadow-2xl animate-fadeIn">
-            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Log Workout Manually</h3>
-            <p class="text-xs text-slate-500 mb-4">Log active energy burned during training loops and watch calibration metrics.</p>
-            
-            <div class="space-y-4 mb-6">
+    <!-- API KEY MODAL -->
+    <div id="api-key-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 border border-slate-200 dark:border-slate-700 transition-colors">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Set Gemini API Key</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Required for AI Food Logger & AI Coach.</p>
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Workout Activity Type</label>
-                    <input type="text" id="manual-workout-type" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none text-slate-900 dark:text-white" placeholder="e.g., Pull Gym Session, Zone 2 Elliptical">
+                    <input type="password" id="api-key-input" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 outline-none focus:border-indigo-500 text-sm" placeholder="AIzaSy...">
                 </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="closeAPIModal()" class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white py-3 rounded-xl font-medium text-sm transition-colors">Cancel</button>
+                    <button onclick="saveAPIKey()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-medium text-sm transition-colors">Save Key</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MANUAL WORKOUT MODAL -->
+    <div id="manual-workout-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity">
+        <div class="bg-white dark:bg-dark-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 border border-slate-200 dark:border-slate-700 transition-colors">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">Log Manual Workout</h3>
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">Active Energy (Kcal Burned)</label>
-                    <input type="number" id="manual-workout-calories" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none text-slate-900 dark:text-white font-mono" placeholder="e.g., 350">
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Activity Name</label>
+                    <input type="text" id="man-work-name" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 outline-none focus:border-rose-500 text-sm" placeholder="e.g., Rehab Matrix Day 2">
                 </div>
-            </div>
-
-            <div class="flex justify-end gap-3 text-sm font-semibold">
-                <button onclick="closeManualWorkout()" class="px-4 py-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors">Cancel</button>
-                <button onclick="logManualWorkoutSubmit()" class="px-5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl shadow-md transition-colors">Submit Log</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Duration (mins)</label>
+                        <input type="number" id="man-work-time" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none focus:border-rose-500 text-sm" placeholder="45">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Active Calories</label>
+                        <input type="number" id="man-work-cal" class="w-full bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none focus:border-rose-500 text-sm" placeholder="kcal">
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="closeManualWorkout()" class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white py-3 rounded-xl font-medium text-sm">Cancel</button>
+                    <button onclick="saveManualWorkout()" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white py-3 rounded-xl font-medium text-sm">Save Log</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- AI Coach Slide-Over Conversational Sidebar Panel -->
-    <div id="coach-panel" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white dark:bg-dark-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out">
-        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-950">
-            <div class="flex items-center gap-2">
-                <span class="p-1.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-lg">🤖</span>
-                <span class="font-bold text-slate-900 dark:text-white text-sm">Gemini Recovery Coach</span>
+    <!-- FLOATING CHAT WIDGET (Gemini Integrated) -->
+    <div id="chat-widget" class="fixed bottom-6 right-4 sm:right-8 z-50 flex flex-col items-end">
+        <button onclick="toggleChat()" class="bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xl shadow-indigo-900/50 px-5 py-3.5 rounded-full flex items-center justify-center gap-3 transition-transform hover:scale-105 border border-indigo-400/30 font-bold tracking-wide">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+            🤖 AI Recovery Coach
+        </button>
+
+        <div id="chat-window" class="bg-white dark:bg-dark-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-[calc(100vw-32px)] sm:w-[400px] h-[550px] max-h-[85vh] flex flex-col mt-4 absolute bottom-[120%] right-0 hidden transform transition-all origin-bottom-right scale-95 opacity-0">
+            <div class="bg-indigo-600 dark:bg-indigo-900/40 p-4 rounded-t-2xl border-b border-indigo-700 dark:border-slate-700 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-indigo-700 dark:bg-indigo-600 flex items-center justify-center border border-indigo-500/50 shadow-inner">🤖</div>
+                    <div>
+                        <h3 class="font-bold text-sm leading-none">VaultMind Coach</h3>
+                        <p class="text-[10px] text-indigo-200 dark:text-slate-400 mt-0.5">Powered by Gemini</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-indigo-200 hover:text-white transition-colors"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
-            <button onclick="toggleCoach()" class="text-slate-400 hover:text-rose-500 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-        </div>
-        <!-- Conversational Feed space -->
-        <div id="coach-messages" class="flex-grow overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50 dark:bg-slate-950/20">
-            <div class="flex gap-2.5 items-start">
-                <div class="bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 p-2 rounded-xl text-sm font-bold">🤖</div>
-                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-xs max-w-[80%] text-slate-800 dark:text-slate-300">
-                    Hey PM! Standardized tracking metrics are key. How's the rehabilitation on Kienböck's post-surgery wrist today? Ask me how to scale exercises safely or calculate dynamic macros.
+            
+            <div id="chat-messages" class="flex-grow p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4 bg-slate-50 dark:bg-dark-900/50">
+                <div class="flex flex-col gap-1 w-full items-start">
+                    <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm p-3.5 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] leading-relaxed">
+                        Hey! I'm your recovery coach. Need to adjust your macros, swap a meal, or get modifications for your wrist-safe workout? Just ask.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white dark:bg-dark-800 border-t border-slate-200 dark:border-slate-700 rounded-b-2xl p-3 shrink-0">
+                <div class="flex items-center gap-2 bg-slate-100 dark:bg-dark-900 border border-slate-300 dark:border-slate-700 rounded-xl p-1 pr-2 focus-within:border-indigo-500 transition-colors">
+                    <input type="text" id="chat-input" class="flex-grow bg-transparent text-slate-900 dark:text-white text-sm px-3 py-2 outline-none placeholder-slate-500" placeholder="Ask about macros, rehab...">
+                    <button id="chat-send-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg transition-colors disabled:opacity-50"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg></button>
                 </div>
             </div>
         </div>
-        <!-- Chat Inputs interface -->
-        <div class="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2 bg-white dark:bg-dark-900">
-            <input type="text" id="coach-input" class="flex-grow bg-slate-50 dark:bg-dark-950 border border-slate-200 dark:border-slate-800 text-xs rounded-xl px-3 py-2 focus:border-brand-500 focus:outline-none text-slate-900 dark:text-white" placeholder="Type message..." onkeydown="handleCoachKey(event)">
-            <button onclick="sendCoachMessage()" class="bg-brand-600 hover:bg-brand-500 text-white rounded-xl px-4 py-2 text-xs font-semibold flex items-center justify-center gap-1">
-                Send
-            </button>
-        </div>
     </div>
 
-    <!-- Global Floating Toast Notification Container -->
-    <div id="toast-container"></div>
+<script>
+    // --- APP DATA ---
+    let meals = [
+        { id: 'm1', time: '6:30 AM', title: 'Breakfast', desc: 'Bread Omelette (5 Whole Eggs + 3 Slices Bread + 1 Cheese Slice)', cal: 610, pro: 40, carb: 40, fat: 30, cost: 55, checked: false },
+        { id: 'm2', time: '11:00 AM', title: 'Desk Snack', desc: '1 Scoop Whey + 1 Banana + 15g Almonds', cal: 315, pro: 28, carb: 33, fat: 8, cost: 90, checked: false },
+        { id: 'm3', time: '2:00 PM', title: 'Lunch', desc: '150g Chicken + 3 Cups Rice + 1 tbsp Ghee', cal: 850, pro: 45, carb: 110, fat: 20, cost: 65, checked: false },
+        { id: 'm4', time: '6:00 PM', title: 'Pre-Workout', desc: '1 Scoop Whey + 1 Banana + 1 tbsp Peanut Butter', cal: 320, pro: 29, carb: 33, fat: 8, cost: 85, checked: false },
+        { id: 'm5', time: '8:30 PM', title: 'Dinner / Recovery', desc: '200g Paneer + 3 Cups Rice + Veggies + 1 tbsp Ghee', cal: 1000, pro: 44, carb: 110, fat: 40, cost: 115, checked: false }
+    ];
 
+    let burnLogs = [];
 
-    <!-- ================== SCRIPT INTEGRATIONS ================== -->
+    const workoutData = [
+        { day: 1, title: 'Lower Body (Quad) + Core', exercises: ['Leg Extensions: 4x12-15', 'Hack Squat / Leg Press: 4x10-12 (No Barbell)', 'Walking Lunges: 3x12/leg', 'Machine Crunches: 3x15'] },
+        { day: 2, title: 'Upper (Pull Focus)', alert: 'STRAPS MANDATORY', exercises: ['Lat Pulldowns: 4x10-12', 'Chest-Supported Machine Rows: 4x10', 'Cable Pullovers (rope): 3x15', 'Rear Delt Flyes: 3x15'] },
+        { day: 3, title: 'Active Recovery', exercises: ['Incline Treadmill Walk: 30-40 mins', 'Lower Body Mobility: 15 mins'] },
+        { day: 4, title: 'Lower Body (Ham/Glute)', exercises: ['Lying Leg Curls: 4x12', 'RDLs: 4x10 (STRAPS REQUIRED)', 'Calf Raises: 4x15-20', 'Planks: 3 sets (Forearms only)'] },
+        { day: 5, title: 'Upper (Push Focus)', alert: 'MACHINE ONLY', exercises: ['Machine Chest Press: 4x10-12 (Heel of palm)', 'Pec Deck Flyes: 4x12', 'Machine Lateral Raises: 4x15', 'Tricep Pushdowns: 4x12'] },
+        { day: 6, title: 'Lower (Volume)', exercises: ['Leg Press (Wide stance): 4x15', 'Leg Extensions: 3x15', 'Seated Calf Raises: 4x15', 'Hanging Leg Raises: 3x failure (Slings)'] },
+        { day: 7, title: 'Arms, Core & Rehab', exercises: ['Cable Bicep Curls: 4x12', 'Overhead Tricep Ext: 4x12', 'Wrist Therapy: As assigned', 'Stationary Bike: 20 mins'] }
+    ];
 
-    <script>
-        // State Machine Variables representing client metrics
-        let appState = {
-            goalKcal: 3320,
-            goalPro: 165,
-            calIn: 0,
-            calOut: 0,
-            pro: 0,
-            carb: 0,
-            fat: 0,
-            cost: 0,
-            streak: 12,
-            meals: [
-                { name: "Recon Oats & Whey combo", cal: 450, pro: 45, carb: 50, fat: 10, cost: 45, time: "08:30 AM" }
-            ],
-            workouts: [
-                { name: "Post-surgery recovery bike", calories: 220 }
-            ],
-            theme: 'dark',
-            mode: 'ai'
-        };
+    let myChart = null;
 
-        const quotes = [
-            "Rebuilding step-by-step. Let's conquer today.",
-            "Consistency over intensity. Stick to the macros.",
-            "Protect the wrist, build the back. Adapt and overcome.",
-            "Discipline equals freedom. Track the inputs."
-        ];
+    // =============================================
+    // FIX 1: toggleLogMode — switches between AI and Manual logger panels
+    // =============================================
+    function toggleLogMode(mode) {
+        const aiPanel     = document.getElementById('logger-ai');
+        const manualPanel = document.getElementById('logger-manual');
+        const btnAI       = document.getElementById('btn-mode-ai');
+        const btnManual   = document.getElementById('btn-mode-manual');
 
-        let macroChartInstance = null;
-
-        // Startup hooks
-        window.onload = function() {
-            initTheme();
-            startClock();
-            rotateQuotes();
-            renderMeals();
-            renderWorkouts();
-            renderWorkoutMatrix();
-            initChart();
-            renderDashboard();
-        };
-
-        // Dark vs Light state toggling configuration
-        function initTheme() {
-            const saved = localStorage.getItem('theme');
-            if (saved === 'light') {
-                document.documentElement.classList.remove('dark');
-                appState.theme = 'light';
-            } else {
-                document.documentElement.classList.add('dark');
-                appState.theme = 'dark';
-            }
+        if (mode === 'ai') {
+            aiPanel.classList.remove('hidden');
+            manualPanel.classList.add('hidden');
+            // Active styles on AI button
+            btnAI.classList.add('active-mode', 'bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+            btnAI.classList.remove('text-slate-500', 'dark:text-slate-400');
+            // Reset Manual button
+            btnManual.classList.remove('active-mode', 'bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+            btnManual.classList.add('text-slate-500', 'dark:text-slate-400');
+        } else {
+            manualPanel.classList.remove('hidden');
+            aiPanel.classList.add('hidden');
+            // Active styles on Manual button
+            btnManual.classList.add('active-mode', 'bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+            btnManual.classList.remove('text-slate-500', 'dark:text-slate-400');
+            // Reset AI button
+            btnAI.classList.remove('active-mode', 'bg-white', 'dark:bg-slate-700', 'text-indigo-600', 'dark:text-indigo-400', 'shadow-sm');
+            btnAI.classList.add('text-slate-500', 'dark:text-slate-400');
         }
+    }
 
-        function toggleTheme() {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                appState.theme = 'light';
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                appState.theme = 'dark';
-            }
-            if(macroChartInstance) macroChartInstance.update();
-            showToast("System Theme Altered", "info");
-        }
+    // =============================================
+    // FIX 2: Manual Workout Modal helpers
+    // =============================================
+    function openManualWorkout() {
+        const modal = document.getElementById('manual-workout-modal');
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
 
-        // Clock logic loops
-        function startClock() {
-            setInterval(() => {
-                const now = new Date();
-                document.getElementById('live-clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
-            }, 1000);
-        }
+    function closeManualWorkout() {
+        const modal = document.getElementById('manual-workout-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
 
-        // Cycling motivation reminders
-        function rotateQuotes() {
-            const el = document.getElementById('live-quote');
-            if (!el) return;
-            let idx = 0;
-            el.innerText = quotes[idx];
-            
-            setInterval(() => {
-                el.classList.add('fade-out');
-                setTimeout(() => {
-                    idx = (idx + 1) % quotes.length;
-                    el.innerText = quotes[idx];
-                    el.classList.remove('fade-out');
-                }, 600);
-            }, 10000);
-        }
+    function saveManualWorkout() {
+        const name = document.getElementById('man-work-name').value.trim();
+        const time = parseInt(document.getElementById('man-work-time').value) || 0;
+        const cal  = parseInt(document.getElementById('man-work-cal').value)  || 0;
 
-        function refreshMotivation() {
-            const msgEl = document.getElementById('motivation-text');
-            msgEl.innerText = quotes[Math.floor(Math.random() * quotes.length)];
-            const badge = document.getElementById('streak-badge');
-            badge.classList.remove('badge-bounce');
-            void badge.offsetWidth; // trigger layout reflow
-            badge.classList.add('badge-bounce');
-            showToast("Motivation renewed!", "info");
-        }
+        if (!name) { alert('Please enter an activity name.'); return; }
+        if (cal <= 0) { alert('Please enter calories burned.'); return; }
 
-        // Core View Switcher tab mechanics
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('[id^="tab-"]').forEach(el => {
-                el.classList.remove('border-brand-500', 'text-brand-600', 'dark:text-brand-500');
-                el.classList.add('border-transparent', 'text-slate-500');
-            });
-            
-            document.getElementById('view-' + tabId).classList.add('active');
-            const btn = document.getElementById('tab-' + tabId);
-            btn.classList.remove('border-transparent', 'text-slate-500');
-            btn.classList.add('border-brand-500', 'text-brand-600', 'dark:text-brand-500');
-        }
+        burnLogs.push({
+            id:     'burn-' + Date.now(),
+            name:   name,
+            time:   time,
+            cal:    cal,
+            source: 'Manual'
+        });
 
-        // Log modes (AI Smart vs Manual exact inputs forms)
-        function toggleLogMode(mode) {
-            appState.mode = mode;
-            const btnAI = document.getElementById('btn-mode-ai');
-            const btnMan = document.getElementById('btn-mode-manual');
-            const divAI = document.getElementById('logger-ai');
-            const divMan = document.getElementById('logger-manual');
+        // Clear inputs
+        document.getElementById('man-work-name').value = '';
+        document.getElementById('man-work-time').value = '';
+        document.getElementById('man-work-cal').value  = '';
 
-            if (mode === 'ai') {
-                btnAI.classList.add('active-mode');
-                btnMan.classList.remove('active-mode');
-                divAI.classList.remove('hidden');
-                divMan.classList.add('hidden');
-            } else {
-                btnMan.classList.add('active-mode');
-                btnAI.classList.remove('active-mode');
-                divMan.classList.remove('hidden');
-                divAI.classList.add('hidden');
-            }
-        }
+        closeManualWorkout();
+        renderBurnLogs();
+    }
 
-        // Smart Local dictionary parser to simulate high quality natural language scaling
-        function queryFoodParser(query) {
-            const normalized = query.toLowerCase();
-            let parsed = { name: query, cal: 250, pro: 15, carb: 20, fat: 8, cost: 50 };
+    // =============================================
+    // FIX 3: syncAppleHealth — simulates a watch sync
+    // =============================================
+    function syncAppleHealth() {
+        const btn = document.getElementById('btn-sync-health');
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Syncing...`;
 
-            if (normalized.includes("chicken") || normalized.includes("breast")) {
-                parsed = { name: "Chicken Breast", cal: 165, pro: 31, carb: 0, fat: 3, cost: 45 };
-            } else if (normalized.includes("rice")) {
-                parsed = { name: "Cooked Basmati Rice", cal: 200, pro: 4, carb: 44, fat: 0, cost: 15 };
-            } else if (normalized.includes("egg")) {
-                parsed = { name: "Whole Cage-Free Eggs", cal: 140, pro: 12, carb: 1, fat: 10, cost: 20 };
-            } else if (normalized.includes("whey") || normalized.includes("scoop") || normalized.includes("protein")) {
-                parsed = { name: "ISO Whey Protein Scoop", cal: 120, pro: 25, carb: 2, fat: 1, cost: 65 };
-            } else if (normalized.includes("oats") || normalized.includes("oatmeal")) {
-                parsed = { name: "Organic Rolled Oats", cal: 190, pro: 7, carb: 32, fat: 3, cost: 15 };
-            } else if (normalized.includes("paneer")) {
-                parsed = { name: "Fresh Dairy Paneer", cal: 265, pro: 18, carb: 1, fat: 20, cost: 40 };
-            }
-
-            // Extract numeric weights if exists (e.g. 200g, 150g) to scale
-            const gramsMatch = normalized.match(/(\d+)\s*g/);
-            if (gramsMatch && gramsMatch[1]) {
-                const multiplier = parseInt(gramsMatch[1]) / 100;
-                parsed.name = `${gramsMatch[1]}g ${parsed.name}`;
-                parsed.cal = Math.round(parsed.cal * multiplier);
-                parsed.pro = Math.round(parsed.pro * multiplier);
-                parsed.carb = Math.round(parsed.carb * multiplier);
-                parsed.fat = Math.round(parsed.fat * multiplier);
-                parsed.cost = Math.round(parsed.cost * multiplier);
-            }
-            return parsed;
-        }
-
-        // Trigger Auto Fill macros helper
-        function autoFillMacros() {
-            const name = document.getElementById('man-food-name').value;
-            const weight = document.getElementById('man-food-weight').value || '100g';
-            if (!name) {
-                showToast("Enter a food name first!", "error");
-                return;
-            }
-            const query = `${weight} of ${name}`;
-            const parsed = queryFoodParser(query);
-            
-            document.getElementById('man-cal').value = parsed.cal;
-            document.getElementById('man-pro').value = parsed.pro;
-            document.getElementById('man-carb').value = parsed.carb;
-            document.getElementById('man-fat').value = parsed.fat;
-            document.getElementById('man-cost').value = parsed.cost;
-            showToast("Macros fetched via local smart dictionary!", "success");
-        }
-
-        // Add manual form logged entries
-        function logManualFood() {
-            const name = document.getElementById('man-food-name').value || 'Custom Food';
-            const weight = document.getElementById('man-food-weight').value;
-            const finalName = weight ? `${name} (${weight})` : name;
-
-            const cal = parseInt(document.getElementById('man-cal').value) || 0;
-            const pro = parseInt(document.getElementById('man-pro').value) || 0;
-            const carb = parseInt(document.getElementById('man-carb').value) || 0;
-            const fat = parseInt(document.getElementById('man-fat').value) || 0;
-            const cost = parseInt(document.getElementById('man-cost').value) || 0;
-
-            if (cal === 0 && pro === 0) {
-                showToast("Add metrics before submitting diary entries", "error");
-                return;
-            }
-
-            addMeal({
-                name: finalName,
-                cal,
-                pro,
-                carb,
-                fat,
-                cost,
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        // Simulate a sync delay then add a sample workout entry
+        setTimeout(() => {
+            const sampleWorkouts = [
+                { name: 'Outdoor Walk',        time: 35,  cal: 210 },
+                { name: 'Strength Training',   time: 50,  cal: 320 },
+                { name: 'Cycling',             time: 40,  cal: 280 },
+            ];
+            const sample = sampleWorkouts[Math.floor(Math.random() * sampleWorkouts.length)];
+            burnLogs.push({
+                id:     'burn-' + Date.now(),
+                name:   sample.name,
+                time:   sample.time,
+                cal:    sample.cal,
+                source: 'Apple Watch'
             });
 
-            // reset Form elements
-            document.getElementById('man-food-name').value = '';
-            document.getElementById('man-food-weight').value = '';
-            document.getElementById('man-cal').value = '';
-            document.getElementById('man-pro').value = '';
-            document.getElementById('man-carb').value = '';
-            document.getElementById('man-fat').value = '';
-            document.getElementById('man-cost').value = '';
+            renderBurnLogs();
 
-            showToast("Logged manual entry successfully", "success");
-        }
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/></svg> Sync Watch`;
+        }, 1800);
+    }
 
-        // Trigger dynamic Natural Language log
-        function logAIFood() {
-            const input = document.getElementById('ai-food-input');
-            const val = input.value.trim();
-            if (!val) {
-                showToast("Please input text describing food first", "error");
-                return;
-            }
+    // --- THEME LOGIC ---
+    function toggleTheme() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        const iconLight = document.getElementById('theme-icon-light');
+        const iconDark  = document.getElementById('theme-icon-dark');
+        if (isDark) { iconLight.style.display = 'block'; iconDark.style.display = 'none'; }
+        else        { iconLight.style.display = 'none';  iconDark.style.display = 'block'; }
+        if (myChart) myChart.update();
+    }
+
+    // --- RENDER LOGIC ---
+    function renderMeals() {
+        const container = document.getElementById('meal-container');
+        container.innerHTML = '';
+        meals.forEach(m => {
+            const isChecked = m.checked ? 'checked' : '';
+            const cardClass = m.checked
+                ? 'meal-card completed bg-white dark:bg-dark-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex items-start'
+                : 'meal-card bg-white dark:bg-dark-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm flex items-start';
             
-            const btn = document.getElementById('btn-add-ai-food');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Parsing...`;
-            
-            setTimeout(() => {
-                const parsedResult = queryFoodParser(val);
-                parsedResult.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                addMeal(parsedResult);
-                
-                input.value = '';
-                btn.innerHTML = originalHTML;
-                showToast("AI recognized food and updated diary logs!", "success");
-            }, 850);
-        }
+            let deleteBtn = m.id.startsWith('custom-')
+                ? `<button onclick="deleteMeal('${m.id}')" class="text-slate-400 dark:text-slate-500 hover:text-rose-500 px-2"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>`
+                : '';
 
-        function addMeal(meal) {
-            appState.meals.push(meal);
-            renderMeals();
-        }
-
-        function deleteMeal(index) {
-            appState.meals.splice(index, 1);
-            renderMeals();
-            showToast("Diary element removed", "info");
-        }
-
-        function renderMeals() {
-            appState.calIn = 0; 
-            appState.pro = 0; 
-            appState.carb = 0; 
-            appState.fat = 0; 
-            appState.cost = 0;
-            
-            const container = document.getElementById('meal-container');
-            container.innerHTML = '';
-
-            appState.meals.forEach((m, idx) => {
-                appState.calIn += m.cal; 
-                appState.pro += m.pro; 
-                appState.carb += m.carb; 
-                appState.fat += m.fat; 
-                appState.cost += m.cost;
-                
-                container.innerHTML += `
-                <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 flex justify-between items-center shadow-sm hover:shadow transition-all animate-fadeIn">
-                    <div class="min-w-0 flex-grow pr-3">
-                        <p class="font-semibold text-slate-900 dark:text-white text-sm truncate">${m.name}</p>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">${m.time} • ₹${m.cost} • <span class="sm:hidden text-brand-600 dark:text-brand-400 font-medium">${m.pro}P / ${m.carb}C / ${m.fat}F</span><span class="hidden sm:inline">Macronutrient elements</span></p>
-                    </div>
-                    <div class="flex items-center gap-4 shrink-0">
-                        <div class="text-right hidden sm:block">
-                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-wide">Macros Ratio</p>
-                            <p class="text-xs text-slate-700 dark:text-slate-300 font-mono">${m.pro}P / ${m.carb}C / ${m.fat}F</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="font-bold text-brand-600 dark:text-brand-400 font-mono text-sm sm:text-base">${m.cal} kcal</p>
-                        </div>
-                        <button onclick="deleteMeal(${idx})" class="text-slate-400 hover:text-rose-500 p-1 transition-colors" title="Remove Entry">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
-                </div>`;
-            });
-
-            if (appState.meals.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">No meal items logged yet today. Fill parameters above.</div>`;
-            }
-
-            renderDashboard();
-            updateChart();
-        }
-
-        // Dynamic dashboard calculations syncer
-        function renderDashboard() {
-            appState.netCal = appState.calIn - appState.calOut;
-            
-            document.getElementById('live-cal-in').innerText = appState.calIn.toLocaleString();
-            document.getElementById('live-cal-out').innerText = appState.calOut.toLocaleString();
-            document.getElementById('live-net-cal').innerText = appState.netCal.toLocaleString();
-            document.getElementById('live-pro').innerText = appState.pro;
-            document.getElementById('live-cost').innerText = appState.cost;
-            document.getElementById('sum-carb').innerText = appState.carb;
-            document.getElementById('sum-fat').innerText = appState.fat;
-
-            // Update Progress bars
-            const calPct = Math.min(100, (appState.calIn / appState.goalKcal) * 100);
-            const proPct = Math.min(100, (appState.pro / appState.goalPro) * 100);
-            document.getElementById('bar-cal').style.width = calPct + '%';
-            document.getElementById('bar-pro').style.width = proPct + '%';
-            
-            // Goals percentage tracking
-            document.getElementById('goal-pct').innerText = Math.round(calPct);
-        }
-
-        function initChart() {
-            const ctx = document.getElementById('macroChart').getContext('2d');
-            Chart.defaults.color = appState.theme === 'dark' ? '#94a3b8' : '#64748b';
-            
-            macroChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Protein (g)', 'Carbs (g)', 'Fats (g)'],
-                    datasets: [{
-                        data: [appState.pro, appState.carb, appState.fat],
-                        backgroundColor: ['#14b8a6', '#3b82f6', '#eab308'],
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { 
-                            position: 'bottom',
-                            labels: { boxWidth: 10, padding: 15 } 
-                        }
-                    },
-                    cutout: '72%'
-                }
-            });
-        }
-
-        function updateChart() {
-            if (macroChartInstance) {
-                macroChartInstance.data.datasets[0].data = [appState.pro, appState.carb, appState.fat];
-                macroChartInstance.update();
-            }
-        }
-
-
-        // ================== WORKOUT & ACTIVE ENERGY ACTIONS ==================
-
-        // Apple Health Syncer simulation
-        function syncAppleHealth() {
-            const btn = document.getElementById('btn-sync-health');
-            const dot = document.getElementById('active-burn-dot');
-            const originalHTML = btn.innerHTML;
-            
-            btn.innerHTML = `<svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Synching...`;
-            dot.style.display = 'block';
-
-            setTimeout(() => {
-                const autoBurned = Math.floor(Math.random() * 150) + 220;
-                const syncedActivity = { name: "Apple Health Auto-Calibrated Loop", calories: autoBurned };
-                
-                appState.workouts.push(syncedActivity);
-                renderWorkouts();
-
-                btn.innerHTML = originalHTML;
-                dot.style.display = 'none';
-                showToast(`Synced ${autoBurned} kcal active energy from watch loop!`, "success");
-            }, 1200);
-        }
-
-        // FULLY FUNCTIONAL: Open Manual Workout Logger Modal
-        function openManualWorkout() {
-            document.getElementById('workout-modal').classList.replace('hidden', 'flex');
-        }
-
-        function closeManualWorkout() {
-            document.getElementById('workout-modal').classList.replace('flex', 'hidden');
-        }
-
-        // Submit logged manual workouts and recalculate values instantly
-        function logManualWorkoutSubmit() {
-            const typeInput = document.getElementById('manual-workout-type');
-            const calInput = document.getElementById('manual-workout-calories');
-
-            const type = typeInput.value.trim() || "Manual Active Training";
-            const cal = parseInt(calInput.value) || 0;
-
-            if (cal <= 0) {
-                showToast("Enter a valid metric above zero Kcal!", "error");
-                return;
-            }
-
-            const customWorkout = { name: type, calories: cal };
-            appState.workouts.push(customWorkout);
-            renderWorkouts();
-
-            // Reset forms and trigger close modal
-            typeInput.value = '';
-            calInput.value = '';
-            closeManualWorkout();
-            showToast(`Logged workout successfully: ${cal} Kcal active burn added!`, "success");
-        }
-
-        // Render workouts to training syncer timeline
-        function renderWorkouts() {
-            appState.calOut = 0;
-            const container = document.getElementById('workout-log-container');
-            container.innerHTML = '';
-
-            appState.workouts.forEach((w, idx) => {
-                appState.calOut += w.calories;
-                container.innerHTML += `
-                <div class="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 p-3 rounded-lg flex justify-between items-center text-sm animate-fadeIn">
-                    <span class="text-slate-700 dark:text-slate-300 flex items-center gap-2 font-medium">
-                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span> 
-                        ${w.name}
-                    </span>
-                    <div class="flex items-center gap-3 font-mono font-bold text-rose-500">
-                        <span>-${w.calories} kcal</span>
-                        <button onclick="removeWorkout(${idx})" class="text-slate-400 hover:text-rose-500 font-normal hover:scale-105 transition-all pl-1 text-xs" title="Remove Session">✕</button>
-                    </div>
-                </div>`;
-            });
-
-            if (appState.workouts.length === 0) {
-                container.innerHTML = `<div class="text-center py-4 text-slate-400 dark:text-slate-500 text-xs">No watch syncs or workouts reported. Press Synch Watch or Log Manual.</div>`;
-            }
-
-            renderDashboard();
-        }
-
-        function removeWorkout(index) {
-            appState.workouts.splice(index, 1);
-            renderWorkouts();
-            showToast("Workout log purged", "info");
-        }
-
-
-        // ================== OTHER MODALS & ACTIONS ==================
-
-        // Training Matrix Schedule list
-        const workoutMatrix = [
-            { day: "Monday Activity", title: "Pull Day (Straps Mandatory)", desc: "Lat Pulldowns, Chest-Supported machine Rows, Face Pulls. Lock straps tightly." },
-            { day: "Tuesday Activity", title: "Legs (Quad Dominant)", desc: "Hack Squat, Leg Extensions, Calf Raise routines. Minimal hand loading." },
-            { day: "Wednesday Activity", title: "Push Day (Machine Only)", desc: "Pec Deck, Tricep pushdowns via loop ropes, Lateral raises. Palm-heel push ONLY." },
-            { day: "Thursday Activity", title: "Active Cardio Recovery", desc: "Steady State Zone 2 Cardio (Bike / Incline Treadmill walking) - 45 mins limit." }
-        ];
-
-        function renderWorkoutMatrix() {
-            const container = document.getElementById('workout-matrix-container');
-            let html = '';
-            workoutMatrix.forEach(w => {
-                html += `
-                <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm hover:border-brand-500 dark:hover:border-brand-500 transition-all group">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 group-hover:text-brand-500 transition-colors">${w.day}</span>
-                        <svg class="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-brand-500 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                    </div>
-                    <h4 class="font-bold text-slate-900 dark:text-white mb-1">${w.title}</h4>
-                    <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">${w.desc}</p>
-                </div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        // Helper Complete indicator triggers
-        function markDone(btn) {
-            btn.innerText = "Done ✓";
-            btn.classList.replace('bg-slate-100', 'bg-emerald-100');
-            btn.classList.replace('dark:bg-slate-700', 'dark:bg-emerald-900/50');
-            btn.classList.replace('text-slate-800', 'text-emerald-700');
-            btn.classList.replace('dark:text-white', 'dark:text-emerald-400');
-            btn.disabled = true;
-            showToast("Preparation protocol archived!", "success");
-        }
-
-        // Daily PM check increment tracks
-        function incrementProgress() {
-            showToast("Night recovery schedule logged!", "success");
-        }
-
-        // Reset system structures
-        function confirmReset() {
-            if (confirm("Reset current daily tracking metrics? All meals and active sessions will be deleted.")) {
-                appState.calIn = 0; 
-                appState.calOut = 0; 
-                appState.pro = 0; 
-                appState.carb = 0; 
-                appState.fat = 0; 
-                appState.cost = 0;
-                appState.meals = [];
-                appState.workouts = [];
-                document.getElementById('workout-log-container').innerHTML = '';
-                renderMeals();
-                renderWorkouts();
-                showToast("Daily record reset successfully", "info");
-            }
-        }
-
-
-        // ================== GEMINI AI COACH INTERACTIVE SIMULATION ==================
-
-        // Slide out side panel helper
-        function toggleCoach() {
-            const panel = document.getElementById('coach-panel');
-            if (panel.classList.contains('translate-x-full')) {
-                panel.classList.remove('translate-x-full');
-                showToast("Gemini Rehab Advisor connected", "info");
-            } else {
-                panel.classList.add('translate-x-full');
-            }
-        }
-
-        function handleCoachKey(e) {
-            if (e.key === 'Enter') sendCoachMessage();
-        }
-
-        function sendCoachMessage() {
-            const input = document.getElementById('coach-input');
-            const msg = input.value.trim();
-            if (!msg) return;
-
-            const container = document.getElementById('coach-messages');
-
-            // Append User message block
             container.innerHTML += `
-            <div class="flex gap-2.5 items-start justify-end">
-                <div class="bg-brand-600 text-white p-3 rounded-2xl text-xs max-w-[80%] shadow-sm">
-                    ${msg}
+            <div class="${cardClass}" id="card-${m.id}">
+                <input type="checkbox" class="custom-checkbox mt-1 mr-4 meal-check" onchange="toggleMealCheck('${m.id}', this.checked)" data-cal="${m.cal}" data-pro="${m.pro}" data-carb="${m.carb}" data-fat="${m.fat}" data-cost="${m.cost}" id="${m.id}" ${isChecked}>
+                <div class="flex-grow">
+                    <label for="${m.id}" class="cursor-pointer block">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="font-bold text-lg text-slate-900 dark:text-white">${m.title}</h3>
+                            <div class="flex items-center gap-2">
+                                ${deleteBtn}
+                                <span class="bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] uppercase tracking-wide font-bold px-2 py-1 rounded border border-slate-200 dark:border-slate-600">${m.time}</span>
+                            </div>
+                        </div>
+                        <p class="text-brand-600 dark:text-brand-400 font-medium text-sm mb-3">${m.desc}</p>
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span class="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded">${m.cal} kcal</span>
+                            <span class="bg-brand-50 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-700/50 text-brand-700 dark:text-brand-300 px-2 py-1 rounded">${m.pro}g Pro</span>
+                            <span class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">${m.carb}g Carb</span>
+                            <span class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700/50 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded">${m.fat}g Fat</span>
+                        </div>
+                    </label>
                 </div>
-                <div class="bg-brand-500/20 text-brand-600 dark:text-brand-400 p-2 rounded-xl text-xs font-bold">PM</div>
             </div>`;
+        });
+        updateProgress();
+    }
 
-            input.value = '';
-            container.scrollTop = container.scrollHeight;
+    function renderWorkouts() {
+        const container = document.getElementById('workout-matrix-container');
+        container.innerHTML = '';
+        workoutData.forEach(w => {
+            let alertHtml = w.alert ? `<span class="bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-200 dark:border-amber-700/50 uppercase tracking-wider mb-3 inline-block">${w.alert}</span>` : '';
+            let listHtml  = w.exercises.map(e => `<li class="flex gap-2"><span class="text-brand-500 mt-0.5">▸</span><span class="text-slate-700 dark:text-slate-300">${e}</span></li>`).join('');
+            container.innerHTML += `
+            <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col h-full transition-colors">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0">D${w.day}</div>
+                    <h3 class="font-bold text-slate-900 dark:text-white leading-tight">${w.title}</h3>
+                </div>
+                ${alertHtml}
+                <ul class="text-sm space-y-2 mt-auto pt-2">${listHtml}</ul>
+            </div>`;
+        });
+    }
 
-            // Simulate parsing and coach reply delay
-            setTimeout(() => {
-                let reply = "I understand. Let's make sure we minimize compression forces. Ensure you rely on machines and push directly using the heel of your hand rather than fingers. Also, remember that Figure-8 straps are highly recommended to bypass wrist loading during heavy pulling.";
-                
-                const lower = msg.toLowerCase();
-                if (lower.includes("protein") || lower.includes("macro") || lower.includes("diet")) {
-                    reply = "Your goal requires 165g of daily protein. Keep prioritizing high bioavailable proteins (such as eggs and chicken breast). If you're short on macros, try adding a clean scoop of Whey isolate to hit that benchmark cost-effectively.";
-                } else if (lower.includes("kienbock") || lower.includes("surgery") || lower.includes("wrist") || lower.includes("pain")) {
-                    reply = "For Kienböck's stage recovery, focus strictly on passive wrist extension, neural glides, and machine-bound movements. Do NOT press heavy dumbbells or attempt pull-ups without using secure Figure-8 wrist harnesses.";
-                } else if (lower.includes("calendar") || lower.includes("timeline") || lower.includes("meeting")) {
-                    reply = "As a busy Project Manager, calendar blocking is key! Set a recurring 15-minute daily window for meal tracking and wrist mobilizations so rehab tasks don't slip past schedule loops.";
-                }
+    function renderBurnLogs() {
+        const container = document.getElementById('workout-log-container');
+        container.innerHTML = '';
 
-                container.innerHTML += `
-                <div class="flex gap-2.5 items-start">
-                    <div class="bg-teal-100 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 p-2 rounded-xl text-sm font-bold">🤖</div>
-                    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 rounded-2xl text-xs max-w-[80%] text-slate-800 dark:text-slate-300">
-                        ${reply}
+        if (burnLogs.length === 0) {
+            container.innerHTML = '<p class="text-xs text-slate-500 italic py-2">No active energy recorded today.</p>';
+            document.getElementById('active-burn-dot').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('active-burn-dot').style.display = 'block';
+
+        burnLogs.forEach(log => {
+            let sourceIcon = log.source === 'Apple Watch'
+                ? `<svg class="w-4 h-4 text-rose-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`
+                : `<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>`;
+
+            container.innerHTML += `
+            <div class="workout-card bg-slate-50 dark:bg-dark-900 border border-slate-200 dark:border-slate-700 rounded-lg p-3 flex justify-between items-center group">
+                <div class="flex items-center gap-3">
+                    ${sourceIcon}
+                    <div>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white">${log.name}</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">${log.time} mins • ${log.source}</p>
                     </div>
-                </div>`;
-                container.scrollTop = container.scrollHeight;
-            }, 800);
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-rose-600 dark:text-rose-400 font-bold text-sm">-${log.cal} kcal</span>
+                    <button onclick="deleteBurnLog('${log.id}')" class="text-slate-400 dark:text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+            </div>`;
+        });
+        updateProgress();
+    }
+
+    // --- ACTIONS ---
+    function toggleMealCheck(id, isChecked) {
+        const meal = meals.find(m => m.id === id);
+        if (meal) meal.checked = isChecked;
+        const card = document.getElementById('card-' + id);
+        if (isChecked) card.classList.add('completed');
+        else card.classList.remove('completed');
+        updateProgress();
+    }
+
+    function deleteMeal(id)     { meals    = meals.filter(m => m.id !== id);    renderMeals(); }
+    function deleteBurnLog(id)  { burnLogs = burnLogs.filter(b => b.id !== id); renderBurnLogs(); }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('[id^="tab-"]').forEach(el => {
+            el.className = 'py-4 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap flex items-center gap-2';
+        });
+        document.getElementById(`view-${tabId}`).classList.add('active');
+        document.getElementById(`tab-${tabId}`).className = 'py-4 text-sm font-medium border-b-2 border-brand-500 text-brand-600 dark:text-brand-500 transition-colors whitespace-nowrap flex items-center gap-2';
+    }
+
+    function updateProgress() {
+        let tCal = 0, tPro = 0, tCarb = 0, tFat = 0, tCost = 0;
+        meals.forEach(m => {
+            if (m.checked) { tCal += m.cal; tPro += m.pro; tCarb += m.carb; tFat += m.fat; tCost += m.cost; }
+        });
+
+        let tBurn = 0;
+        burnLogs.forEach(b => tBurn += b.cal);
+        let netCal = tCal - tBurn;
+
+        document.getElementById('live-cal-in').innerText  = tCal;
+        document.getElementById('live-cal-out').innerText = tBurn;
+        document.getElementById('live-net-cal').innerText = netCal;
+        document.getElementById('live-pro').innerText     = tPro;
+        document.getElementById('sum-carb').innerText     = tCarb;
+        document.getElementById('sum-fat').innerText      = tFat;
+        document.getElementById('live-cost').innerText    = tCost.toFixed(2);
+
+        document.getElementById('bar-cal').style.width = Math.min((tCal / 3320) * 100, 100) + '%';
+        document.getElementById('bar-pro').style.width = Math.min((tPro / 165)  * 100, 100) + '%';
+
+        // Milestone & streak checks
+        const pct = Math.round((tCal / 3320) * 100);
+        checkMilestones(pct);
+        updateStreak();
+        renderMotivation();
+
+        updateChart(tPro, tCarb, tFat);
+    }
+
+    function resetDay() {
+        meals.forEach(m => m.checked = false);
+        burnLogs = [];
+        renderMeals();
+        renderBurnLogs();
+    }
+
+    function updateChart(p, c, f) {
+        const pCal = p * 4; const cCal = c * 4; const fCal = f * 9;
+        const total = pCal + cCal + fCal;
+        const data  = total === 0 ? [30, 40, 30] : [pCal, cCal, fCal];
+        const ctx   = document.getElementById('macroChart').getContext('2d');
+        if (myChart) {
+            myChart.data.datasets[0].data = data;
+            myChart.update();
+        } else {
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: ['Protein', 'Carbs', 'Fats'], datasets: [{ data: data, backgroundColor: ['#38bdf8', '#818cf8', '#fbbf24'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+            });
         }
+    }
 
+    // --- API KEY MANAGEMENT ---
+    function openAPIModal() {
+        const modal = document.getElementById('api-key-modal');
+        document.getElementById('api-key-input').value = localStorage.getItem('gemini_api_key') || '';
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
 
-        // ================== OTHER MODAL UTILITIES ==================
+    function closeAPIModal() {
+        const modal = document.getElementById('api-key-modal');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.classList.add('hidden'), 200);
+    }
 
-        function openAPIModal() {
-            document.getElementById('api-modal').classList.replace('hidden', 'flex');
-        }
+    function saveAPIKey() {
+        const key = document.getElementById('api-key-input').value.trim();
+        localStorage.setItem('gemini_api_key', key);
+        closeAPIModal();
+        alert('API Key Saved Successfully!');
+    }
 
-        function closeAPIModal() {
-            document.getElementById('api-modal').classList.replace('flex', 'hidden');
-        }
-
-        function saveAPIKey() {
-            const keyVal = document.getElementById('api-key-input').value.trim();
-            if (keyVal) {
-                localStorage.setItem('gemini_api_key', keyVal);
-                showToast("API Access Token saved securely", "success");
-            } else {
-                localStorage.removeItem('gemini_api_key');
-                showToast("API Token reset", "info");
+    async function fetchGeminiAPI(payload, useJson = false) {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) { openAPIModal(); throw new Error('Please set your Gemini API Key first.'); }
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const delays = [1000, 2000, 4000, 8000];
+        let lastError;
+        for (let i = 0; i <= delays.length; i++) {
+            try {
+                const res  = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (data.error) throw new Error(data.error.message);
+                return data.candidates[0].content.parts[0].text;
+            } catch(err) {
+                lastError = err;
+                if (i < delays.length) await new Promise(r => setTimeout(r, delays[i]));
             }
-            closeAPIModal();
+        }
+        throw lastError;
+    }
+
+    async function logAIFood() {
+        const inputEl = document.getElementById('ai-food-input');
+        const text = inputEl.value.trim();
+        if (!text) return;
+
+        const btn = document.getElementById('btn-add-ai-food');
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Scanning...`;
+
+        try {
+            const prompt = `Analyze this food entry strictly: "${text}". Calculate precise estimated macros, calories, and a rough cost in INR. Include the weight in the title if not obvious. Return ONLY a JSON object with EXACTLY these keys: "title" (short 3-4 word name with qty), "desc" (details/breakdown), "cal" (number), "pro" (number), "carb" (number), "fat" (number), "cost" (number).`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                    responseSchema: { type: 'OBJECT', properties: { title: { type: 'STRING' }, desc: { type: 'STRING' }, cal: { type: 'NUMBER' }, pro: { type: 'NUMBER' }, carb: { type: 'NUMBER' }, fat: { type: 'NUMBER' }, cost: { type: 'NUMBER' } } }
+                }
+            };
+            const rawJson = await fetchGeminiAPI(payload, true);
+            const parsed  = JSON.parse(rawJson);
+            meals.unshift({
+                id:      'custom-' + Date.now(),
+                time:    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                title:   parsed.title,
+                desc:    parsed.desc,
+                cal:     Math.round(parsed.cal),
+                pro:     Math.round(parsed.pro),
+                carb:    Math.round(parsed.carb),
+                fat:     Math.round(parsed.fat),
+                cost:    Math.round(parsed.cost),
+                checked: true
+            });
+            inputEl.value = '';
+            renderMeals();
+        } catch (e) {
+            alert('Failed to analyze food via AI: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Auto-Log`;
+        }
+    }
+
+    document.getElementById('ai-food-input').addEventListener('keypress', e => { if (e.key === 'Enter') logAIFood(); });
+
+    async function autoFillMacros() {
+        const name   = document.getElementById('man-food-name').value.trim();
+        const weight = document.getElementById('man-food-weight').value.trim();
+        if (!name || !weight) return alert('Please enter both Food Name and Weight/Portion first.');
+
+        const btn = document.getElementById('btn-autofill');
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="animate-spin h-3 w-3 text-indigo-600 dark:text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Fetching...`;
+
+        try {
+            const prompt = `Provide the estimated nutritional macros for exactly "${weight} of ${name}". Return ONLY a JSON object with EXACTLY these keys (all numbers): "cal" (calories), "pro" (protein in grams), "carb" (carbs in grams), "fat" (fats in grams), "cost" (estimated cost in INR).`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: 'application/json',
+                    responseSchema: { type: 'OBJECT', properties: { cal: { type: 'NUMBER' }, pro: { type: 'NUMBER' }, carb: { type: 'NUMBER' }, fat: { type: 'NUMBER' }, cost: { type: 'NUMBER' } } }
+                }
+            };
+            const rawJson = await fetchGeminiAPI(payload, true);
+            const parsed  = JSON.parse(rawJson);
+            document.getElementById('man-cal').value  = Math.round(parsed.cal);
+            document.getElementById('man-pro').value  = Math.round(parsed.pro);
+            document.getElementById('man-carb').value = Math.round(parsed.carb);
+            document.getElementById('man-fat').value  = Math.round(parsed.fat);
+            document.getElementById('man-cost').value = Math.round(parsed.cost);
+        } catch (e) {
+            if (e.message !== 'Please set your Gemini API Key first.') alert('Failed to fetch macros: ' + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> AI Fetch Macros`;
+        }
+    }
+
+    function logManualFood() {
+        const name   = document.getElementById('man-food-name').value.trim();
+        const weight = document.getElementById('man-food-weight').value.trim();
+        if (!name) return alert('Please provide a food name.');
+
+        const cal  = parseInt(document.getElementById('man-cal').value)  || 0;
+        const pro  = parseInt(document.getElementById('man-pro').value)  || 0;
+        const carb = parseInt(document.getElementById('man-carb').value) || 0;
+        const fat  = parseInt(document.getElementById('man-fat').value)  || 0;
+        const cost = parseInt(document.getElementById('man-cost').value) || 0;
+
+        meals.unshift({
+            id:      'custom-' + Date.now(),
+            time:    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            title:   weight ? `${name} (${weight})` : name,
+            desc:    'Exact Manual Entry',
+            cal, pro, carb, fat, cost,
+            checked: true
+        });
+
+        document.getElementById('man-food-name').value  = '';
+        document.getElementById('man-food-weight').value = '';
+        document.getElementById('man-cal').value   = '';
+        document.getElementById('man-pro').value   = '';
+        document.getElementById('man-carb').value  = '';
+        document.getElementById('man-fat').value   = '';
+        document.getElementById('man-cost').value  = '';
+
+        renderMeals();
+    }
+
+    // --- CHAT LOGIC ---
+    let chatHistory = [];
+    const sysPrompt = `You are an elite fitness and nutrition coach named VaultMind. The user is a Project Manager working 12-hour shifts. He recently had surgery for Kienböck's disease (core decompression and vascularized bone graft on lunate). 
+    His goal: Muscle recomp while strictly protecting his wrist. 
+    Current Diet: ~3300 cal, 165g Pro (Whey, Eggs, Paneer, Chicken). 
+    Training: 7-day split, absolutely NO heavy pressing or unsupported gripping (Figure-8 straps mandatory).
+    Keep responses concise, highly motivating, and scientifically sound.`;
+
+    function toggleChat() {
+        const w = document.getElementById('chat-window');
+        if (w.classList.contains('hidden')) {
+            w.classList.remove('hidden');
+            setTimeout(() => w.classList.remove('scale-95', 'opacity-0'), 10);
+        } else {
+            w.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => w.classList.add('hidden'), 150);
+        }
+    }
+
+    async function handleChat() {
+        const inp  = document.getElementById('chat-input');
+        const text = inp.value.trim();
+        if (!text) return;
+
+        const msgDiv = document.getElementById('chat-messages');
+        msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-end"><div class="text-sm p-3.5 bg-indigo-600 text-white rounded-2xl rounded-tr-none shadow-sm max-w-[85%]">${text}</div></div>`;
+        inp.value = '';
+        document.getElementById('chat-send-btn').disabled = true;
+
+        const typingId = 'typing-' + Date.now();
+        msgDiv.innerHTML += `<div id="${typingId}" class="flex flex-col gap-1 w-full items-start"><div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 p-3.5 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] h-[46px] flex items-center justify-center"><svg height="8" width="32"><circle class="typing-dot" cx="4" cy="4" r="3"/><circle class="typing-dot" cx="16" cy="4" r="3"/><circle class="typing-dot" cx="28" cy="4" r="3"/></svg></div></div>`;
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+
+        chatHistory.push({ role: 'user', parts: [{ text }] });
+
+        try {
+            const payload  = { systemInstruction: { parts: [{ text: sysPrompt }] }, contents: chatHistory };
+            const aiText   = await fetchGeminiAPI(payload, false);
+            document.getElementById(typingId).remove();
+            chatHistory.push({ role: 'model', parts: [{ text: aiText }] });
+            const formatted = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>');
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3.5 bg-white dark:bg-dark-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] leading-relaxed">${formatted}</div></div>`;
+        } catch (e) {
+            document.getElementById(typingId).remove();
+            chatHistory.pop();
+            msgDiv.innerHTML += `<div class="flex flex-col gap-1 w-full items-start"><div class="text-sm p-3.5 bg-rose-100 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">Connection Error: Could not reach the AI. Try again.</div></div>`;
         }
 
-        // Unified Toast helper
-        function showToast(message, type = "info") {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerText = message;
-            container.appendChild(toast);
-            
-            setTimeout(() => toast.classList.add('show'), 15);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                setTimeout(() => toast.remove(), 400);
-            }, 3000);
+        document.getElementById('chat-send-btn').disabled = false;
+        inp.focus();
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    }
+
+    document.getElementById('chat-send-btn').addEventListener('click', handleChat);
+    document.getElementById('chat-input').addEventListener('keypress', e => { if (e.key === 'Enter') handleChat(); });
+
+    // =============================================
+    // DYNAMIC QUOTES — rotating every 12 seconds
+    // =============================================
+    const quotes = [
+        // Discipline & Grind
+        { text: '"Discipline equals freedom."', author: '— Jocko Willink' },
+        { text: '"The pain you feel today will be the strength you feel tomorrow."', author: '— Arnold Schwarzenegger' },
+        { text: '"Don\'t wish it were easier. Wish you were better."', author: '— Jim Rohn' },
+        { text: '"You don\'t find willpower. You build it, rep by rep."', author: '— Anonymous' },
+        { text: '"Wake up determined. Go to bed satisfied."', author: '— Dwayne Johnson' },
+        // Recovery-specific
+        { text: '"Setbacks are setups for comebacks."', author: '— T.D. Jakes' },
+        { text: '"Strength does not come from the physical capacity. It comes from an indomitable will."', author: '— Mahatma Gandhi' },
+        { text: '"The comeback is always stronger than the setback."', author: '— Anonymous' },
+        { text: '"Rest when you\'re weary. Refresh and renew yourself."', author: '— Anonymous' },
+        { text: '"Healing is not linear. Trust the process."', author: '— Anonymous' },
+        // PM mindset
+        { text: '"You manage what you measure. Track everything."', author: '— Peter Drucker' },
+        { text: '"Small disciplines repeated with consistency every day lead to great achievements."', author: '— John C. Maxwell' },
+        { text: '"Execution eats strategy for breakfast."', author: '— Anonymous' },
+        { text: '"Motivation gets you started. Habit keeps you going."', author: '— Jim Ryun' },
+        { text: '"The body achieves what the mind believes."', author: '— Anonymous' },
+        // Hard days
+        { text: '"On the hard days, show up anyway. That\'s what separates you."', author: '— Anonymous' },
+        { text: '"Embrace the struggle. It\'s building the version of you that wins."', author: '— Anonymous' },
+        { text: '"You\'re not tired. You\'re just not done yet."', author: '— Anonymous' },
+        { text: '"Every rep you don\'t skip is a promise kept to yourself."', author: '— Anonymous' },
+        { text: '"Champions aren\'t made in gyms. They\'re made from the stuff inside them."', author: '— Muhammad Ali' },
+    ];
+
+    let currentQuoteIndex = 0;
+
+    function rotateQuote() {
+        const el = document.getElementById('live-quote');
+        if (!el) return;
+
+        // Fade out
+        el.classList.add('fade-out');
+        el.classList.remove('fade-in');
+
+        setTimeout(() => {
+            currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+            const q = quotes[currentQuoteIndex];
+            el.innerHTML = `${q.text} <span class="not-italic text-slate-500 dark:text-slate-500 text-[10px]">${q.author}</span>`;
+            el.classList.remove('fade-out');
+            el.classList.add('fade-in');
+        }, 600);
+    }
+
+    function initQuotes() {
+        const el = document.getElementById('live-quote');
+        // Pick a random start
+        currentQuoteIndex = Math.floor(Math.random() * quotes.length);
+        const q = quotes[currentQuoteIndex];
+        el.innerHTML = `${q.text} <span class="not-italic text-slate-500 dark:text-slate-500 text-[10px]">${q.author}</span>`;
+        setInterval(rotateQuote, 12000);
+    }
+
+    // =============================================
+    // MOTIVATION BANNER — context-aware messages
+    // =============================================
+    const motivationSets = {
+        early: [
+            { emoji: '🌅', text: 'New day, clean slate. Your goals are waiting — let\'s go.' },
+            { emoji: '⚡', text: 'Day starts now. Log that breakfast and stack the calories.' },
+            { emoji: '🎯', text: 'First meal in = first win of the day. Don\'t skip it.' },
+        ],
+        midday: [
+            { emoji: '💪', text: 'Midday check-in. How\'s the protein tracking? Hit that lunch.' },
+            { emoji: '🔋', text: 'Energy dipping? Grab the shaker. Fuel the afternoon.' },
+            { emoji: '📊', text: 'You\'re in the thick of it. Stay consistent, PM.' },
+        ],
+        preworkout: [
+            { emoji: '🔥', text: 'Pre-workout window. Eat. Strap up. Dominate.' },
+            { emoji: '🏋️', text: 'Time to train. Protect the wrist. Destroy everything else.' },
+            { emoji: '⚡', text: 'Fuel is logged. Now it\'s time to earn the recovery.' },
+        ],
+        evening: [
+            { emoji: '🌙', text: 'Last meal incoming. Finish strong — protein before bed.' },
+            { emoji: '🛌', text: 'Recovery window open. Eat, sleep, rebuild. You earned it.' },
+            { emoji: '✅', text: 'Almost there. One more meal and today is locked in.' },
+        ],
+        highProgress: [
+            { emoji: '🚀', text: 'You\'re crushing it today. Over 70% to your calorie goal!' },
+            { emoji: '🏆', text: 'Protein targets in range. This is what elite looks like.' },
+            { emoji: '💯', text: 'Tracking, training, recovering — firing on all cylinders.' },
+        ],
+        lowProgress: [
+            { emoji: '⚠️', text: 'Behind on calories. Time to catch up — log your next meal.' },
+            { emoji: '📉', text: 'Protein gap detected. Shake time. Don\'t let the day slip.' },
+            { emoji: '💡', text: 'Recomp needs fuel. Under-eating kills gains. Hit those macros.' },
+        ],
+        rest: [
+            { emoji: '🧘', text: 'Rest day — but recovery is active work. Eat and sleep right.' },
+            { emoji: '🔄', text: 'Active recovery today. Treadmill walk. Mobility. Own it.' },
+            { emoji: '🌿', text: 'The body builds on rest days. Don\'t skip your calories.' },
+        ],
+        wristFocus: [
+            { emoji: '🩺', text: 'Post-surgery reminder: straps on for all pulling movements today.' },
+            { emoji: '🤝', text: 'The wrist heals in silence. Train around it, not through it.' },
+            { emoji: '🔒', text: 'Protect the lunate. Machine work only on push days.' },
+        ],
+    };
+
+    let streakCount = parseInt(localStorage.getItem('recomp_streak') || '0');
+    let lastLogDate = localStorage.getItem('recomp_last_log_date') || '';
+
+    function getContextualMotivation() {
+        const hour      = new Date().getHours();
+        const dayOfWeek = new Date().getDay(); // 0=Sun,3=Wed=Day3=rest
+
+        // Check progress
+        const calIn  = parseInt(document.getElementById('live-cal-in').innerText)  || 0;
+        const pct    = Math.round((calIn / 3320) * 100);
+
+        // Time-of-day pool
+        let pool;
+        if (hour < 9)                pool = motivationSets.early;
+        else if (hour >= 9  && hour < 13) pool = motivationSets.midday;
+        else if (hour >= 13 && hour < 17) pool = motivationSets.preworkout;
+        else                          pool = motivationSets.evening;
+
+        // Override with progress-based if meaningful
+        if (calIn > 0 && pct >= 70)  pool = motivationSets.highProgress;
+        if (calIn > 0 && pct < 30 && hour > 12) pool = motivationSets.lowProgress;
+
+        // Rest day override (Day 3 = Wednesday)
+        if (dayOfWeek === 3)         pool = motivationSets.rest;
+
+        // Wrist reminder early morning
+        if (hour >= 6 && hour < 8)   pool = motivationSets.wristFocus;
+
+        return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function renderMotivation() {
+        const m    = getContextualMotivation();
+        const calIn = parseInt(document.getElementById('live-cal-in').innerText) || 0;
+        const pct   = Math.min(Math.round((calIn / 3320) * 100), 100);
+
+        document.getElementById('motivation-emoji').innerText  = m.emoji;
+        document.getElementById('motivation-text').innerText   = m.text;
+        document.getElementById('goal-pct').innerText          = pct;
+        document.getElementById('streak-count').innerText      = streakCount;
+    }
+
+    function refreshMotivation() {
+        const banner = document.getElementById('motivation-banner');
+        banner.style.opacity = '0.4';
+        setTimeout(() => {
+            renderMotivation();
+            banner.style.opacity = '1';
+        }, 300);
+    }
+
+    // Update streak when a meal is checked
+    function updateStreak() {
+        const today = new Date().toDateString();
+        if (lastLogDate !== today) {
+            // Check if any meal is checked
+            const anyChecked = meals.some(m => m.checked);
+            if (anyChecked) {
+                const yesterday = new Date(Date.now() - 86400000).toDateString();
+                streakCount = lastLogDate === yesterday ? streakCount + 1 : 1;
+                lastLogDate = today;
+                localStorage.setItem('recomp_streak', streakCount);
+                localStorage.setItem('recomp_last_log_date', today);
+
+                // Bounce the badge
+                const badge = document.getElementById('streak-badge');
+                badge.classList.remove('badge-bounce');
+                void badge.offsetWidth; // reflow
+                badge.classList.add('badge-bounce');
+            }
         }
-    </script>
+        document.getElementById('streak-count').innerText = streakCount;
+    }
+
+    // Milestone flash on progress bar when crossing thresholds
+    const milestonesCrossed = new Set();
+    function checkMilestones(pct) {
+        [25, 50, 75, 100].forEach(threshold => {
+            if (pct >= threshold && !milestonesCrossed.has(threshold)) {
+                milestonesCrossed.add(threshold);
+                const header = document.querySelector('header');
+                header.classList.add('milestone-flash');
+                setTimeout(() => header.classList.remove('milestone-flash'), 1200);
+
+                // Flash a temporary milestone message
+                const banner = document.getElementById('motivation-banner');
+                const text   = document.getElementById('motivation-text');
+                const emoji  = document.getElementById('motivation-emoji');
+                const prevText  = text.innerText;
+                const prevEmoji = emoji.innerText;
+
+                const milestoneMessages = {
+                    25:  { emoji: '🟢', text: `${threshold}% of calories hit! Solid start. Keep stacking.` },
+                    50:  { emoji: '⚡', text: `Halfway there! 50% of today's goal locked in.` },
+                    75:  { emoji: '🔥', text: `75% to goal — you\'re in the zone. Finish strong!` },
+                    100: { emoji: '🏆', text: `FULL DAY CALORIES HIT. Legendary execution.` },
+                };
+
+                const msg = milestoneMessages[threshold];
+                emoji.innerText = msg.emoji;
+                text.innerText  = msg.text;
+
+                // Restore after 4 seconds
+                setTimeout(() => {
+                    emoji.innerText = prevEmoji;
+                    text.innerText  = prevText;
+                }, 4000);
+            }
+        });
+    }
+
+    // =============================================
+    // INIT
+    // =============================================
+    setInterval(() => { document.getElementById('live-clock').textContent = new Date().toLocaleTimeString('en-US', { hour12: false }); }, 1000);
+
+    initQuotes();
+    renderMotivation();
+    // Refresh motivation context every 5 minutes
+    setInterval(renderMotivation, 5 * 60 * 1000);
+
+    renderMeals();
+    renderWorkouts();
+    renderBurnLogs();
+</script>
 </body>
 </html>
