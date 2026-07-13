@@ -234,6 +234,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
   color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:2.5px 8px;font-variant-numeric:tabular-nums}
 .m-chip.time{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
 .m-chip.tag .dot{width:6px;height:6px;border-radius:50%}
+.m-chip.person{color:var(--gold);border-color:var(--line-hi);background:var(--pane)}
 .m-chip.carried{color:var(--amber);border-color:rgba(217,160,91,.35);background:rgba(217,160,91,.07)}
 .m-chip.p-high{color:var(--red);border-color:rgba(201,123,110,.4);background:rgba(201,123,110,.08);font-weight:600}
 .m-chip.p-med{color:var(--amber);border-color:rgba(217,160,91,.35)}
@@ -273,6 +274,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .fld textarea{resize:vertical;min-height:64px}
 .fld .mono{font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:12px;line-height:1.6;color:var(--mute)}
 .fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fld-row.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 .sub-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;position:relative}
 .sub-row .chk{width:19px;height:19px;border-radius:6px;margin:0}
 .sub-row input{flex:1;background:var(--pane);border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px;outline:none}
@@ -347,6 +349,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
   .cap-hint{display:none}
   .stats{gap:6px}.stat{padding:5px 10px;font-size:11px}
   .fld-row{grid-template-columns:1fr 1fr}
+  .fld-row.cols-3 { grid-template-columns: 1fr; }
 }
 
 /* density: compact */
@@ -374,7 +377,6 @@ html.compact .stats{margin-top:10px}
 </head>
 <body>
 <div class="shell">
-
   <header class="masthead">
     <div class="mast-meta">
       <div class="live-time" id="liveTime">00:00 AM</div>
@@ -387,7 +389,7 @@ html.compact .stats{margin-top:10px}
           <span class="sync-dot" id="syncDot"></span><span id="syncLbl">Local</span>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </button>
       </div>
     </div>
@@ -410,7 +412,7 @@ html.compact .stats{margin-top:10px}
     <div class="tray" id="tray"></div>
     <div class="parse-row" id="parseRow"></div>
     <div class="cap-hint">
-      Type naturally — <code>tmrw</code> <code>mon</code> <code>21/7</code> <code>3pm</code> <code>#summit</code> <code>!</code> <code>every day</code>. Unscheduled tasks land in <strong>Today</strong> automatically.
+      Type naturally — <code>tmrw</code> <code>3pm</code> <code>#summit</code> <code>@riya</code> <code>!</code> <code>every day</code>. Unscheduled tasks land in <strong>Today</strong>.
     </div>
   </section>
 
@@ -435,31 +437,32 @@ html.compact .stats{margin-top:10px}
       <div id="eSubs"></div>
       <button class="btn ghost sm" id="eSubAdd">+ Add item</button>
     </div>
-    <div class="fld-row">
+    <div class="fld-row cols-3">
       <div class="fld"><label>Date</label><input id="eDate" type="date"></div>
       <div class="fld"><label>Time</label><input id="eTime" type="time"></div>
+      <div class="fld"><label>Repeats</label>
+        <select id="eRecur">
+          <option value="">Never</option><option value="daily">Every day</option>
+          <option value="weekdays">Weekdays</option>
+          <option value="weekly:1">Every Monday</option><option value="weekly:2">Every Tuesday</option>
+          <option value="weekly:3">Every Wednesday</option><option value="weekly:4">Every Thursday</option>
+          <option value="weekly:5">Every Friday</option><option value="weekly:6">Every Saturday</option>
+          <option value="weekly:0">Every Sunday</option>
+        </select>
+      </div>
     </div>
-    <div class="fld-row">
+    <div class="fld-row cols-3">
       <div class="fld"><label>Tag</label><select id="eTag"></select></div>
+      <div class="fld"><label>Assignee</label><select id="ePerson"></select></div>
       <div class="fld"><label>Priority</label>
         <select id="ePri"><option value="">Normal</option><option value="high">High</option><option value="med">Medium</option><option value="low">Low</option></select>
       </div>
-    </div>
-    <div class="fld"><label>Repeats</label>
-      <select id="eRecur">
-        <option value="">Never</option><option value="daily">Every day</option>
-        <option value="weekdays">Weekdays (Mon–Fri)</option>
-        <option value="weekly:1">Every Monday</option><option value="weekly:2">Every Tuesday</option>
-        <option value="weekly:3">Every Wednesday</option><option value="weekly:4">Every Thursday</option>
-        <option value="weekly:5">Every Friday</option><option value="weekly:6">Every Saturday</option>
-        <option value="weekly:0">Every Sunday</option>
-      </select>
     </div>
     <div class="m-foot">
       <button class="btn danger" id="eDelete">Delete</button>
       <div style="display:flex;gap:8px">
         <button class="btn ghost" id="eCancel">Cancel</button>
-        <button class="btn gold" id="eSave">Save changes</button>
+        <button class="btn gold" id="eSave">Save</button>
       </div>
     </div>
   </div>
@@ -484,9 +487,15 @@ html.compact .stats{margin-top:10px}
 
     <div class="set-sec">
       <h4>Tags</h4>
-      <p>Tap the dot to change colour. Deleting a tag keeps its tasks (untagged).</p>
       <div id="tagMgr"></div>
       <button class="btn ghost sm" id="tagAdd">+ Add tag</button>
+    </div>
+
+    <div class="set-sec">
+      <h4>Team</h4>
+      <p>Manage people you can assign tasks to via <code>@name</code>.</p>
+      <div id="personMgr"></div>
+      <button class="btn ghost sm" id="personAdd">+ Add person</button>
     </div>
 
     <div class="set-sec">
@@ -509,23 +518,19 @@ html.compact .stats{margin-top:10px}
     </div>
 
     <div class="set-sec">
-      <h4>Backup</h4>
-      <div class="set-row">
-        <button class="btn ghost" id="exportBtn">Export JSON</button>
-        <button class="btn ghost" id="importBtn">Import JSON</button>
+      <h4>Backup & Housekeeping</h4>
+      <div class="set-row" style="margin-bottom:8px">
+        <button class="btn ghost sm" id="exportBtn">Export JSON</button>
+        <button class="btn ghost sm" id="importBtn">Import JSON</button>
         <input type="file" id="importFile" accept="application/json" hidden>
       </div>
-    </div>
-
-    <div class="set-sec">
-      <h4>Housekeeping</h4>
       <div class="set-row">
-        <button class="btn ghost" id="clearDone">Clear completed &gt; 30 days</button>
-        <button class="btn danger" id="wipeBtn">Wipe local data</button>
+        <button class="btn ghost sm" id="clearDone">Clear completed &gt; 30d</button>
+        <button class="btn danger sm" id="wipeBtn">Wipe local data</button>
       </div>
     </div>
 
-    <div class="m-foot"><span style="font-size:11.5px;color:var(--dim)">Daily Ops v2.1</span><button class="btn ghost" id="setClose">Close</button></div>
+    <div class="m-foot"><span style="font-size:11.5px;color:var(--dim)">Daily Ops v2.2</span><button class="btn ghost" id="setClose">Close</button></div>
   </div>
 </div>
 
@@ -533,7 +538,7 @@ html.compact .stats{margin-top:10px}
 
 <script>
 /* ================================================================
-   DAILY OPS v2.1 — Clock, Quotes, Dynamic Themes (Light/Dark)
+   DAILY OPS v2.2 — Team Tagging, Smart Autofill, History
 ================================================================ */
 'use strict';
 
@@ -593,11 +598,21 @@ const DEFAULT_TAGS=[
   {id:'portfolio',label:'Portfolio',color:'#A88FC9'},
   {id:'personal',label:'Personal',color:'#8FBF9B'}
 ];
+const DEFAULT_PEOPLE=[
+  {id:'riya', label:'Riya'},
+  {id:'arun', label:'Arun'},
+  {id:'manish', label:'Manish'},
+  {id:'melton', label:'Melton'},
+  {id:'brad', label:'Brad'},
+  {id:'ishan', label:'Ishan sir'},
+  {id:'shivani', label:'Shivani mam'},
+  {id:'anukriti', label:'Anukriti'},
+  {id:'shubam', label:'Shubam'}
+];
 const ACCENTS={
   gold:['#E2C27A','#A47F35'], steel:['#8FB6DC','#4E7194'], violet:['#B69AD9','#71589A'],
   emerald:['#93C9A4','#4F7A5C'], crimson:['#D98A7C','#8C4A40'], platinum:['#D3D3D8','#84848C']
 };
-// Upgraded backgrounds to include fully defined Light Themes and contrast definitions
 const BGS={
   midnight:{ink:'#07080B',line:'rgba(233,222,196,.09)',lineHi:'rgba(233,222,196,.18)',pane:'rgba(255,255,255,.032)',paneHi:'rgba(255,255,255,.055)',text:'#EDEBE4',mute:'#8E8C86',dim:'#5C5B57',scheme:'dark'},
   oled:{ink:'#000002',line:'rgba(255,255,255,.1)',lineHi:'rgba(255,255,255,.2)',pane:'rgba(255,255,255,.05)',paneHi:'rgba(255,255,255,.08)',text:'#EDEDED',mute:'#888888',dim:'#555555',scheme:'dark'},
@@ -610,21 +625,25 @@ const pad=n=>String(n).padStart(2,'0');
 const todayStr=(off=0)=>{const d=new Date();d.setDate(d.getDate()+off);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
 
 /* ---------- state + migration ---------- */
-let S=Store.get(KEY,null)||{tasks:[],recurring:[],tags:DEFAULT_TAGS.map(t=>({...t})),prefs:{},meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
+let S=Store.get(KEY,null)||{tasks:[],recurring:[],tags:[],people:[],prefs:{},meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
 function migrate(){
   S.tasks??=[];S.recurring??=[];S.meta??={updatedAt:0,lastCarry:'',doneDates:{}};
+  
   if(!S.tags||!S.tags.length)S.tags=DEFAULT_TAGS.map(t=>({...t}));
+  if(!S.people||!S.people.length)S.people=DEFAULT_PEOPLE.map(p=>({...p})); // Initialize Team
+  
   const map={'var(--t-summit)':'#E2C27A','var(--t-imark)':'#7FA3C9','var(--t-portfolio)':'#A88FC9','var(--t-personal)':'#8FBF9B'};
   S.tags.forEach(t=>{if(map[t.color])t.color=map[t.color];if(!/^#/.test(t.color||''))t.color='#9AA3B2'});
   S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy'},S.prefs||{});
   
+  // Force old un-dated open tasks to today
   const tStr = todayStr();
   S.tasks.forEach(t => { if(!t.date && t.status === 'open') t.date = tStr; });
 }
 migrate();
 let view='today', activeTag='all', query='', selDate=null, editing=null, editSubs=[];
 let suppressPush=false;
-const pendingPick={date:undefined,time:undefined,tag:undefined,pri:undefined,recur:undefined};
+const pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 let openTray=null;
 
 /* ---------- utils ---------- */
@@ -637,6 +656,7 @@ const fmtDateShort=ds=>{const[y,m,d]=ds.split('-').map(Number);return new Date(y
 const dayLabel=ds=>{const t=todayStr();if(ds===t)return'Today';if(ds===todayStr(1))return'Tomorrow';
   const[y,m,d]=ds.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'})};
 const tagOf=id=>S.tags.find(t=>t.id===id);
+const personOf=id=>S.people.find(p=>p.id===id);
 const hexRGB=h=>{const n=h.replace('#','');return[parseInt(n.slice(0,2),16),parseInt(n.slice(2,4),16),parseInt(n.slice(4,6),16)]};
 const rgba=(h,a)=>{const[r,g,b]=hexRGB(h);return `rgba(${r},${g},${b},${a})`};
 const shade=(h,p)=>{const[r,g,b]=hexRGB(h);const f=c=>Math.round(Math.min(255,Math.max(0,p<0?c*(1+p):c+(255-c)*p)));
@@ -650,7 +670,6 @@ function applyTheme(){
   const acc=p.accent==='custom'&&p.custom?[p.custom,shade(p.custom,-.34)]:(ACCENTS[p.accent]||ACCENTS.gold);
   R.setProperty('--gold',acc[0]);R.setProperty('--gold-deep',acc[1]);R.setProperty('--gold-soft',rgba(acc[0],.14));
   
-  // Calculate contrast for text on top of gold components
   const [r,g,b] = hexRGB(acc[0]);
   const luminance = (0.299*r + 0.587*g + 0.114*b)/255;
   R.setProperty('--on-gold', luminance > 0.55 ? '#07080B' : '#FFFFFF');
@@ -681,7 +700,7 @@ function rollDay(){
     const due=r.freq==='daily'||(r.freq==='weekdays'&&dow>=1&&dow<=5)||(r.freq&&r.freq.startsWith('weekly:')&&Number(r.freq.split(':')[1])===dow);
     if(!due)continue;
     if(S.tasks.some(k=>k.recurId===r.id&&k.date===t))continue;
-    S.tasks.push({id:uid(),title:r.title,notes:r.notes||'',date:t,time:r.time||null,tag:r.tag||null,pri:r.pri||'',status:'open',created:Date.now(),carried:0,recurId:r.id,subs:[]});
+    S.tasks.push({id:uid(),title:r.title,notes:r.notes||'',date:t,time:r.time||null,tag:r.tag||null,person:r.person||null,pri:r.pri||'',status:'open',created:Date.now(),carried:0,recurId:r.id,subs:[]});
     changed=true;
   }
   if(S.meta.lastCarry!==t){S.meta.lastCarry=t;changed=true}
@@ -693,12 +712,27 @@ const MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:1
 const DOWS={sun:0,mon:1,tue:2,tues:2,wed:3,thu:4,thur:4,thurs:4,fri:5,sat:6};
 function parseInput(raw){
   let s=' '+raw+' ';
-  const out={title:'',date:null,time:null,tag:null,pri:'',recur:''};
+  const out={title:'',date:null,time:null,tag:null,person:null,pri:'',recur:''};
   const eat=(re,fn)=>{s=s.replace(re,(...a)=>{fn&&fn(...a);return' '})};
+  
   eat(/\severy\s?day\s|\sdaily\s/i,()=>{out.recur='daily'});
   eat(/\s(?:every\s)?weekdays?\s/i,()=>{out.recur='weekdays'});
   eat(/\severy\s(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)[a-z]*\s/i,(m,d)=>{out.recur='weekly:'+DOWS[d.toLowerCase()]});
-  eat(/#([a-z0-9_-]+)/i,(m,t)=>{out.tag=t.toLowerCase()});
+  
+  // Smart Autofill for #tags
+  eat(/(?:^|\s)#([a-z0-9_-]+)/i,(m,t)=>{
+    const tl=t.toLowerCase();
+    const match=S.tags.find(x=>x.id.startsWith(tl)||x.label.toLowerCase().startsWith(tl));
+    out.tag=match?match.id:tl;
+  });
+  
+  // Smart Autofill for @people
+  eat(/(?:^|\s)@([a-z0-9_-]+)/i,(m,p)=>{
+    const pl=p.toLowerCase();
+    const match=S.people.find(x=>x.id.startsWith(pl)||x.label.toLowerCase().startsWith(pl));
+    out.person=match?match.id:pl;
+  });
+
   eat(/(?:^|\s)!(?:high|hi)?(?=\s|$)/i,()=>{out.pri='high'});
   eat(/\s(\d{1,2})[:.](\d{2})\s?(am|pm)\s/i,(m,h,mm,ap)=>{let H=+h%12;if(ap.toLowerCase()==='pm')H+=12;out.time=pad(H)+':'+mm});
   eat(/\s(\d{1,2})\s?(am|pm)\s/i,(m,h,ap)=>{let H=+h%12;if(ap.toLowerCase()==='pm')H+=12;out.time=pad(H)+':00'});
@@ -734,7 +768,7 @@ function parseInput(raw){
 function mergedPending(){
   const p=parseInput(capInput.value||'');
   const g=f=>pendingPick[f]===undefined?p[f]:pendingPick[f];
-  const out={title:p.title,date:g('date'),time:g('time'),tag:g('tag'),pri:g('pri')||'',recur:g('recur')||''};
+  const out={title:p.title,date:g('date'),time:g('time'),tag:g('tag'),person:g('person'),pri:g('pri')||'',recur:g('recur')||''};
   if(out.recur)out.date=null;
   return out;
 }
@@ -751,15 +785,17 @@ function renderCapture(){
     ['date','📅',m.date?dayLabel(m.date):'Date'],
     ['time','⏰',m.time?fmtTime12(m.time):'Time'],
     ['tag','#',m.tag?(tagOf(m.tag)?.label||m.tag):'Tag'],
+    ['person','@',m.person?(personOf(m.person)?.label||m.person):'Assign'],
     ['pri','⚑',m.pri?PRI_LABEL[m.pri]:'Priority'],
     ['recur','↻',m.recur?recurLabel(m.recur):'Repeat']
   ];
   pickRow.innerHTML=pills.map(([f,ic,lb])=>{
-    const set=(f==='date'&&m.date)||(f==='time'&&m.time)||(f==='tag'&&m.tag)||(f==='pri'&&m.pri)||(f==='recur'&&m.recur);
+    const set=(f==='date'&&m.date)||(f==='time'&&m.time)||(f==='tag'&&m.tag)||(f==='person'&&m.person)||(f==='pri'&&m.pri)||(f==='recur'&&m.recur);
     return `<button class="pk ${set?'set':''} ${openTray===f?'open':''}" data-pick="${f}"><span>${ic}</span>${esc(lb)}</button>`;
   }).join('');
   renderTray(m);
-  const any=capInput.value.trim()||m.date||m.time||m.tag||m.pri||m.recur;
+  
+  const any=capInput.value.trim()||m.date||m.time||m.tag||m.person||m.pri||m.recur;
   if(!any){parseRow.innerHTML='';return}
   const chips=[];
   if(capInput.value.trim())chips.push(`<span class="p-chip neutral">“${esc(m.title||'…')}”</span>`);
@@ -769,6 +805,7 @@ function renderCapture(){
   
   if(m.time)chips.push(pchip('time','⏰ '+fmtTime12(m.time)));
   if(m.tag)chips.push(pchip('tag','# '+esc(tagOf(m.tag)?.label||m.tag)));
+  if(m.person)chips.push(pchip('person','@ '+esc(personOf(m.person)?.label||m.person)));
   if(m.pri)chips.push(pchip('pri','⚑ '+PRI_LABEL[m.pri]));
   parseRow.innerHTML=chips.join('');
 }
@@ -802,6 +839,11 @@ function renderTray(m){
       +`<input type="text" id="trNewTag" placeholder="New tag…">`
       +`<button class="tr-chip clear" data-set="tag" data-val="">No tag</button>`;
   }
+  if(openTray==='person'){
+    h=S.people.map(p=>`<button class="tr-chip ${m.person===p.id?'on':''}" data-set="person" data-val="${p.id}">@ ${esc(p.label)}</button>`).join('')
+      +`<input type="text" id="trNewPerson" placeholder="New person…">`
+      +`<button class="tr-chip clear" data-set="person" data-val="">Unassigned</button>`;
+  }
   if(openTray==='pri'){
     h=['high','med','low'].map(p=>tchip('pri',p,PRI_LABEL[p],m.pri)).join('')
       +`<button class="tr-chip clear" data-set="pri" data-val="">Normal</button>`;
@@ -814,12 +856,21 @@ function renderTray(m){
   trayEl.innerHTML=h;
   const dI=$('#trDate');if(dI)dI.addEventListener('change',()=>{pendingPick.date=dI.value||null;openTray=null;renderCapture()});
   const tI=$('#trTime');if(tI)tI.addEventListener('change',()=>{pendingPick.time=tI.value||null;openTray=null;renderCapture()});
+  
   const nT=$('#trNewTag');if(nT)nT.addEventListener('keydown',e=>{
     if(e.key!=='Enter')return;
     const lb=nT.value.trim();if(!lb)return;
     const id=lb.toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'')||uid();
     if(!tagOf(id))S.tags.push({id,label:lb,color:TAGCOLORS[S.tags.length%TAGCOLORS.length]});
     save();pendingPick.tag=id;openTray=null;renderCapture();renderFilters();
+  });
+  
+  const nP=$('#trNewPerson');if(nP)nP.addEventListener('keydown',e=>{
+    if(e.key!=='Enter')return;
+    const lb=nP.value.trim();if(!lb)return;
+    const id=lb.toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'')||uid();
+    if(!personOf(id))S.people.push({id,label:lb});
+    save();pendingPick.person=id;openTray=null;renderCapture();
   });
 }
 const tchip=(f,val,lb,cur)=>`<button class="tr-chip ${cur===val?'on':''}" data-set="${f}" data-val="${val}">${esc(lb)}</button>`;
@@ -837,14 +888,16 @@ function resetCapture(){
 function commitCapture(){
   const m=mergedPending();
   if(!m.title){toast('Add a task title');capInput.focus();return}
+  
   if(m.tag&&!tagOf(m.tag))S.tags.push({id:m.tag,label:m.tag[0].toUpperCase()+m.tag.slice(1),color:TAGCOLORS[S.tags.length%TAGCOLORS.length]});
+  if(m.person&&!personOf(m.person))S.people.push({id:m.person,label:m.person[0].toUpperCase()+m.person.slice(1)});
   
   if(m.recur){
-    S.recurring.push({id:uid(),title:m.title,notes:'',time:m.time||null,tag:m.tag,pri:m.pri,freq:m.recur});
+    S.recurring.push({id:uid(),title:m.title,notes:'',time:m.time||null,tag:m.tag,person:m.person,pri:m.pri,freq:m.recur});
     save();rollDay();toast('Repeating task set — '+recurLabel(m.recur));
   }else{
     const taskDate = m.date || todayStr();
-    S.tasks.push({id:uid(),title:m.title,notes:'',date:taskDate,time:m.time,tag:m.tag,pri:m.pri,status:'open',created:Date.now(),carried:0,subs:[]});
+    S.tasks.push({id:uid(),title:m.title,notes:'',date:taskDate,time:m.time,tag:m.tag,person:m.person,pri:m.pri,status:'open',created:Date.now(),carried:0,subs:[]});
     save();toast('Added to '+dayLabel(taskDate));
   }
   resetCapture();render();
@@ -936,14 +989,22 @@ function priChip(p){if(!p)return'';return '<span class="m-chip p-'+p+'">⚑ '+PR
 function taskCard(k,opts){
   opts=opts||{};
   const tg=k.tag?tagOf(k.tag):null;
+  const pr=k.person?personOf(k.person):null;
+  
   const meta=[];
   if(k.time)meta.push('<span class="m-chip time">⏰ '+fmtTime12(k.time)+'</span>');
   if(opts.showDate&&k.date)meta.push('<span class="m-chip">📅 '+esc(fmtDateShort(k.date))+'</span>');
   if(tg)meta.push('<span class="m-chip tag"><span class="dot" style="background:'+tg.color+'"></span>'+esc(tg.label)+'</span>');
+  
+  // Person Chip
+  if(pr) meta.push(`<span class="m-chip person">@ ${esc(pr.label)}</span>`);
+  else if (k.person) meta.push(`<span class="m-chip person">@ ${esc(k.person)}</span>`);
+  
   meta.push(priChip(k.pri));
   if(k.subs&&k.subs.length){const sd=k.subs.filter(s=>s.done).length;meta.push('<span class="m-chip">☑ '+sd+'/'+k.subs.length+'</span>')}
   if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
   if(k.recurId)meta.push('<span class="m-chip recur">↻ repeats</span>');
+  
   const done=k.status==='done';
   const hintL=done?'↺ RESTORE':'✓ DONE';
   const hintR=done?'✕ DELETE':'→ TOMORROW';
@@ -1087,7 +1148,10 @@ function openEdit(k){
   editing=k;editSubs=(k.subs||[]).map(s=>({...s}));
   $('#eTitle').value=k.title;$('#eNotes').value=k.notes||'';
   $('#eDate').value=k.date||'';$('#eTime').value=k.time||'';
+  
   $('#eTag').innerHTML='<option value="">No tag</option>'+S.tags.map(t=>'<option value="'+t.id+'" '+(k.tag===t.id?'selected':'')+'>'+esc(t.label)+'</option>').join('');
+  $('#ePerson').innerHTML='<option value="">Unassigned</option>'+S.people.map(p=>'<option value="'+p.id+'" '+(k.person===p.id?'selected':'')+'>'+esc(p.label)+'</option>').join('');
+  
   $('#ePri').value=k.pri||'';
   const r=k.recurId?S.recurring.find(x=>x.id===k.recurId):null;
   $('#eRecur').value=r?r.freq:'';
@@ -1124,15 +1188,16 @@ $('#eSave').addEventListener('click',()=>{
   k.date=$('#eDate').value||null;
   k.time=$('#eTime').value||null;
   k.tag=$('#eTag').value||null;
+  k.person=$('#ePerson').value||null;
   k.pri=$('#ePri').value;
   k.subs=editSubs.filter(s=>s.title.trim());
   const freq=$('#eRecur').value;
   if(freq){
-    if(k.recurId){const r=S.recurring.find(x=>x.id===k.recurId);if(r){r.freq=freq;r.title=k.title;r.time=k.time;r.tag=k.tag;r.pri=k.pri}}
-    else{const r={id:uid(),title:k.title,notes:k.notes,time:k.time,tag:k.tag,pri:k.pri,freq};S.recurring.push(r);k.recurId=r.id}
+    if(k.recurId){const r=S.recurring.find(x=>x.id===k.recurId);if(r){r.freq=freq;r.title=k.title;r.time=k.time;r.tag=k.tag;r.person=k.person;r.pri=k.pri}}
+    else{const r={id:uid(),title:k.title,notes:k.notes,time:k.time,tag:k.tag,person:k.person,pri:k.pri,freq};S.recurring.push(r);k.recurId=r.id}
   }else if(k.recurId){S.recurring=S.recurring.filter(x=>x.id!==k.recurId);delete k.recurId}
   
-  if(!k.date && !k.recurId) k.date = todayStr();
+  if(!k.date && !k.recurId) k.date = todayStr(); // Enforce today default
   
   save();closeOv('editOv');render();
 });
@@ -1155,7 +1220,7 @@ $('#settingsBtn').addEventListener('click',openSettings);
 $('#syncBtn').addEventListener('click',openSettings);
 $('#setClose').addEventListener('click',()=>closeOv('setOv'));
 function openSettings(){
-  renderAppearance();renderTagMgr();renderRecurMgr();
+  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();
   const cfg=Store.get(KEY+'.fbcfg',null);
   $('#fbCfg').value=cfg?JSON.stringify(cfg,null,2):'';
   $('#setOv').classList.add('open');
@@ -1185,6 +1250,8 @@ $('#densitySeg').addEventListener('click',e=>{
   const b=e.target.closest('[data-d]');if(!b)return;
   S.prefs.density=b.dataset.d;save();applyTheme();renderAppearance();
 });
+
+/* Tag Manager */
 function renderTagMgr(){
   $('#tagMgr').innerHTML=S.tags.map(t=>
     '<div class="tagmgr-row" data-tid="'+t.id+'">'+
@@ -1220,6 +1287,38 @@ $('#tagAdd').addEventListener('click',()=>{
   save();renderTagMgr();renderFilters();
   const inputs=$$('#tagMgr input');const last=inputs[inputs.length-1];last.focus();last.select();
 });
+
+/* Person / Team Manager */
+function renderPersonMgr(){
+  $('#personMgr').innerHTML=S.people.map(p=>
+    '<div class="tagmgr-row" data-pid="'+p.id+'">'+
+    '<span class="tdot" style="background:var(--pane-hi);display:grid;place-items:center;font-size:11px;color:var(--mute);border:1px solid var(--line)">@</span>'+
+    '<input value="'+esc(p.label)+'">'+
+    '<button class="sx ta-btn del" title="Remove person">✕</button></div>').join('');
+}
+$('#personMgr').addEventListener('click',e=>{
+  const row=e.target.closest('.tagmgr-row');if(!row)return;
+  const p=personOf(row.dataset.pid);if(!p)return;
+  if(e.target.closest('.sx')){
+    if(!confirm('Remove team member “'+p.label+'”?'))return;
+    S.tasks.forEach(k=>{if(k.person===p.id)k.person=null});
+    S.recurring.forEach(r=>{if(r.person===p.id)r.person=null});
+    S.people=S.people.filter(x=>x.id!==p.id);
+    save();renderPersonMgr();renderLedger();
+  }
+});
+$('#personMgr').addEventListener('input',e=>{
+  const row=e.target.closest('.tagmgr-row');if(!row||e.target.tagName!=='INPUT')return;
+  const p=personOf(row.dataset.pid);if(p){p.label=e.target.value;save(false)}
+});
+$('#personMgr').addEventListener('change',()=>{save();renderLedger()});
+$('#personAdd').addEventListener('click',()=>{
+  S.people.push({id:'person-'+Date.now().toString(36),label:'New person'});
+  save();renderPersonMgr();
+  const inputs=$$('#personMgr input');const last=inputs[inputs.length-1];last.focus();last.select();
+});
+
+
 function renderRecurMgr(){
   if(!S.recurring.length){$('#recurMgr').innerHTML='<p style="margin:0;font-size:12.5px;color:var(--dim)">None yet — add one with <em>every day</em> / <em>every mon</em> or the ↻ picker.</p>';return}
   $('#recurMgr').innerHTML=S.recurring.map(r=>
@@ -1256,7 +1355,7 @@ $('#clearDone').addEventListener('click',()=>{
 });
 $('#wipeBtn').addEventListener('click',()=>{
   if(!confirm('Wipe ALL local data? Export a backup first if you need it.'))return;
-  S={tasks:[],recurring:[],tags:DEFAULT_TAGS.map(t=>({...t})),prefs:{...S.prefs},meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
+  S={tasks:[],recurring:[],tags:DEFAULT_TAGS.map(t=>({...t})),people:DEFAULT_PEOPLE.map(p=>({...p})),prefs:{...S.prefs},meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
   migrate();save();render();toast('Local data wiped');
 });
 
