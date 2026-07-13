@@ -639,16 +639,66 @@ html.compact .stats{margin-top:10px}
 
 <div class="toasts" id="toasts"></div>
 
+<!-- ======================================================================
+     STEP 1: SYNCHRONOUS UI SCRIPT
+     This script handles the password gate. It runs independently of 
+     ES Modules, ensuring the button works even if CORS blocks Firebase.
+====================================================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const g_ok = (()=>{try{localStorage.setItem('__p','1');localStorage.removeItem('__p');return true}catch(e){return false}})();
+  const g_Store = {
+    get(k,d){if(!g_ok)return d;try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+    set(k,v){if(!g_ok)return;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  };
+
+  const ACCESS_PHRASE = 'soul';
+  const gateGo = document.getElementById('gateGo');
+  const gatePw = document.getElementById('gatePw');
+  const gateErr = document.getElementById('gateErr');
+  const gateStep1 = document.getElementById('gateStep1');
+  const gateStep2 = document.getElementById('gateStep2');
+  const gateMsg = document.getElementById('gateMsg');
+
+  // If already unlocked previously, skip the visual flash
+  if(g_Store.get('dailyops.gate', 0) === 1 && gateStep1 && gateStep2) {
+    gateStep1.classList.add('hidden');
+    gateStep2.classList.remove('hidden');
+    gateMsg.textContent = 'Sign in to load your board.';
+  }
+
+  function tryPhrase() {
+    const v = gatePw.value.trim().toLowerCase();
+    if(v !== ACCESS_PHRASE.toLowerCase()){
+      gateErr.textContent = 'Incorrect phrase.';
+      gatePw.value = '';
+      return;
+    }
+    // Unlock and Transition
+    g_Store.set('dailyops.gate', 1);
+    gateStep1.classList.add('hidden');
+    gateStep2.classList.remove('hidden');
+    gateMsg.textContent = 'Sign in to load your board.';
+  }
+
+  // Bind the isolated events immediately
+  if (gateGo && gatePw) {
+    gateGo.addEventListener('click', tryPhrase);
+    gatePw.addEventListener('keydown', e => { if(e.key === 'Enter') tryPhrase(); });
+  }
+});
+</script>
+
+<!-- ======================================================================
+     STEP 2: FIREBASE MODULE & APP LOGIC
+====================================================================== -->
 <script type="module">
-/* ================================================================
-   DAILY OPS v3.0 — auth · assignees · public view key · requests
-================================================================ */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
-  from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+  from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc,
          serverTimestamp, query, orderBy, deleteDoc }
-  from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+  from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 /* ---------- config ---------- */
 const firebaseConfig={
@@ -661,7 +711,6 @@ const firebaseConfig={
   measurementId:"G-XBT55M9NPJ"
 };
 const ADMIN_EMAIL='kalashnandal@gmail.com';
-const ACCESS_PHRASE='soul';          /* <<< CHANGE THIS */
 const fbApp=initializeApp(firebaseConfig);
 const auth=getAuth(fbApp);
 const db=getFirestore(fbApp);
@@ -1604,25 +1653,6 @@ function toast(msg,undo){
   setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),320)},undo?5200:2600);
 }
 
-/* ---------- gate ---------- */
-$('#gateGo').addEventListener('click',tryPhrase);
-$('#gatePw').addEventListener('keydown',e=>{if(e.key==='Enter')tryPhrase()});
-function tryPhrase(){
-  const v=$('#gatePw').value.trim().toLowerCase();
-  if(v!==ACCESS_PHRASE.toLowerCase()){$('#gateErr').textContent='Incorrect phrase.';$('#gatePw').value='';return}
-  Store.set('dailyops.gate',1);showGateStep2();
-}
-function showGateStep2(msg){
-  $('#gateStep1').classList.add('hidden');
-  $('#gateStep2').classList.remove('hidden');
-  $('#gateMsg').textContent=msg||'Sign in to load your board.';
-}
-$('#googleBtn').addEventListener('click',async()=>{
-  $('#gateErr2').textContent='';
-  try{await signInWithPopup(auth,new GoogleAuthProvider())}
-  catch(e){console.error(e);$('#gateErr2').textContent='Sign-in failed. Is this domain authorized in Firebase Auth?'}
-});
-
 /* ---------- boot ---------- */
 function bootApp(user){
   mode='app';me=user;
@@ -1638,13 +1668,26 @@ function bootApp(user){
     if(S.view.key){loadRequests();loadTeamNotes();if(S.view.live)schedulePublish()}
   }
 }
+
+// Google Sign-In button logic (moved inside the module so Firebase Auth is available)
+$('#googleBtn').addEventListener('click',async()=>{
+  $('#gateErr2').textContent='';
+  try{await signInWithPopup(auth,new GoogleAuthProvider())}
+  catch(e){console.error(e);$('#gateErr2').textContent='Sign-in failed. Is this domain authorized in Firebase Auth?'}
+});
+
 onAuthStateChanged(auth,async user=>{
   const vk=new URLSearchParams(location.search).get('view');
   if(vk){bootViewer(vk);return}
   if(!user){
     mode='gate';
     $('#gate').classList.remove('hidden');$('#app').classList.add('hidden');
-    if(Store.get('dailyops.gate',0))showGateStep2();
+    // If local storage already passed step 1, show step 2
+    if(Store.get('dailyops.gate',0)) {
+      $('#gateStep1').classList.add('hidden');
+      $('#gateStep2').classList.remove('hidden');
+      $('#gateMsg').textContent='Sign in to load your board.';
+    }
     return;
   }
   const em=(user.email||'').toLowerCase();
@@ -1654,7 +1697,9 @@ onAuthStateChanged(auth,async user=>{
       ok=(c.data()?.emails||[]).map(x=>String(x).toLowerCase()).includes(em)}catch(e){console.error(e)}
     if(!ok){
       await signOut(auth);
-      showGateStep2();
+      $('#gateStep1').classList.add('hidden');
+      $('#gateStep2').classList.remove('hidden');
+      $('#gateMsg').textContent='Sign in to load your board.';
       $('#gateErr2').textContent='That account isn’t on the allowlist. Ask Kalash to add it.';
       return;
     }
@@ -1675,3 +1720,4 @@ setInterval(()=>{
 </script>
 </body>
 </html>
+
