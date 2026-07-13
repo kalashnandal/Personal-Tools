@@ -419,7 +419,7 @@ html.compact .stats{margin-top:10px}
         <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 010-4.22V7.05H2.18a11 11 0 000 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.65l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84c.87-2.6 3.3-4.51 6.16-4.51z"/></svg>
         Sign in with Google
       </button>
-      <div class="err" id="gateErr2" style="margin-top:12px"></div>
+      <div class="err" id="gateErr2" style="margin-top:12px;line-height:1.4"></div>
       <div class="sep">ACCESS</div>
       <p style="margin:0;font-size:12.5px">Kalash signs in as admin. Approved team members get their own private board.</p>
     </div>
@@ -467,7 +467,7 @@ html.compact .stats{margin-top:10px}
           <span class="sync-dot" id="syncDot"></span><span id="syncLbl">Local</span>
         </button>
         <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           <span class="badge hidden" id="reqBadge">0</span>
         </button>
       </div>
@@ -640,9 +640,7 @@ html.compact .stats{margin-top:10px}
 <div class="toasts" id="toasts"></div>
 
 <!-- ======================================================================
-     STEP 1: SYNCHRONOUS UI SCRIPT
-     This script handles the password gate. It runs independently of 
-     ES Modules, ensuring the button works even if CORS blocks Firebase.
+     STEP 1: SYNCHRONOUS UI SCRIPT (Fallback)
 ====================================================================== -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -659,8 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const gateStep1 = document.getElementById('gateStep1');
   const gateStep2 = document.getElementById('gateStep2');
   const gateMsg = document.getElementById('gateMsg');
+  const googleBtn = document.getElementById('googleBtn');
+  const gateErr2 = document.getElementById('gateErr2');
 
-  // If already unlocked previously, skip the visual flash
   if(g_Store.get('dailyops.gate', 0) === 1 && gateStep1 && gateStep2) {
     gateStep1.classList.add('hidden');
     gateStep2.classList.remove('hidden');
@@ -674,17 +673,24 @@ document.addEventListener('DOMContentLoaded', () => {
       gatePw.value = '';
       return;
     }
-    // Unlock and Transition
     g_Store.set('dailyops.gate', 1);
     gateStep1.classList.add('hidden');
     gateStep2.classList.remove('hidden');
     gateMsg.textContent = 'Sign in to load your board.';
   }
 
-  // Bind the isolated events immediately
   if (gateGo && gatePw) {
     gateGo.addEventListener('click', tryPhrase);
     gatePw.addEventListener('keydown', e => { if(e.key === 'Enter') tryPhrase(); });
+  }
+
+  // FALLBACK: If the module script below crashes, this explicit click handler
+  // will tell the user exactly what is wrong when they click the button.
+  if (googleBtn) {
+    googleBtn.onclick = () => {
+      gateErr2.style.color = 'var(--amber)';
+      gateErr2.textContent = 'Application framework is still loading or was blocked by your browser environment. Check the Developer Console (F12) for red errors.';
+    };
   }
 });
 </script>
@@ -700,20 +706,49 @@ import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc,
          serverTimestamp, query, orderBy, deleteDoc }
   from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+/* ---------- Global Error Trap for Firebase Init ---------- */
+let fbApp, auth, db;
+try {
+  const firebaseConfig={
+    apiKey:"AIzaSyDPLhoT1gmotcWtGI-UFHYR5zL7vX0cLSk",
+    authDomain:"taskboard-65330.firebaseapp.com",
+    projectId:"taskboard-65330",
+    storageBucket:"taskboard-65330.firebasestorage.app",
+    messagingSenderId:"818884869738",
+    appId:"1:818884869738:web:a42a6088c9b76dc66cd413",
+    measurementId:"G-XBT55M9NPJ"
+  };
+  fbApp=initializeApp(firebaseConfig);
+  auth=getAuth(fbApp);
+  db=getFirestore(fbApp);
+
+  // If we reach here without crashing, we OVERWRITE the fallback click handler!
+  document.getElementById('googleBtn').onclick = async () => {
+    const errEl = document.getElementById('gateErr2');
+    errEl.style.color = 'var(--gold)';
+    errEl.textContent = 'Opening Google Sign-In popup...';
+    try {
+      await signInWithPopup(auth,new GoogleAuthProvider());
+    } catch(e) {
+      console.error(e);
+      errEl.style.color = 'var(--red)';
+      errEl.textContent = `Error (${e.code}): ${e.message}. (Cannot open popup in this preview environment).`;
+    }
+  };
+
+} catch (fatalError) {
+  // If browser strictly blocks IndexedDB/Cookies (very common in iframes)
+  const errEl = document.getElementById('gateErr2');
+  if (errEl) {
+    errEl.style.color = 'var(--red)';
+    errEl.textContent = 'Fatal Init Error: ' + fatalError.message + ' (This browser environment is strictly blocking Firebase).';
+  }
+  console.error("Firebase failed to start:", fatalError);
+  throw fatalError; // Stop script execution safely
+}
+
 /* ---------- config ---------- */
-const firebaseConfig={
-  apiKey:"AIzaSyDPLhoT1gmotcWtGI-UFHYR5zL7vX0cLSk",
-  authDomain:"taskboard-65330.firebaseapp.com",
-  projectId:"taskboard-65330",
-  storageBucket:"taskboard-65330.firebasestorage.app",
-  messagingSenderId:"818884869738",
-  appId:"1:818884869738:web:a42a6088c9b76dc66cd413",
-  measurementId:"G-XBT55M9NPJ"
-};
 const ADMIN_EMAIL='kalashnandal@gmail.com';
-const fbApp=initializeApp(firebaseConfig);
-const auth=getAuth(fbApp);
-const db=getFirestore(fbApp);
 
 /* ---------- storage ---------- */
 const Store={
@@ -1669,13 +1704,6 @@ function bootApp(user){
   }
 }
 
-// Google Sign-In button logic (moved inside the module so Firebase Auth is available)
-$('#googleBtn').addEventListener('click',async()=>{
-  $('#gateErr2').textContent='';
-  try{await signInWithPopup(auth,new GoogleAuthProvider())}
-  catch(e){console.error(e);$('#gateErr2').textContent='Sign-in failed. Is this domain authorized in Firebase Auth?'}
-});
-
 onAuthStateChanged(auth,async user=>{
   const vk=new URLSearchParams(location.search).get('view');
   if(vk){bootViewer(vk);return}
@@ -1700,6 +1728,7 @@ onAuthStateChanged(auth,async user=>{
       $('#gateStep1').classList.add('hidden');
       $('#gateStep2').classList.remove('hidden');
       $('#gateMsg').textContent='Sign in to load your board.';
+      $('#gateErr2').style.color = 'var(--red)';
       $('#gateErr2').textContent='That account isn’t on the allowlist. Ask Kalash to add it.';
       return;
     }
@@ -1720,4 +1749,5 @@ setInterval(()=>{
 </script>
 </body>
 </html>
+
 
