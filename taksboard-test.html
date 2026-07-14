@@ -380,6 +380,43 @@ html.compact .group-h{margin:14px 0 8px}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.96)}}
 .toast.out{opacity:0;transform:translateY(8px);transition:all .3s}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* in-progress status */
+.task.prog-card{border-color:rgba(217,160,91,.45)}
+.chk.prog{background:var(--amber);border-color:var(--amber)}
+.chk.prog svg{stroke-dashoffset:0;stroke:#fff;opacity:.9}
+.chk.prog::after{content:"";position:absolute;width:8px;height:8px;border-radius:2px;background:#fff}
+.chk.prog svg{display:none}
+.m-chip.prog{color:var(--amber);border-color:var(--amber);background:rgba(217,160,91,.1);font-weight:600}
+.group-h.prog{color:var(--amber)}
+/* clickable stat filters */
+.stat.clk{cursor:pointer;transition:all .18s}
+.stat.clk:hover{border-color:var(--line-hi);color:var(--text)}
+.stat.clk.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.stat.clk.on b{color:var(--on-gold)}
+.stat.clk.on .flame{color:var(--on-gold)}
+/* viewer action buttons */
+.v-acts{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+.vb{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--mute);transition:all .15s;min-height:32px}
+.vb:hover{border-color:var(--line-hi);color:var(--text)}
+.vb.prog.on{background:var(--amber);border-color:var(--amber);color:#fff}
+.vb.done.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.vb:disabled{opacity:.45;cursor:default}
+.v-mark{font-size:11px;color:var(--dim);margin-top:7px}
+.v-mark b{color:var(--amber)}
+/* presence */
+.pr-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.pr-row .pav{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--on-gold);background:var(--gold)}
+.pr-row .pe{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr-row .pe small{display:block;color:var(--dim);font-size:11px}
+.pr-row .pdot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
+.pr-row .pdot.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.pr-row .pt{font-size:11px;color:var(--dim);flex:none}
+.inv-box{background:var(--pane);border:1px dashed var(--line-hi);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--mute);line-height:1.6;margin-top:10px}
+.inv-box b{color:var(--gold)}
+/* gate email/pw */
+.gate .gfld{margin-bottom:9px}
+.gate .gsw{font-size:12px;color:var(--gold);margin-top:14px;cursor:pointer}
+.gate .gsw:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -400,9 +437,23 @@ html.compact .group-h{margin:14px 0 8px}
         <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.65l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.11a6.6 6.6 0 010-4.22V7.05H2.18a11 11 0 000 9.9l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.65l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84c.87-2.6 3.3-4.51 6.16-4.51z"/></svg>
         Sign in with Google
       </button>
+      <div class="sep">OR EMAIL</div>
+      <div class="gfld"><input id="gEmail" type="email" placeholder="you@company.com" autocomplete="username"></div>
+      <div class="gfld"><input id="gPass" type="password" placeholder="Password" autocomplete="current-password"></div>
+      <button class="gbtn alt" id="emailBtn">Sign in</button>
+      <div class="gsw" id="toSignup">First time? Set up your account →</div>
       <div class="err" id="gateErr2" style="margin-top:12px"></div>
       <div class="sep">ACCESS</div>
-      <p style="margin:0;font-size:12.5px">Kalash signs in as admin. Team members see their assigned work plus their own board.</p>
+      <p style="margin:0;font-size:12.5px">Invite only. Kalash adds your email first — then you can set a password.</p>
+    </div>
+
+    <div id="gateStep3" class="hidden">
+      <p style="font-size:13px;color:var(--mute);margin-bottom:16px">Your email must already be on Kalash's team list. Choose a password to finish setup.</p>
+      <div class="gfld"><input id="sEmail" type="email" placeholder="Your invited email" autocomplete="username"></div>
+      <div class="gfld"><input id="sPass" type="password" placeholder="Choose a password (6+ chars)" autocomplete="new-password"></div>
+      <button class="gbtn alt" id="signupBtn">Create my account</button>
+      <div class="gsw" id="toSignin">← Back to sign in</div>
+      <div class="err" id="gateErr3" style="margin-top:12px"></div>
     </div>
     <div class="foot">The phrase is a courtesy gate, not encryption — data is protected by Firebase rules on the server.<br>Sent a <b>view link</b>? Open that link directly.</div>
   </div>
@@ -410,9 +461,18 @@ html.compact .group-h{margin:14px 0 8px}
 
 <!-- PUBLIC VIEWER -->
 <div class="shell hidden" id="viewerApp">
+  <div class="mast-meta">
+    <div class="live-time" id="vTime">00:00 AM</div>
+    <div class="quote-wrap" id="vQuoteWrap"></div>
+  </div>
   <div class="vhead">
     <div><div class="vt" id="vTitle">Task <em>board</em></div><div class="vs" id="vSub">Read-only view</div></div>
-    <span class="ro">👁 View only</span>
+    <div style="display:flex;align-items:center;gap:8px;flex:none">
+      <span class="ro">👁 VIEW</span>
+      <button class="icon-btn" id="vThemeBtn" aria-label="Colours">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="13.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1.5" fill="currentColor" stroke="none"/><path d="M12 2a10 10 0 000 20c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1a1.5 1.5 0 011.09-2.5H16a6 6 0 006-6c0-5.52-4.48-10-10-10z"/></svg>
+      </button>
+    </div>
   </div>
   <div id="whoPick">
     <p style="font-size:13.5px;color:var(--mute);margin-top:18px">Who's viewing? Pick yourself to see only the tasks assigned to you.</p>
@@ -427,6 +487,18 @@ html.compact .group-h{margin:14px 0 8px}
     <div id="vLedger"></div>
   </div>
 </div>
+
+<!-- VIEWER THEME -->
+<div class="overlay" id="vSetOv"><div class="modal">
+  <div class="grab"></div>
+  <h3>Your <em>colours</em></h3>
+  <p style="font-size:12.5px;color:var(--dim);margin-bottom:16px;position:relative">Saved on this device only — it won't change anyone else's board.</p>
+  <div class="set-sec" style="border-top:none;padding-top:0;margin-top:0">
+    <h4>Accent</h4><div class="swatches" id="vAccentSw"></div>
+    <h4 style="margin-top:14px">Background</h4><div class="set-row" id="vBgSeg"></div>
+  </div>
+  <div class="m-foot"><button class="btn ghost sm" id="vThemeReset">Reset</button><button class="btn gold" id="vSetClose">Done</button></div>
+</div></div>
 
 <!-- MAIN APP -->
 <div class="shell hidden" id="app">
@@ -517,10 +589,19 @@ html.compact .group-h{margin:14px 0 8px}
   </div>
 
   <div class="set-sec" id="teamSec">
-    <h4>Team &amp; assignees</h4>
-    <p>Add an email to give someone a login — they see the tasks you assign and can tick them done (goes to your review). No email = view-link only.</p>
+    <h4>Team &amp; assignees — invite only</h4>
+    <p>Add someone's email here and it becomes the <b>only</b> address that can register. They open your app link, tap "Set up your account", and choose their own password. Anyone not on this list is refused.</p>
     <div id="personMgr"></div>
     <button class="btn ghost sm" id="personAdd">+ Add person</button>
+    <div class="inv-box">Send them: <b id="inviteUrl">your app link</b><br>They tap <b>Set up your account</b> → enter that exact email → choose a password.
+      <div class="set-row" style="margin-top:9px"><button class="btn ghost sm" id="copyInvite">Copy invite message</button></div>
+    </div>
+  </div>
+
+  <div class="set-sec" id="presenceSec">
+    <h4>Signed in — who's using it</h4>
+    <p>Everyone who has ever signed in with an account. Green = active in the last 5 minutes.</p>
+    <div id="presenceList"><p style="margin:0;font-size:12.5px;color:var(--dim)">No one yet.</p></div>
   </div>
 
   <div class="set-sec" id="viewSec">
@@ -666,6 +747,7 @@ var view='today',activeTag='all',query='',selDate=null,editing=null,editSubs=[],
 var anRange=30;
 var suppressPush=false,unsubBoard=null,unsubShared=null,unsubReq=null,unsubNotes=null,pushTimer=null,pubTimer=null;
 var shared=[],requests=[],allowCfg={emails:[],people:[]};
+var hydrated=false,unsubAdminMarks=null;
 var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 var openTray=null,qIdx=0;
@@ -945,7 +1027,7 @@ function counts(){
     upcoming:A.filter(function(k){return k.status!=='done'&&k.date&&k.date>t}).length,
     history:A.filter(function(k){return k.status==='done'}).length,
     analytics:0,
-    requests:requests.length+shared.filter(function(k){return k.status==='review'}).length};
+    requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
 function matches(k){return(activeTag==='all'||k.tag===activeTag)&&(!query||((k.title+' '+(k.notes||'')).toLowerCase().indexOf(query)>=0))}
 function render(){renderMast();renderTabs();renderFilters();renderWeek();renderLedger()}
@@ -1031,6 +1113,8 @@ function taskCard(k,o){
   if(pp&&isAdmin)meta.push('<span class="m-chip person">@ '+esc(pp.label)+'</span>');
   else if(k.person&&isAdmin)meta.push('<span class="m-chip person">@ '+esc(k.person)+'</span>');
   if(k.status==='review')meta.push('<span class="m-chip rev">⏳ '+(isAdmin?'Awaiting your review':'In review')+'</span>');
+  if(k.vmark==='progress')meta.push('<span class="m-chip prog">◐ In progress'+(k.vmarkBy?' · '+esc(k.vmarkBy):'')+'</span>');
+  if(k.vmark==='review')meta.push('<span class="m-chip rev">✓ Marked done'+(k.vmarkBy?' by '+esc(k.vmarkBy):'')+' — approve?</span>');
   if(k.selfCreated&&isAdmin)meta.push('<span class="m-chip self">✎ self-created</span>');
   if(isShared&&!isAdmin&&!k.selfCreated)meta.push('<span class="m-chip shared">↑ from Kalash</span>');
   if(k.pri)meta.push('<span class="m-chip p-'+k.pri+'">⚑ '+PRI_LABEL[k.pri]+'</span>');
@@ -1042,7 +1126,9 @@ function taskCard(k,o){
   var cls=done?'done-card':(rev?'review-card':'');
   var chk=done?'checked':(rev?'review':'');
   var acts=[];
-  if(isAdmin&&rev){acts.push('<button class="ta-btn ok" data-act="approve" title="Approve">✓</button>');
+  if(isAdmin&&k.vmark==='review'){acts.push('<button class="ta-btn ok" data-act="okmark" title="Approve & close">✓</button>');
+    acts.push('<button class="ta-btn del" data-act="nomark" title="Send back">↩</button>')}
+  else if(isAdmin&&rev){acts.push('<button class="ta-btn ok" data-act="approve" title="Approve">✓</button>');
     acts.push('<button class="ta-btn del" data-act="reject" title="Send back">↩</button>')}
   else if(!done&&!rev)acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>');
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
@@ -1061,6 +1147,11 @@ function renderLedger(){
   var L=$('#ledger'),t=todayStr(),A=allTasks(),html='';
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
   if(view==='requests'){
+    var vm=allTasks().filter(function(k){return k.vmark==='review'});
+    if(vm.length){
+      html+='<div class="group-h rev">Marked done from the view link — approve to close</div>';
+      html+=vm.map(function(k){return taskCard(k,{showDate:true})}).join('');
+    }
     var rev=shared.filter(function(k){return k.status==='review'});
     if(rev.length){
       html+='<div class="group-h rev">Completed — awaiting your review</div>';
@@ -1073,7 +1164,7 @@ function renderLedger(){
       +(r.notes?'<div class="rn">'+esc(r.notes)+'</div>':'')+'</div>'
       +'<div class="ra"><button class="rbtn ok" data-req="ok">✓</button><button class="rbtn no" data-req="no">✕</button></div></div>'}).join('')
       :'<p style="font-size:12.5px;color:var(--dim);padding:8px 2px">Nothing pending from the view link.</p>';
-    if(!rev.length&&!requests.length)html=emptyState('Inbox zero.','Completed team tasks and incoming requests land here for approval.');
+    if(!rev.length&&!requests.length&&!vm.length)html=emptyState('Inbox zero.','Completed team tasks and incoming requests land here for approval.');
     L.innerHTML=html;return;
   }
   if(view==='today'){
@@ -1267,6 +1358,8 @@ function bindLedger(){
 async function doAction(a,k,card){
   var w=card.closest('.t-wrap');
   var isShared=!!k.assigneeEmail;
+  if(a==='okmark'){await approveMark(k.id);return}
+  if(a==='nomark'){await rejectMark(k.id);return}
   if(a==='approve'){
     if(!FB.ready)return;
     try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});
@@ -1470,6 +1563,77 @@ function loadTeamNotes(){
   },function(e){console.error(e)});
 }
 
+/* ---------- ADMIN: marks made from the public view link ---------- */
+var adminMarks={};   /* taskId -> mark */
+function loadMarks(){
+  if(!isAdmin||!S.view.key||!FB.ready)return;
+  if(unsubAdminMarks)unsubAdminMarks();
+  unsubAdminMarks=FB.F.onSnapshot(fcol('views',S.view.key,'marks'),function(snap){
+    adminMarks={};
+    snap.docs.forEach(function(d){adminMarks[d.id]=Object.assign({id:d.id},d.data())});
+    /* stamp the local/shared task objects so the board reflects link activity */
+    allTasks().forEach(function(k){
+      var m=adminMarks[k.id];
+      k.vmark=m?m.status:null;
+      k.vmarkBy=m?m.byName:null;
+    });
+    renderMast();renderTabs();render();
+  },function(e){console.error('adminMarks',e)});
+}
+/* Approve a viewer-marked task: close it for real, then clear the mark. */
+async function approveMark(id){
+  var k=findTask(id);if(!k)return;
+  if(k.assigneeEmail){
+    try{await FB.F.updateDoc(fdoc('tasks',id),{status:'done',doneAt:Date.now()})}catch(e){console.error(e);toast('Failed');return}
+  }else{
+    k.status='done';k.doneAt=Date.now();
+  }
+  bumpDoneDate(todayStr(),1);save();
+  try{await FB.F.deleteDoc(fdoc('views',S.view.key,'marks',id))}catch(e){console.error(e)}
+  toast('Approved & closed');
+}
+async function rejectMark(id){
+  var k=findTask(id);if(!k)return;
+  try{await FB.F.deleteDoc(fdoc('views',S.view.key,'marks',id))}catch(e){console.error(e)}
+  toast('Sent back — reopened');
+  render();
+}
+
+/* ---------- PRESENCE: who is signed in ---------- */
+var presence=[],unsubPresence=null,presenceTimer=null;
+async function beat(){
+  if(!FB.ready||!me)return;
+  try{await FB.F.setDoc(fdoc('presence',me.uid),
+    {email:me.email||'',name:me.displayName||'',admin:isAdmin,lastSeen:Date.now()},{merge:true})}
+  catch(e){/* non-fatal */}
+}
+function startPresence(){
+  beat();
+  clearInterval(presenceTimer);
+  presenceTimer=setInterval(beat,60000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)beat()});
+  if(!isAdmin||!FB.ready)return;
+  if(unsubPresence)unsubPresence();
+  unsubPresence=FB.F.onSnapshot(fcol('presence'),function(snap){
+    presence=snap.docs.map(function(d){return Object.assign({uid:d.id},d.data())})
+      .sort(function(a,b){return(b.lastSeen||0)-(a.lastSeen||0)});
+    renderPresence();
+  },function(e){console.error('presence',e)});
+}
+function renderPresence(){
+  var el=$('#presenceList');if(!el)return;
+  if(!presence.length){el.innerHTML='<p style="margin:0;font-size:12.5px;color:var(--dim)">No one has signed in yet.</p>';return}
+  var now=Date.now();
+  el.innerHTML=presence.map(function(p){
+    var live=(now-(p.lastSeen||0))<5*60000;
+    return'<div class="pr-row"><span class="pdot '+(live?'live':'')+'"></span>'
+      +'<span class="pav">'+esc(initials(p.name||p.email||'?'))+'</span>'
+      +'<span class="pe">'+esc(p.email||'—')+(p.admin?' <b style="color:var(--gold)">· admin</b>':'')
+      +'<small>'+(live?'active now':'last seen '+(p.lastSeen?ago(p.lastSeen):'—'))+'</small></span>'
+      +'<span class="pt">'+(live?'●':'')+'</span></div>';
+  }).join('');
+}
+
 /* ---------- SYNC ---------- */
 function setSync(c,l){
   ['#syncDot','#setDot'].forEach(function(s){var e=$(s);if(e)e.className='sync-dot '+c});
@@ -1479,6 +1643,8 @@ function setSync(c,l){
 }
 function queuePush(){
   if(!me||!FB.ready)return;
+  if(!hydrated)return;   /* never push before the server has spoken —
+                            a fresh device must not overwrite the real board */
   setSync('syncing','Syncing');
   clearTimeout(pushTimer);
   pushTimer=setTimeout(async function(){
@@ -1491,7 +1657,31 @@ function listenBoard(){
   if(unsubBoard)unsubBoard();
   unsubBoard=FB.F.onSnapshot(fdoc('boards',me.uid),function(snap){
     var r=snap.data();
-    if(r&&((r.meta&&r.meta.updatedAt)||0)>(S.meta.updatedAt||0)){
+    var remoteAt=(r&&r.meta&&r.meta.updatedAt)||0;
+
+    /* ---- FIRST SNAPSHOT: decide which copy wins, once ---- */
+    if(!hydrated){
+      hydrated=true;
+      var localAt=(S.meta&&S.meta.updatedAt)||0;
+      var neverSynced=!Store.get('dailyops.synced.'+me.uid,0);
+      /* On a device that has never synced this account (new phone, incognito,
+         cleared cache) the server ALWAYS wins — even if local carries a fresher
+         timestamp from a local carry-forward. Otherwise newest-wins. */
+      if(r&&(neverSynced||remoteAt>localAt)){
+        suppressPush=true;
+        S=r;migrate();Store.set(KEY,S);
+        suppressPush=false;
+      }
+      Store.set('dailyops.synced.'+me.uid,1);
+      rollDay();                     /* safe now — operating on the real board */
+      applyTheme();renderCapture();render();
+      setSync('synced','Synced');
+      if(!r)queuePush();             /* brand-new account: seed the server */
+      return;
+    }
+
+    /* ---- LIVE UPDATES: newest wins ---- */
+    if(r&&remoteAt>(S.meta.updatedAt||0)){
       suppressPush=true;
       S=r;migrate();Store.set(KEY,S);rollDay();applyTheme();render();
       suppressPush=false;
@@ -1537,19 +1727,46 @@ async function syncAllowlist(){
 }
 
 /* ---------- PUBLIC VIEWER ---------- */
+var vMarks={};          /* taskId -> {status,by,byName,ts} written by anonymous viewers */
+var vFilter='all';      /* all | open | today | carried | done */
+var unsubMarks=null;
+
+function vPrefsKey(){return 'dailyops.vprefs'}
+function applyViewerTheme(){
+  var p=Store.get(vPrefsKey(),null);
+  if(!p)return;
+  S.prefs.accent=p.accent||S.prefs.accent;
+  S.prefs.custom=p.custom||null;
+  S.prefs.bg=p.bg||S.prefs.bg;
+  applyTheme();
+}
+function renderVTheme(){
+  var p=Store.get(vPrefsKey(),{accent:'gold',bg:'midnight',custom:null});
+  $('#vAccentSw').innerHTML=Object.keys(ACCENTS).map(function(k){
+    return'<button class="sw '+(p.accent===k?'on':'')+'" data-vacc="'+k+'" style="background:linear-gradient(135deg,'+ACCENTS[k][0]+','+ACCENTS[k][1]+')"></button>'}).join('')
+    +'<span class="sw custom '+(p.accent==='custom'?'on':'')+'">＋<input type="color" id="vCustomAcc" value="'+(p.custom||'#E2C27A')+'"></span>';
+  $('#vBgSeg').innerHTML=Object.keys(BGS).map(function(k){
+    return'<button class="tr-chip '+(p.bg===k?'on':'')+'" data-vbg="'+k+'">'+k[0].toUpperCase()+k.slice(1)+'</button>'}).join('');
+}
+function saveVPrefs(patch){
+  var p=Store.get(vPrefsKey(),{accent:'gold',bg:'midnight',custom:null});
+  Object.assign(p,patch);
+  Store.set(vPrefsKey(),p);
+  applyViewerTheme();renderVTheme();renderViewer();
+}
+
 async function bootViewer(key){
   mode='viewer';VK=key;
   $('#gate').classList.add('hidden');$('#viewerApp').classList.remove('hidden');
-  applyTheme();
+  applyViewerTheme();applyTheme();
+  startViewerClock();
 
-  /* paint instantly from the last cached copy of this key, then refresh */
   var cached=Store.get('dailyops.view.'+key,null);
   if(cached&&cached.people){
     vData=cached;
     $('#vTitle').innerHTML=esc(vData.owner||'Task')+' <em>board</em>';
     renderWhoGrid();
   }
-
   if(!FB.ready){
     if(!cached)$('#whoPick').innerHTML=emptyState('Offline.','Couldn’t reach Firebase — check your network or ad-blocker, then refresh.');
     return;
@@ -1564,77 +1781,166 @@ async function bootViewer(key){
     vData=snap.data();
     Store.set('dailyops.view.'+key,vData);
     $('#vTitle').innerHTML=esc(vData.owner||'Task')+' <em>board</em>';
-    renderWhoGrid();
+    listenMarks();
+    var remembered=Store.get('dailyops.vwho.'+key,null);
+    if(remembered&&(vData.people||[]).some(function(x){return x.id===remembered})){
+      vWho=remembered;renderViewer();
+    }else renderWhoGrid();
   }catch(e){
     console.error('bootViewer',e.code,e);
     var code=(e&&e.code)||'';
     var msg;
     if(code==='permission-denied')
-      msg='Firestore is refusing the read. The rule <code>match /views/{key} { allow read: if true; }</code> is missing or not published in the Firebase console.';
+      msg='Firestore is refusing the read. The rule <code>match /views/{key} { allow read: if true; }</code> is missing or not published.';
     else if(code==='unavailable'||code==='failed-precondition')
       msg='Can’t reach Firestore. Check your connection, or that the database exists in this project.';
     else
-      msg='Firestore error: <code>'+esc(code||'unknown')+'</code> — open DevTools console for detail.';
+      msg='Firestore error: <code>'+esc(code||'unknown')+'</code> — see the DevTools console.';
     if(!cached)$('#whoPick').innerHTML=emptyState('Can’t load.',msg);
-    else toast('Showing a cached copy — live refresh failed ('+(code||'error')+')');
+    else toast('Showing a cached copy — refresh failed ('+(code||'error')+')');
   }
 }
+function listenMarks(){
+  if(!FB.ready||!VK)return;
+  if(unsubMarks)unsubMarks();
+  unsubMarks=FB.F.onSnapshot(fcol('views',VK,'marks'),function(snap){
+    vMarks={};
+    snap.docs.forEach(function(d){vMarks[d.id]=d.data()});
+    if(vWho)renderViewer();
+  },function(e){console.error('marks',e)});
+}
+function startViewerClock(){
+  var c=$('#vTime');
+  function tick(){var d=new Date(),h=d.getHours();
+    if(c)c.textContent=(h%12||12)+':'+pad(d.getMinutes())+' '+(h>=12?'PM':'AM')}
+  tick();setInterval(tick,1000);
+  var qw=$('#vQuoteWrap');if(!qw)return;
+  qw.innerHTML=QUOTES.map(function(q,i){return'<div class="quote-item '+(i===0?'active':'')+'" id="vq-'+i+'">“'+esc(q)+'”</div>'}).join('');
+  var i=0;
+  setInterval(function(){
+    var o=$('#vq-'+i);if(o)o.className='quote-item prev';
+    i=(i+1)%QUOTES.length;
+    var n=$('#vq-'+i);
+    if(n){n.className='quote-item active';setTimeout(function(){if(o)o.className='quote-item'},600)}
+  },8500);
+}
 function renderWhoGrid(){
-  /* self-healing: loading/error states overwrite #whoPick, so rebuild it */
   $('#whoPick').innerHTML='<p style="font-size:13.5px;color:var(--mute);margin-top:18px">Who\u2019s viewing? Pick yourself to see only the tasks assigned to you.</p>'
     +'<div class="who-grid" id="whoGrid"></div>';
   var g=$('#whoGrid');
-  if(!vData.people||!vData.people.length){g.innerHTML='<p style="color:var(--dim);font-size:13px">No people assigned yet.</p>';return}
+  if(!vData||!vData.people||!vData.people.length){g.innerHTML='<p style="color:var(--dim);font-size:13px">No people assigned yet.</p>';return}
   g.innerHTML=vData.people.map(function(p){
-    var n=(vData.tasks||[]).filter(function(t){return t.person===p.id&&t.status!=='done'}).length;
+    var n=(vData.tasks||[]).filter(function(t){return t.person===p.id&&vStatus(t)!=='done'}).length;
     return'<button class="who-card" data-who="'+p.id+'"><span class="av">'+esc(initials(p.name))+'</span>'
       +'<span><span class="wn2">'+esc(p.name)+'</span><span class="wc2">'+n+' open</span></span></button>'}).join('');
-  g.querySelectorAll('[data-who]').forEach(function(b){b.addEventListener('click',function(){vWho=b.dataset.who;renderViewer()})});
+  g.querySelectorAll('[data-who]').forEach(function(b){b.addEventListener('click',function(){
+    vWho=b.dataset.who;Store.set('dailyops.vwho.'+VK,vWho);vFilter='all';renderViewer()})});
+}
+/* effective status = the admin's status, unless a viewer mark supersedes it */
+function vStatus(x){
+  var m=vMarks[x.id];
+  if(x.status==='done')return'done';
+  if(m&&m.status)return m.status;      /* 'progress' | 'review' */
+  return x.status||'open';
 }
 function renderViewer(){
   $('#whoPick').classList.add('hidden');$('#vBoard').classList.remove('hidden');
-  var p=vData.people.find(function(x){return x.id===vWho});
+  var p=(vData.people||[]).find(function(x){return x.id===vWho});
   $('#vTitle').innerHTML=esc((p&&p.name)||'')+' <em>· tasks</em>';
-  $('#vSub').textContent='Assigned by '+(vData.owner||'admin')+' · read-only';
+  $('#vSub').textContent='Assigned by '+(vData.owner||'admin');
   var mine=(vData.tasks||[]).filter(function(t){return t.person===vWho});
-  var open=mine.filter(function(t){return t.status==='open'});
-  var rev=mine.filter(function(t){return t.status==='review'});
-  var done=mine.filter(function(t){return t.status==='done'});
   var t=todayStr();
-  var over=open.filter(function(x){return x.carried>0}).length;
-  $('#vStats').innerHTML='<span class="stat"><b>'+open.length+'</b> open</span>'
-    +'<span class="stat"><b>'+open.filter(function(x){return x.date===t}).length+'</b> today</span>'
-    +(rev.length?'<span class="stat"><b>'+rev.length+'</b> in review</span>':'')
-    +(over?'<span class="stat warn"><b>'+over+'</b> carried over</span>':'')
-    +'<span class="stat"><b>'+done.length+'</b> done</span>';
-  var grp={};open.forEach(function(x){var d=x.date||'none';(grp[d]=grp[d]||[]).push(x)});
+  var nOpen=mine.filter(function(x){return vStatus(x)==='open'||vStatus(x)==='progress'}).length;
+  var nToday=mine.filter(function(x){return x.date===t&&vStatus(x)!=='done'}).length;
+  var nCarr=mine.filter(function(x){return x.carried>0&&vStatus(x)!=='done'}).length;
+  var nRev=mine.filter(function(x){return vStatus(x)==='review'}).length;
+  var nDone=mine.filter(function(x){return vStatus(x)==='done'}).length;
+
+  function chip(f,n,label,cls){
+    return'<button class="stat clk '+(cls||'')+' '+(vFilter===f?'on':'')+'" data-vf="'+f+'"><b>'+n+'</b> '+label+'</button>';
+  }
+  $('#vStats').innerHTML=chip('all',mine.length,'all')
+    +chip('open',nOpen,'open')
+    +chip('today',nToday,'today')
+    +(nCarr?chip('carried',nCarr,'carried over','warn'):'')
+    +(nRev?chip('review',nRev,'in review'):'')
+    +chip('done',nDone,'done');
+
+  var list=mine.filter(function(x){
+    var st=vStatus(x);
+    if(vFilter==='all')return true;
+    if(vFilter==='open')return st==='open'||st==='progress';
+    if(vFilter==='today')return x.date===t&&st!=='done';
+    if(vFilter==='carried')return x.carried>0&&st!=='done';
+    if(vFilter==='review')return st==='review';
+    if(vFilter==='done')return st==='done';
+    return true;
+  });
+
   var h='';
-  Object.keys(grp).sort().forEach(function(d){
-    h+='<div class="group-h'+(d===t?' gold':'')+'">'+(d==='none'?'No date':esc(dayLabel(d)))+'</div>'+grp[d].map(vCard).join('')});
-  if(rev.length)h+='<div class="group-h rev">Awaiting Kalash\u2019s review</div>'+rev.map(vCard).join('');
-  if(done.length)h+='<div class="group-h">Completed</div>'+done.map(vCard).join('');
-  if(!mine.length)h=emptyState('Nothing assigned to you.','When '+(vData.owner||'admin')+' assigns you a task, it appears here.');
+  if(vFilter==='all'){
+    var open=list.filter(function(x){return vStatus(x)==='open'||vStatus(x)==='progress'});
+    var rev=list.filter(function(x){return vStatus(x)==='review'});
+    var done=list.filter(function(x){return vStatus(x)==='done'});
+    var grp={};open.forEach(function(x){var d=x.date||'none';(grp[d]=grp[d]||[]).push(x)});
+    Object.keys(grp).sort().forEach(function(d){
+      h+='<div class="group-h'+(d===t?' gold':'')+'">'+(d==='none'?'No date':esc(dayLabel(d)))+'</div>'+grp[d].map(vCard).join('')});
+    if(rev.length)h+='<div class="group-h rev">Awaiting Kalash\u2019s review</div>'+rev.map(vCard).join('');
+    if(done.length)h+='<div class="group-h">Approved &amp; closed</div>'+done.map(vCard).join('');
+  }else{
+    h=list.map(vCard).join('');
+  }
+  if(!list.length)h=emptyState(mine.length?'Nothing here.':'Nothing assigned to you.',
+    mine.length?'No tasks match this filter — tap <code>all</code>.':'When '+(vData.owner||'admin')+' assigns you a task, it appears here.');
   $('#vLedger').innerHTML=h;
   $$('#vLedger [data-note]').forEach(function(b){b.addEventListener('click',function(){sendNote(b.dataset.note)})});
   $$('#vLedger .vnote input').forEach(function(i){i.addEventListener('keydown',function(e){if(e.key==='Enter')sendNote(i.dataset.for)})});
+  $$('#vLedger [data-mark]').forEach(function(b){b.addEventListener('click',function(){
+    setMark(b.dataset.id,b.dataset.mark)})});
 }
 function vCard(x){
-  var meta=[];
+  var st=vStatus(x),m=vMarks[x.id],meta=[];
   if(x.time)meta.push('<span class="m-chip time">⏰ '+fmtTime12(x.time)+'</span>');
   if(x.date)meta.push('<span class="m-chip">📅 '+esc(fmtDateShort(x.date))+'</span>');
   if(x.tag)meta.push('<span class="m-chip tag"><span class="dot" style="background:'+(x.tagColor||'#999')+'"></span>'+esc(x.tag)+'</span>');
   if(x.pri)meta.push('<span class="m-chip p-'+x.pri+'">⚑ '+PRI_LABEL[x.pri]+'</span>');
-  if(x.status==='review')meta.push('<span class="m-chip rev">⏳ In review</span>');
+  if(st==='progress')meta.push('<span class="m-chip prog">◐ In progress</span>');
+  if(st==='review')meta.push('<span class="m-chip rev">⏳ Awaiting review</span>');
   if(x.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+x.carried+'</span>');
   var subsHtml='';
   if(x.subs&&x.subs.length)subsHtml='<div class="notefeed">'+x.subs.map(function(s){return'<div class="nf">'+(s.done?'☑':'☐')+' <span>'+esc(s.title)+'</span></div>'}).join('')+'</div>';
-  return'<div class="t-wrap"><article class="task '+(x.status==='done'?'done-card':(x.status==='review'?'review-card':''))+'">'
+
+  var acts='';
+  if(st==='done'){
+    acts='<div class="v-mark">✓ Approved and closed by '+esc(vData.owner||'admin')+'</div>';
+  }else{
+    acts='<div class="v-acts">'
+      +'<button class="vb prog '+(st==='progress'?'on':'')+'" data-mark="'+(st==='progress'?'open':'progress')+'" data-id="'+x.id+'">◐ '+(st==='progress'?'In progress':'Start')+'</button>'
+      +'<button class="vb done '+(st==='review'?'on':'')+'" data-mark="'+(st==='review'?'open':'review')+'" data-id="'+x.id+'">✓ '+(st==='review'?'Marked done':'Mark done')+'</button>'
+      +'</div>';
+    if(st==='review')acts+='<div class="v-mark">Sent to <b>'+esc(vData.owner||'admin')+'</b> for review'+(m&&m.ts?' · '+ago(m.ts):'')+'</div>';
+  }
+  return'<div class="t-wrap"><article class="task '+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':'')))+'">'
     +'<div class="t-body" style="padding-left:2px"><div class="t-title">'+esc(x.title)+'</div>'
     +(x.notes?'<div class="t-notes">'+linkify(esc(x.notes))+'</div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')
-    +subsHtml
-    +'<div class="vnote"><input placeholder="Add a note for Kalash…" data-for="'+x.id+'"><button class="btn ghost sm" data-note="'+x.id+'">Send</button></div>'
+    +subsHtml+acts
+    +'<div class="vnote"><input placeholder="Add a note for '+esc(vData.owner||'admin')+'…" data-for="'+x.id+'"><button class="btn ghost sm" data-note="'+x.id+'">Send</button></div>'
     +'</div></article></div>';
+}
+async function setMark(taskId,status){
+  if(!FB.ready){toast('Offline — try again');return}
+  var p=(vData.people||[]).find(function(x){return x.id===vWho});
+  vMarks[taskId]=Object.assign({},vMarks[taskId],{status:status,by:vWho,byName:(p&&p.name)||'team',ts:Date.now()});
+  renderViewer();
+  try{
+    if(status==='open'){await FB.F.deleteDoc(fdoc('views',VK,'marks',taskId));delete vMarks[taskId];renderViewer();toast('Cleared')}
+    else{
+      await FB.F.setDoc(fdoc('views',VK,'marks',taskId),
+        {status:status,by:vWho,byName:(p&&p.name)||'team',title:'',ts:Date.now()},{merge:true});
+      toast(status==='progress'?'Marked in progress':'Sent to '+(vData.owner||'admin')+' for review');
+    }
+  }catch(e){console.error(e);toast('Could not save — check rules');delete vMarks[taskId];renderViewer()}
 }
 async function sendNote(taskId){
   var inp=$('#vLedger .vnote input[data-for="'+taskId+'"]');
@@ -1647,16 +1953,32 @@ async function sendNote(taskId){
 }
 function bindViewer(){
   $('#vSwitch').addEventListener('click',function(){
-    vWho=null;$('#vBoard').classList.add('hidden');$('#whoPick').classList.remove('hidden');
+    vWho=null;vFilter='all';Store.set('dailyops.vwho.'+VK,null);
+    $('#vBoard').classList.add('hidden');$('#whoPick').classList.remove('hidden');
     $('#vTitle').innerHTML=esc((vData&&vData.owner)||'Task')+' <em>board</em>';
     $('#vSub').textContent='Read-only view';if(vData)renderWhoGrid()});
+  $('#vStats').addEventListener('click',function(e){
+    var b=e.target.closest('[data-vf]');if(!b)return;
+    vFilter=b.dataset.vf;renderViewer()});
+  $('#vThemeBtn').addEventListener('click',function(){renderVTheme();$('#vSetOv').classList.add('open')});
+  $('#vSetClose').addEventListener('click',function(){$('#vSetOv').classList.remove('open')});
+  $('#vThemeReset').addEventListener('click',function(){
+    Store.set(vPrefsKey(),{accent:'gold',bg:'midnight',custom:null});
+    S.prefs.accent='gold';S.prefs.bg='midnight';S.prefs.custom=null;
+    applyTheme();renderVTheme();renderViewer()});
+  $('#vAccentSw').addEventListener('click',function(e){
+    var b=e.target.closest('[data-vacc]');if(!b)return;saveVPrefs({accent:b.dataset.vacc})});
+  $('#vAccentSw').addEventListener('input',function(e){
+    if(e.target.id!=='vCustomAcc')return;saveVPrefs({accent:'custom',custom:e.target.value})});
+  $('#vBgSeg').addEventListener('click',function(e){
+    var b=e.target.closest('[data-vbg]');if(!b)return;saveVPrefs({bg:b.dataset.vbg})});
   $('#vRequest').addEventListener('click',function(){$('#reqOv').classList.add('open')});
   $('#rqCancel').addEventListener('click',function(){$('#reqOv').classList.remove('open')});
   $('#rqSend').addEventListener('click',async function(){
     var title=$('#rqTitle').value.trim();
     if(!title){toast('Add a title');return}
     if(!FB.ready){toast('Offline — try again');return}
-    var p=vData.people.find(function(x){return x.id===vWho});
+    var p=(vData.people||[]).find(function(x){return x.id===vWho});
     try{
       await FB.F.addDoc(fcol('views',VK,'requests'),{title:title,notes:$('#rqNotes').value.trim(),
         date:$('#rqDate').value||null,from:vWho,fromName:(p&&p.name)||'team',ts:FB.F.serverTimestamp()});
@@ -1667,8 +1989,9 @@ function bindViewer(){
 }
 /* ---------- SETTINGS ---------- */
 function openSettings(){
-  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();
-  ['#viewSec','#teamSec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
+  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();
+  $('#inviteUrl').textContent=location.origin+location.pathname;
+  ['#viewSec','#teamSec','#presenceSec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
   $('#setOv').classList.add('open');
 }
 function renderAppearance(){
@@ -1796,13 +2119,13 @@ function bindAll(){
   $('#publishView').addEventListener('click',async function(){
     if(!FB.ready){toast('Sync offline — sign in first');return}
     if(!S.view.key)S.view.key=uid().replace(/-/g,'').slice(0,20);
-    await publishView();save(false);renderViewLink();loadRequests();loadTeamNotes();toast('View link published')});
+    await publishView();save(false);renderViewLink();loadRequests();loadTeamNotes();loadMarks();toast('View link published')});
   $('#rotateView').addEventListener('click',async function(){
     if(!FB.ready)return;
     if(!confirm('Rotate key? The old link stops working.'))return;
     var old=S.view.key;S.view.key=uid().replace(/-/g,'').slice(0,20);
     await publishView();if(old){try{await FB.F.deleteDoc(fdoc('views',old))}catch(e){}}
-    save(false);renderViewLink();loadRequests();loadTeamNotes();toast('New link generated')});
+    save(false);renderViewLink();loadRequests();loadTeamNotes();loadMarks();toast('New link generated')});
   $('#revokeView').addEventListener('click',async function(){
     if(!S.view.key||!confirm('Revoke the view link?'))return;
     if(FB.ready){try{await FB.F.deleteDoc(fdoc('views',S.view.key))}catch(e){}}
@@ -1838,6 +2161,15 @@ function bindAll(){
       prefs:Object.assign({},S.prefs),view:Object.assign({},S.view),meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
     migrate();save();render();toast('Wiped')});
 
+  $('#copyInvite').addEventListener('click',function(){
+    var url=location.origin+location.pathname;
+    var msg='You\u2019ve been added to my Daily Ops board.\n\n1. Open: '+url
+      +'\n2. Enter the access phrase I sent you\n3. Tap \u201cSet up your account\u201d\n'
+      +'4. Use THIS email address and choose your own password\n\n'
+      +'You\u2019ll see the tasks I assign you, and you can mark them in progress or done.';
+    navigator.clipboard.writeText(msg).then(function(){toast('Invite message copied')});
+  });
+
   document.addEventListener('keydown',function(e){
     if(mode!=='app')return;
     var typing=/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');
@@ -1869,9 +2201,69 @@ function tryPhrase(){
   if(!FB.ready)initFirebase();
 }
 function showGateStep2(msg){
-  $('#gateStep1').classList.add('hidden');$('#gateStep2').classList.remove('hidden');
+  gateStep(2);
   $('#gateMsg').textContent=msg||'Sign in to load your board.';
 }
+function gateStep(n){
+  ['gateStep1','gateStep2','gateStep3'].forEach(function(id,i){
+    $('#'+id).classList.toggle('hidden',(i+1)!==n)});
+}
+$('#toSignup').addEventListener('click',function(){
+  gateStep(3);$('#gateMsg').textContent='Set up your account.';
+  $('#sEmail').value=$('#gEmail').value;});
+$('#toSignin').addEventListener('click',function(){
+  gateStep(2);$('#gateMsg').textContent='Sign in to load your board.';});
+
+/* Only an email the admin has already added to the team list may register. */
+async function emailIsInvited(em){
+  if(em===ADMIN_EMAIL)return true;
+  try{
+    var c=await FB.F.getDoc(fdoc('config','allowlist'));
+    return ((c.data()||{}).emails||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0;
+  }catch(e){console.error(e);return false}
+}
+$('#emailBtn').addEventListener('click',async function(){
+  var em=$('#gEmail').value.trim().toLowerCase(),pw=$('#gPass').value;
+  if(!em||!pw){$('#gateErr2').textContent='Enter your email and password.';return}
+  $('#gateErr2').textContent='Signing in…';
+  if(!FB.ready){var ok=await initFirebase();if(!ok){$('#gateErr2').textContent='Firebase unreachable.';return}}
+  try{await FB.A.signInWithEmailAndPassword(FB.auth,em,pw);$('#gateErr2').textContent=''}
+  catch(e){
+    console.error(e);
+    var c=e&&e.code;
+    $('#gateErr2').textContent =
+      (c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found')
+        ? 'Wrong email or password. No account yet? Tap “Set up your account”.'
+      : (c==='auth/too-many-requests') ? 'Too many attempts — wait a minute.'
+      : 'Sign-in failed: '+(c||'unknown');
+  }
+});
+$('#gPass').addEventListener('keydown',function(e){if(e.key==='Enter')$('#emailBtn').click()});
+$('#signupBtn').addEventListener('click',async function(){
+  var em=$('#sEmail').value.trim().toLowerCase(),pw=$('#sPass').value;
+  if(!em||pw.length<6){$('#gateErr3').textContent='Enter your invited email and a password of 6+ characters.';return}
+  $('#gateErr3').textContent='Checking your invite…';
+  if(!FB.ready){var ok=await initFirebase();if(!ok){$('#gateErr3').textContent='Firebase unreachable.';return}}
+  var invited=await emailIsInvited(em);
+  if(!invited){
+    $('#gateErr3').textContent='That email hasn’t been invited. Ask Kalash to add it in Settings → Team first.';
+    return;
+  }
+  try{
+    await FB.A.createUserWithEmailAndPassword(FB.auth,em,pw);
+    $('#gateErr3').textContent='';
+  }catch(e){
+    console.error(e);
+    var c=e&&e.code;
+    $('#gateErr3').textContent =
+      (c==='auth/email-already-in-use') ? 'You already have an account — go back and sign in.'
+      : (c==='auth/weak-password') ? 'Password too weak — use 6+ characters.'
+      : (c==='auth/operation-not-allowed') ? 'Enable Email/Password in Firebase → Authentication → Sign-in method.'
+      : 'Could not create the account: '+(c||'unknown');
+  }
+});
+$('#sPass').addEventListener('keydown',function(e){if(e.key==='Enter')$('#signupBtn').click()});
+
 $('#googleBtn').addEventListener('click',async function(){
   $('#gateErr2').textContent='Connecting…';
   if(!FB.ready){var ok=await initFirebase();if(!ok){$('#gateErr2').textContent='Firebase unreachable — check network / ad-blocker and retry.';return}}
@@ -1936,7 +2328,8 @@ async function bootApp(user,live){
   if(isAdmin)syncAllowlist();
   renderCapture();render();
   listenBoard();listenShared();
-  if(isAdmin&&S.view.key){loadRequests();loadTeamNotes();if(S.view.live)schedulePublish()}
+  startPresence();
+  if(isAdmin&&S.view.key){loadRequests();loadTeamNotes();loadMarks();if(S.view.live)schedulePublish()}
 }
 
 /* ---------- BOOT ---------- */
