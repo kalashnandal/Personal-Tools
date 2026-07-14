@@ -417,6 +417,29 @@ html.compact .group-h{margin:14px 0 8px}
 .gate .gfld{margin-bottom:9px}
 .gate .gsw{font-size:12px;color:var(--gold);margin-top:14px;cursor:pointer}
 .gate .gsw:hover{text-decoration:underline}
+/* viewer calendar */
+.cal{margin-top:16px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-title{font-family:var(--font-display);font-size:18px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-dow{text-align:center;font-size:9.5px;font-weight:600;letter-spacing:.1em;color:var(--dim);padding:4px 0}
+.cal-cell{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .15s;background:var(--pane)}
+.cal-cell:hover{border-color:var(--line-hi)}
+.cal-cell.today{border-color:var(--gold)}
+.cal-cell.on{background:var(--gold);border-color:var(--gold)}
+.cal-cell.on .cd{color:var(--on-gold)}
+.cal-cell .cd{font-size:12.5px;font-weight:600;color:var(--text)}
+.cal-cell .cn{position:absolute;top:4px;right:6px;font-size:8.5px;color:var(--gold);font-weight:700;font-variant-numeric:tabular-nums}
+.cal-cell.on .cn{color:var(--on-gold)}
+.cdots{display:flex;gap:2.5px;height:5px}
+.cdots i{width:5px;height:5px;border-radius:50%}
+.cdots .do{background:var(--gold)}
+.cdots .dp{background:var(--amber)}
+.cdots .dr{background:var(--blue)}
+.cdots .dd{background:var(--dim)}
+.cal-legend{display:flex;gap:14px;margin-top:10px;font-size:10.5px;color:var(--dim);flex-wrap:wrap}
+.cal-legend span{display:inline-flex;align-items:center;gap:5px}
+.cal-legend i{width:6px;height:6px;border-radius:50%;display:inline-block}
 </style>
 </head>
 <body>
@@ -481,6 +504,7 @@ html.compact .group-h{margin:14px 0 8px}
   <div id="vBoard" class="hidden">
     <div class="stats" id="vStats" style="margin:16px 0 4px"></div>
     <div class="set-row" style="margin:14px 0 4px">
+      <div class="seg" id="vModeSeg"><button data-vm="list" class="on">List</button><button data-vm="cal">Calendar</button></div>
       <button class="btn ghost sm" id="vSwitch">↺ Switch person</button>
       <button class="btn gold sm" id="vRequest">+ Request a task for Kalash</button>
     </div>
@@ -596,6 +620,13 @@ html.compact .group-h{margin:14px 0 8px}
     <div class="inv-box">Send them: <b id="inviteUrl">your app link</b><br>They tap <b>Set up your account</b> → enter that exact email → choose a password.
       <div class="set-row" style="margin-top:9px"><button class="btn ghost sm" id="copyInvite">Copy invite message</button></div>
     </div>
+  </div>
+
+  <div class="set-sec" id="guestSec">
+    <h4>Guests — anyone, inside or outside</h4>
+    <p>Guests get their <b>own private Daily Ops board</b>. They can't be assigned your tasks and never appear on your view link. Great for friends.</p>
+    <div id="guestMgr"></div>
+    <button class="btn ghost sm" id="guestAdd">+ Invite a guest</button>
   </div>
 
   <div class="set-sec" id="presenceSec">
@@ -728,7 +759,7 @@ function ago(ms){var s=(Date.now()-ms)/1000;if(s<60)return'now';if(s<3600)return
 /* ---------- STATE ---------- */
 var S=Store.get(KEY,null)||{tasks:[],recurring:[],tags:[],people:[],prefs:{},view:{key:null,live:false},meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
 function migrate(){
-  S.tasks=S.tasks||[];S.recurring=S.recurring||[];
+  S.tasks=S.tasks||[];S.recurring=S.recurring||[];S.guests=S.guests||[];
   S.meta=S.meta||{updatedAt:0,lastCarry:'',doneDates:{}};S.meta.doneDates=S.meta.doneDates||{};
   S.view=Object.assign({key:null,live:false},S.view||{});
   if(!S.tags||!S.tags.length)S.tags=DEFAULT_TAGS.map(function(t){return Object.assign({},t)});
@@ -748,6 +779,7 @@ var anRange=30;
 var suppressPush=false,unsubBoard=null,unsubShared=null,unsubReq=null,unsubNotes=null,pushTimer=null,pubTimer=null;
 var shared=[],requests=[],allowCfg={emails:[],people:[]};
 var hydrated=false,unsubAdminMarks=null;
+var vMode='list',vCalMonth=null,vSelDay=null;
 var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 var openTray=null,qIdx=0;
@@ -992,11 +1024,13 @@ async function commitCapture(){
   if(isAdmin&&m.person&&pEmail&&FB.ready){
     await createShared({title:m.title,date:d,time:m.time,tag:m.tag,pri:m.pri,person:m.person,assigneeEmail:pEmail,selfCreated:false});
     toast('Assigned to '+((personOf(m.person)||{}).label||''));
-  }else if(!isAdmin&&FB.ready){
+  }else if(!isAdmin&&myPersonId&&FB.ready){
+    /* team member: self-created work, visible to Kalash */
     await createShared({title:m.title,date:d,time:m.time,tag:m.tag,pri:m.pri,
-      person:myPersonId||('self-'+(me.email||'').split('@')[0]),assigneeEmail:(me.email||'').toLowerCase(),selfCreated:true});
+      person:myPersonId,assigneeEmail:(me.email||'').toLowerCase(),selfCreated:true});
     toast('Added — visible to Kalash');
   }else{
+    /* admin without assignee, guests, and offline: private board */
     S.tasks.push({id:uid(),title:m.title,notes:'',date:d,time:m.time,tag:m.tag,person:m.person||null,pri:m.pri,
       status:'open',created:Date.now(),carried:0,subs:[],tnotes:[]});
     save();toast(m.person?('Assigned to '+((personOf(m.person)||{}).label||'')+' (view-link only)'):'Added to '+dayLabel(d));
@@ -1710,10 +1744,12 @@ async function loadConfig(){
     allowCfg=c.data()||{emails:[],people:[]};
     if(!isAdmin){
       var em=(me.email||'').toLowerCase();
-      if(allowCfg.people&&allowCfg.people.length)
-        S.people=allowCfg.people.map(function(x){return{id:x.id,label:x.label,email:x.email||''}});
       var p=(allowCfg.people||[]).find(function(x){return String(x.email||'').toLowerCase()===em});
       myPersonId=p?p.id:null;
+      /* team members inherit the shared roster so @labels resolve;
+         guests keep their own private tags/people untouched */
+      if(myPersonId&&allowCfg.people&&allowCfg.people.length)
+        S.people=allowCfg.people.map(function(x){return{id:x.id,label:x.label,email:x.email||''}});
     }
   }catch(e){console.error(e)}
 }
@@ -1721,7 +1757,7 @@ async function syncAllowlist(){
   if(!isAdmin||!FB.ready||!me)return;
   var emails=S.people.filter(function(p){return p.email}).map(function(p){return p.email.toLowerCase()});
   try{await FB.F.setDoc(fdoc('config','allowlist'),
-    {emails:emails,admin:ADMIN_EMAIL,
+    {emails:emails,guests:(S.guests||[]).filter(function(g){return g}).map(function(g){return String(g).toLowerCase()}),admin:ADMIN_EMAIL,
      people:S.people.map(function(p){return{id:p.id,label:p.label,email:String(p.email||'').toLowerCase()}})},{merge:true})}
   catch(e){console.error(e)}
 }
@@ -1877,7 +1913,13 @@ function renderViewer(){
     return true;
   });
 
+  $$('#vModeSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.vm===vMode)});
   var h='';
+  if(vMode==='cal'){
+    $('#vLedger').innerHTML=renderVCal(mine);
+    bindVCal();
+    return;
+  }
   if(vFilter==='all'){
     var open=list.filter(function(x){return vStatus(x)==='open'||vStatus(x)==='progress'});
     var rev=list.filter(function(x){return vStatus(x)==='review'});
@@ -1951,6 +1993,55 @@ async function sendNote(taskId){
     inp.value='';toast('Note sent to Kalash')}
   catch(e){console.error(e);toast('Could not send')}
 }
+function renderVCal(mine){
+  if(!vCalMonth){var n0=new Date();vCalMonth=new Date(n0.getFullYear(),n0.getMonth(),1)}
+  var y=vCalMonth.getFullYear(),mo=vCalMonth.getMonth();
+  var first=new Date(y,mo,1),startDow=first.getDay();
+  var dim=new Date(y,mo+1,0).getDate();
+  var t=todayStr();
+  var byDay={};mine.forEach(function(x){if(x.date)(byDay[x.date]=byDay[x.date]||[]).push(x)});
+  var h='<div class="cal"><div class="cal-head">'
+    +'<button class="btn ghost sm" data-cnav="-1">‹</button>'
+    +'<span class="cal-title">'+esc(first.toLocaleDateString('en-IN',{month:'long',year:'numeric'}))+'</span>'
+    +'<button class="btn ghost sm" data-cnav="1">›</button></div>';
+  h+='<div class="cal-grid">';
+  ['S','M','T','W','T','F','S'].forEach(function(d){h+='<div class="cal-dow">'+d+'</div>'});
+  for(var i=0;i<startDow;i++)h+='<div></div>';
+  for(var d=1;d<=dim;d++){
+    var ds=y+'-'+pad(mo+1)+'-'+pad(d);
+    var items=byDay[ds]||[];
+    var dots='';
+    items.slice(0,4).forEach(function(x){var st=vStatus(x);
+      dots+='<i class="'+(st==='done'?'dd':(st==='review'?'dr':(st==='progress'?'dp':'do')))+'"></i>'});
+    h+='<button class="cal-cell '+(ds===t?'today ':'')+(ds===vSelDay?'on':'')+'" data-cd="'+ds+'">'
+      +(items.length?'<span class="cn">'+items.length+'</span>':'')
+      +'<span class="cd">'+d+'</span>'
+      +'<span class="cdots">'+dots+'</span>'
+      +'</button>';
+  }
+  h+='</div>';
+  h+='<div class="cal-legend"><span><i style="background:var(--gold)"></i>open</span>'
+    +'<span><i style="background:var(--amber)"></i>in progress</span>'
+    +'<span><i style="background:var(--blue)"></i>in review</span>'
+    +'<span><i style="background:var(--dim)"></i>done</span></div></div>';
+  if(vSelDay){
+    var sel=byDay[vSelDay]||[];
+    h+='<div class="group-h gold">'+esc(dayLabel(vSelDay))+' · '+sel.length+'</div>';
+    h+=sel.length?sel.map(vCard).join(''):'<p style="font-size:12.5px;color:var(--dim)">Nothing on this day.</p>';
+  }else{
+    h+='<p style="font-size:12px;color:var(--dim);margin-top:12px">Tap a date to see its tasks.</p>';
+  }
+  return h;
+}
+function bindVCal(){
+  $$('#vLedger [data-cnav]').forEach(function(b){b.addEventListener('click',function(){
+    vCalMonth=new Date(vCalMonth.getFullYear(),vCalMonth.getMonth()+ +b.dataset.cnav,1);renderViewer()})});
+  $$('#vLedger [data-cd]').forEach(function(b){b.addEventListener('click',function(){
+    vSelDay=vSelDay===b.dataset.cd?null:b.dataset.cd;renderViewer()})});
+  $$('#vLedger [data-note]').forEach(function(b){b.addEventListener('click',function(){sendNote(b.dataset.note)})});
+  $$('#vLedger .vnote input').forEach(function(i){i.addEventListener('keydown',function(e){if(e.key==='Enter')sendNote(i.dataset.for)})});
+  $$('#vLedger [data-mark]').forEach(function(b){b.addEventListener('click',function(){setMark(b.dataset.id,b.dataset.mark)})});
+}
 function bindViewer(){
   $('#vSwitch').addEventListener('click',function(){
     vWho=null;vFilter='all';Store.set('dailyops.vwho.'+VK,null);
@@ -1959,7 +2050,10 @@ function bindViewer(){
     $('#vSub').textContent='Read-only view';if(vData)renderWhoGrid()});
   $('#vStats').addEventListener('click',function(e){
     var b=e.target.closest('[data-vf]');if(!b)return;
-    vFilter=b.dataset.vf;renderViewer()});
+    vFilter=b.dataset.vf;vMode='list';renderViewer()});
+  $('#vModeSeg').addEventListener('click',function(e){
+    var b=e.target.closest('[data-vm]');if(!b)return;
+    vMode=b.dataset.vm;renderViewer()});
   $('#vThemeBtn').addEventListener('click',function(){renderVTheme();$('#vSetOv').classList.add('open')});
   $('#vSetClose').addEventListener('click',function(){$('#vSetOv').classList.remove('open')});
   $('#vThemeReset').addEventListener('click',function(){
@@ -1989,9 +2083,9 @@ function bindViewer(){
 }
 /* ---------- SETTINGS ---------- */
 function openSettings(){
-  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();
+  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();
   $('#inviteUrl').textContent=location.origin+location.pathname;
-  ['#viewSec','#teamSec','#presenceSec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
+  ['#viewSec','#teamSec','#presenceSec','#guestSec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
   $('#setOv').classList.add('open');
 }
 function renderAppearance(){
@@ -2025,6 +2119,16 @@ function renderRecurMgr(){
 }
 function renderViewLink(){
   $('#viewUrl').textContent=S.view.key?(location.origin+location.pathname+'?view='+S.view.key):'— not published —';
+}
+
+function renderGuestMgr(){
+  var el=$('#guestMgr');if(!el)return;
+  el.innerHTML=(S.guests&&S.guests.length)?S.guests.map(function(g,i){
+    return'<div class="mgr-row" data-gi="'+i+'">'
+      +'<span class="tdot" style="background:var(--pane-hi);display:grid;place-items:center;font-size:11px;color:var(--mute)">☺</span>'
+      +'<input value="'+esc(g)+'" placeholder="friend@email.com" type="email">'
+      +'<button class="sx">✕</button></div>'}).join('')
+    :'<p style="margin:0 0 8px;font-size:12.5px;color:var(--dim)">No guests yet.</p>';
 }
 
 /* ---------- BINDINGS ---------- */
@@ -2161,6 +2265,21 @@ function bindAll(){
       prefs:Object.assign({},S.prefs),view:Object.assign({},S.view),meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
     migrate();save();render();toast('Wiped')});
 
+  $('#guestAdd').addEventListener('click',function(){
+    S.guests=S.guests||[];S.guests.push('');
+    renderGuestMgr();
+    var a=$$('#guestMgr input');if(a.length)a[a.length-1].focus()});
+  $('#guestMgr').addEventListener('input',function(e){
+    var r=e.target.closest('.mgr-row');if(!r||e.target.tagName!=='INPUT')return;
+    S.guests[+r.dataset.gi]=e.target.value.trim().toLowerCase()});
+  $('#guestMgr').addEventListener('change',function(){
+    S.guests=(S.guests||[]).filter(function(g){return g});
+    save();syncAllowlist();renderGuestMgr();toast('Guest list updated')});
+  $('#guestMgr').addEventListener('click',function(e){
+    var r=e.target.closest('.mgr-row');if(!r||!e.target.closest('.sx'))return;
+    if(!confirm('Remove this guest? They lose sign-in access; their board data stays until they are re-invited.'))return;
+    S.guests.splice(+r.dataset.gi,1);save();syncAllowlist();renderGuestMgr()});
+
   $('#copyInvite').addEventListener('click',function(){
     var url=location.origin+location.pathname;
     var msg='You\u2019ve been added to my Daily Ops board.\n\n1. Open: '+url
@@ -2218,8 +2337,8 @@ $('#toSignin').addEventListener('click',function(){
 async function emailIsInvited(em){
   if(em===ADMIN_EMAIL)return true;
   try{
-    var c=await FB.F.getDoc(fdoc('config','allowlist'));
-    return ((c.data()||{}).emails||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0;
+    var c=await FB.F.getDoc(fdoc('config','allowlist'));var d0=c.data()||{};
+    return (d0.emails||[]).concat(d0.guests||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0;
   }catch(e){console.error(e);return false}
 }
 $('#emailBtn').addEventListener('click',async function(){
@@ -2294,8 +2413,8 @@ async function onAuth(user){
   isAdmin=(em===ADMIN_EMAIL);
   if(!isAdmin){
     var ok=false;
-    try{var c=await FB.F.getDoc(fdoc('config','allowlist'));
-      ok=((c.data()||{}).emails||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0}catch(e){console.error(e)}
+    try{var c=await FB.F.getDoc(fdoc('config','allowlist'));var d0=c.data()||{};
+      ok=(d0.emails||[]).concat(d0.guests||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0}catch(e){console.error(e)}
     if(!ok){
       Store.set(LAST,null);
       try{await FB.A.signOut(FB.auth)}catch(e){}
