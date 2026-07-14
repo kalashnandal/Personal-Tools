@@ -1580,6 +1580,9 @@ async function bootViewer(key){
   }
 }
 function renderWhoGrid(){
+  /* self-healing: loading/error states overwrite #whoPick, so rebuild it */
+  $('#whoPick').innerHTML='<p style="font-size:13.5px;color:var(--mute);margin-top:18px">Who\u2019s viewing? Pick yourself to see only the tasks assigned to you.</p>'
+    +'<div class="who-grid" id="whoGrid"></div>';
   var g=$('#whoGrid');
   if(!vData.people||!vData.people.length){g.innerHTML='<p style="color:var(--dim);font-size:13px">No people assigned yet.</p>';return}
   g.innerHTML=vData.people.map(function(p){
