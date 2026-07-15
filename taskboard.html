@@ -207,7 +207,10 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .m-chip.shared{color:var(--ok);border-color:rgba(143,191,155,.3)}
 .t-acts{flex:none;display:flex;gap:2px;opacity:0;transition:opacity .2s;margin-top:-2px}
 .task:hover .t-acts{opacity:1}
-@media(hover:none){.t-acts{display:none}}
+/* status-change buttons stay visible — they're not discoverable on hover-only */
+.t-acts .ta-btn.always{opacity:1}
+.t-acts:has(.always){opacity:1}
+@media(hover:none){.t-acts{display:flex;opacity:1}.t-acts .ta-btn:not(.always){display:none}.t-acts .ta-btn.always{display:grid}}
 .ta-btn{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--dim);transition:all .15s;font-size:14px}
 .ta-btn:hover{color:var(--gold);background:var(--gold-soft)}
 .ta-btn.del:hover{color:var(--red);background:rgba(201,123,110,.1)}
@@ -440,6 +443,82 @@ html.compact .group-h{margin:14px 0 8px}
 .cal-legend{display:flex;gap:14px;margin-top:10px;font-size:10.5px;color:var(--dim);flex-wrap:wrap}
 .cal-legend span{display:inline-flex;align-items:center;gap:5px}
 .cal-legend i{width:6px;height:6px;border-radius:50%;display:inline-block}
+/* stalled: delegated, carried, zero response */
+.task.stalled-card{border-color:rgba(201,123,110,.55);background:rgba(201,123,110,.04)}
+.task.stalled-card::after{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--red)}
+.m-chip.stall{color:var(--red);border-color:rgba(201,123,110,.5);background:rgba(201,123,110,.1);font-weight:600}
+.stat.danger{border-color:rgba(201,123,110,.45)}
+.stat.danger b{color:var(--red)}
+/* week strip: days carrying overdue work */
+.wd.warnday .wc{background:var(--red);box-shadow:0 0 7px var(--red)}
+/* bulk select */
+.task{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.task.bulk-on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
+.task.bulk-on::after{content:"✓";position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:700;display:grid;place-items:center;z-index:2}
+.bulkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:70;display:flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line-hi);border-radius:14px;padding:8px 10px;box-shadow:0 20px 50px -16px rgba(0,0,0,.8);max-width:94vw;flex-wrap:wrap;justify-content:center}
+@media(max-width:640px){.bulkbar{bottom:calc(84px + env(safe-area-inset-bottom))}}
+.bulkbar .bb-count{font-size:12px;color:var(--gold);font-weight:600;padding:0 6px;white-space:nowrap}
+.bb{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:7px 11px;color:var(--mute);transition:all .15s;min-height:32px}
+.bb:hover{color:var(--text);border-color:var(--line-hi)}
+.bb.danger{color:var(--red);border-color:rgba(201,123,110,.35)}
+.bulktray{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:71;display:flex;flex-wrap:wrap;gap:6px;background:var(--ink);border:1px solid var(--line-hi);border-radius:12px;padding:10px;max-width:92vw;box-shadow:0 20px 50px -16px rgba(0,0,0,.8)}
+@media(max-width:640px){.bulktray{bottom:calc(150px + env(safe-area-inset-bottom))}}
+/* command palette */
+.modal.cmd{padding:12px;max-width:560px}
+.modal.cmd input{width:100%;background:var(--pane);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;outline:none;position:relative}
+.modal.cmd input:focus{border-color:var(--gold)}
+#cmdList{margin-top:8px;max-height:52vh;overflow-y:auto;position:relative}
+.ci{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:9px;cursor:pointer;font-size:13.5px}
+.ci:hover,.ci.on{background:var(--pane-hi)}
+.ci .cico{width:20px;text-align:center;color:var(--gold);flex:none}
+.ci .clab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci .clab small{display:block;color:var(--dim);font-size:11px}
+.ci.dim{color:var(--dim);cursor:default}
+/* iOS-style long-press lift */
+.task.lifting{transform:scale(1.035);box-shadow:0 22px 44px -14px rgba(0,0,0,.75);z-index:5;transition:transform .22s var(--ease-spring),box-shadow .22s}
+.task.pressing{transform:scale(.97);transition:transform .18s ease}
+/* viewer: carried, no response */
+.task.vstall{border-color:var(--red)!important;box-shadow:0 0 0 1px rgba(201,123,110,.45)}
+.task.vstall::before{background:rgba(201,123,110,.16)!important}
+.task.vstall .t-title{color:var(--red)}
+.m-chip.vstall{color:#fff;background:var(--red);border-color:var(--red);font-weight:600}
+.vb.revert{color:var(--dim)}
+.vb.revert:hover{color:var(--text);border-color:var(--line-hi)}
+/* notifications bell + dropdown */
+.bell{position:relative}
+.bell .badge{position:absolute;top:-3px;right:-3px;min-width:16px;height:16px;border-radius:99px;background:var(--red);color:#fff;font-size:9.5px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.notif-pop{position:absolute;top:46px;right:0;width:min(340px,92vw);max-height:60vh;overflow-y:auto;background:var(--ink);border:1px solid var(--line-hi);border-radius:14px;box-shadow:0 24px 60px -20px rgba(0,0,0,.8);z-index:80;opacity:0;pointer-events:none;transform:translateY(-8px);transition:all .2s}
+.notif-pop.open{opacity:1;pointer-events:auto;transform:none}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--ink)}
+.notif-head h5{font-family:var(--font-display);font-size:15px;font-weight:600}
+.notif-head button{font-size:11.5px;color:var(--gold);font-weight:600}
+.act{display:flex;gap:10px;padding:11px 15px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.5}
+.act:last-child{border-bottom:none}
+.act.unseen{background:var(--gold-soft)}
+.act .aic{width:26px;height:26px;border-radius:8px;flex:none;display:grid;place-items:center;font-size:13px;border:1px solid var(--line)}
+.act .aic.done{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.act .aic.prog{color:var(--amber);border-color:rgba(217,160,91,.4)}
+.act .aic.rev{color:var(--red);border-color:rgba(201,123,110,.4)}
+.act .aic.new{color:var(--ok);border-color:rgba(143,191,155,.4)}
+.act .aic.move{color:var(--blue);border-color:rgba(127,163,201,.4)}
+.act .aic.note{color:var(--gold)}
+.act .ab{flex:1;min-width:0}
+.act .ab b{color:var(--text);font-weight:600}
+.act .ab .who{color:var(--gold);font-weight:600}
+.act .at{font-size:10.5px;color:var(--dim);margin-top:2px}
+.notif-empty{padding:34px 20px;text-align:center;color:var(--dim);font-size:12.5px}
+.act-sec .act{border-radius:10px;border:1px solid var(--line);margin-bottom:7px;background:var(--pane)}
+/* activity screen */
+.actfilt{display:flex;gap:7px;margin:14px 0 4px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.actfilt::-webkit-scrollbar{display:none}
+.actfilt .f-chip .cnt2{margin-left:6px;font-size:10px;color:var(--dim)}
+.actfilt .f-chip.on .cnt2{color:var(--on-gold)}
+.act-kind-row{display:flex;gap:6px;margin:8px 0 4px;overflow-x:auto;scrollbar-width:none}
+.act-kind-row::-webkit-scrollbar{display:none}
+.actbig{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:12px 0}
+.actbig .bc{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--pane);text-align:center}
+.actbig .bc .v{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--gold)}
+.actbig .bc .l{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
 </style>
 </head>
 <body>
@@ -492,6 +571,11 @@ html.compact .group-h{margin:14px 0 8px}
     <div><div class="vt" id="vTitle">Task <em>board</em></div><div class="vs" id="vSub">Read-only view</div></div>
     <div style="display:flex;align-items:center;gap:8px;flex:none">
       <span class="ro">👁 VIEW</span>
+      <button class="icon-btn bell" id="vBellBtn" aria-label="Activity">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>
+        <span class="badge hidden" id="vBellBadge">0</span>
+      </button>
+      <div class="notif-pop" id="vNotifPop"></div>
       <button class="icon-btn" id="vThemeBtn" aria-label="Colours">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="13.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1.5" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1.5" fill="currentColor" stroke="none"/><path d="M12 2a10 10 0 000 20c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1a1.5 1.5 0 011.09-2.5H16a6 6 0 006-6c0-5.52-4.48-10-10-10z"/></svg>
       </button>
@@ -535,6 +619,11 @@ html.compact .group-h{margin:14px 0 8px}
       <h1 class="dayname" id="dayName"></h1>
       <div class="mast-ctl">
         <button class="sync-wrap" id="syncBtn"><span class="sync-dot" id="syncDot"></span><span id="syncLbl">Local</span></button>
+        <button class="icon-btn bell" id="bellBtn" aria-label="Activity">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <span class="badge hidden" id="bellBadge">0</span>
+        </button>
+        <div class="notif-pop" id="notifPop"></div>
         <button class="icon-btn" id="settingsBtn" aria-label="Settings">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33h0a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51h0a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v0a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           <span class="badge hidden" id="reqBadge">0</span>
@@ -580,6 +669,10 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="fld"><label>Title</label><input id="eTitle" type="text"></div>
   <div class="fld"><label>Notes</label><textarea id="eNotes"></textarea></div>
   <div class="fld"><label>Checklist</label><div id="eSubs"></div><button class="btn ghost sm" id="eSubAdd">+ Add item</button></div>
+  <div class="fld" id="eStatusFld"><label>Status</label><select id="eStatus">
+    <option value="open">Open</option><option value="progress">In progress</option>
+    <option value="review">In review</option><option value="done">Done</option>
+  </select></div>
   <div class="fld-row cols-3">
     <div class="fld"><label>Date</label><input id="eDate" type="date"></div>
     <div class="fld"><label>Time</label><input id="eTime" type="time"></div>
@@ -627,6 +720,12 @@ html.compact .group-h{margin:14px 0 8px}
     <p>Guests get their <b>own private Daily Ops board</b>. They can't be assigned your tasks and never appear on your view link. Great for friends.</p>
     <div id="guestMgr"></div>
     <button class="btn ghost sm" id="guestAdd">+ Invite a guest</button>
+  </div>
+
+  <div class="set-sec" id="activitySec">
+    <h4>Activity — full history</h4>
+    <p>Everything that's happened across all tasks. Newest first.</p>
+    <div class="act-sec" id="activityFull"><p style="margin:0;font-size:12.5px;color:var(--dim)">Nothing yet.</p></div>
   </div>
 
   <div class="set-sec" id="presenceSec">
@@ -681,6 +780,24 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="fld"><label>Context / why</label><textarea id="rqNotes"></textarea></div>
   <div class="fld"><label>Suggested date</label><input id="rqDate" type="date"></div>
   <div class="m-foot"><button class="btn ghost" id="rqCancel">Cancel</button><button class="btn gold" id="rqSend">Send request</button></div>
+</div></div>
+
+<!-- BULK ACTIONS -->
+<div class="bulkbar hidden" id="bulkBar">
+  <span class="bb-count" id="bbCount">0 selected</span>
+  <button class="bb" data-bulk="today">Today</button>
+  <button class="bb" data-bulk="tmrw">Tomorrow</button>
+  <button class="bb" data-bulk="assign" id="bbAssign">Assign</button>
+  <button class="bb" data-bulk="done">✓ Done</button>
+  <button class="bb danger" data-bulk="del">Delete</button>
+  <button class="bb" data-bulk="exit">✕</button>
+</div>
+<div class="bulktray hidden" id="bulkTray"></div>
+
+<!-- COMMAND PALETTE -->
+<div class="overlay" id="cmdOv"><div class="modal cmd">
+  <input id="cmdIn" placeholder="Search tasks, jump anywhere…  (Esc to close)" autocomplete="off" spellcheck="false">
+  <div id="cmdList"></div>
 </div></div>
 
 <div class="toasts" id="toasts"></div>
@@ -780,6 +897,10 @@ var suppressPush=false,unsubBoard=null,unsubShared=null,unsubReq=null,unsubNotes
 var shared=[],requests=[],allowCfg={emails:[],people:[]};
 var hydrated=false,unsubAdminMarks=null;
 var vMode='list',vCalMonth=null,vSelDay=null;
+var bulkMode=false,bulkSel={},bulkGuard=false;
+var cmdIdx=0,cmdItems=[],_actx=null;
+var activity=[],unsubActivity=null,lastSeenAct=0,notifOpen=false;
+var actWho='all',actKind='all';
 var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 var openTray=null,qIdx=0;
@@ -1035,6 +1156,7 @@ async function commitCapture(){
       status:'open',created:Date.now(),carried:0,subs:[],tnotes:[]});
     save();toast(m.person?('Assigned to '+((personOf(m.person)||{}).label||'')+' (view-link only)'):'Added to '+dayLabel(d));
   }
+  logAct('create',m.title);
   resetCapture();render();
 }
 async function createShared(o){
@@ -1047,12 +1169,13 @@ async function createShared(o){
 }
 
 /* ---------- VIEWS / RENDER ---------- */
-var VIEWS=[['today','Today'],['upcoming','Upcoming'],['history','History'],['analytics','Analytics'],['requests','Requests']];
+var VIEWS=[['today','Today'],['upcoming','Upcoming'],['history','History'],['analytics','Analytics'],['activity','Activity'],['requests','Requests']];
 var NAVICONS={
   today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
   upcoming:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
   history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 7v5l3 2"/><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.5 8.5 0 005 7"/><path d="M3.5 4v3.5H7"/></svg>',
   analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+  activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>',
   requests:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="4"/><path d="M18 15.5v3M16.5 17h3"/></svg>'
 };
 function counts(){
@@ -1060,7 +1183,7 @@ function counts(){
   return{today:A.filter(function(k){return k.status!=='done'&&k.date===t}).length,
     upcoming:A.filter(function(k){return k.status!=='done'&&k.date&&k.date>t}).length,
     history:A.filter(function(k){return k.status==='done'}).length,
-    analytics:0,
+    analytics:0,activity:0,
     requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
 function matches(k){return(activeTag==='all'||k.tag===activeTag)&&(!query||((k.title+' '+(k.notes||'')).toLowerCase().indexOf(query)>=0))}
@@ -1072,15 +1195,18 @@ function renderMast(){
     +now.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
   var t=todayStr(),A=allTasks();
   var due=A.filter(function(k){return k.date===t});
-  var done=due.filter(function(k){return k.status!=='open'}).length;
+  var done=due.filter(function(k){return k.status==='done'||k.status==='review'}).length;
   var p=due.length?Math.round(done/due.length*100):0;
   $('#pct').textContent=done+'/'+due.length+' · '+p+'%';
   $('#inkFill').style.width=p+'%';
   var carried=A.filter(function(k){return k.status==='open'&&k.date===t&&k.carried>0}).length;
+  var stalled=isAdmin?A.filter(function(k){return k.person&&k.status==='open'&&(k.carried||0)>0
+    &&!(k.tnotes&&k.tnotes.length)&&!k.vmark}).length:0;
   var rev=shared.filter(function(k){return k.status==='review'}).length;
   $('#stats').innerHTML='<span class="stat"><b>'+done+'</b> done today</span>'
     +(carried?'<span class="stat warn"><b>'+carried+'</b> carried over</span>':'')
     +'<span class="stat"><span class="flame">◆</span> <b>'+calcStreak()+'</b> day streak</span>'
+    +(stalled?'<span class="stat danger"><b>'+stalled+'</b> unresponsive</span>':'')
     +(isAdmin&&rev?'<span class="stat warn"><b>'+rev+'</b> awaiting review</span>':'')
     +(isAdmin&&requests.length?'<span class="stat warn"><b>'+requests.length+'</b> requests</span>':'');
   var b=$('#reqBadge'),n=isAdmin?counts().requests:0;
@@ -1093,17 +1219,17 @@ function calcStreak(){
 }
 function renderTabs(){
   var c=counts();
-  var tabs=VIEWS.filter(function(v){return isAdmin||v[0]!=='requests'});
+  var tabs=VIEWS.filter(function(v){return isAdmin||(v[0]!=='requests'&&v[0]!=='activity')});
   $('#tabs').innerHTML=tabs.map(function(v){
     return'<button class="tab '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]
       +(v[0]==='requests'?(c.requests?'<span class="alert"></span>':'')
-        :(v[0]==='analytics'?'':'<span class="n">'+(c[v[0]]||0)+'</span>'))+'</button>'}).join('');
+        :((v[0]==='analytics'||v[0]==='activity')?'':'<span class="n">'+(c[v[0]]||0)+'</span>'))+'</button>'}).join('');
   $('#bnav').innerHTML=tabs.map(function(v){
     return'<button class="bn '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+NAVICONS[v[0]]+'<span>'+v[1]+'</span>'
       +((v[0]!=='analytics'&&c[v[0]])?'<span class="bd '+(v[0]==='requests'?'alert':'')+'">'+(c[v[0]]>99?'99':c[v[0]])+'</span>':'')+'</button>'}).join('');
 }
 function renderFilters(){
-  var show=view!=='requests'&&view!=='analytics';
+  var show=view!=='requests'&&view!=='analytics'&&view!=='activity';
   $('#filters').style.display=show?'flex':'none';
   if(!show)return;
   $('#filters').innerHTML='<button class="f-chip '+(activeTag==='all'?'on':'')+'" data-tag="all">All</button>'
@@ -1120,11 +1246,13 @@ function renderWeek(){
     var ds=todayStr(i),parts=ds.split('-'),dt=new Date(+parts[0],+parts[1]-1,+parts[2]);
     var all=A.filter(function(k){return k.date===ds});
     var open=all.filter(function(k){return k.status!=='done'}).length;
+    var carriedOpen=all.filter(function(k){return k.status==='open'&&(k.carried||0)>0}).length;
     var cls=['wd'];
     if(ds===sel)cls.push('on');
     if(ds===todayStr())cls.push('today');
     if(i<0)cls.push('past');
     if(open)cls.push('has');else if(all.length)cls.push('allclear');
+    if(carriedOpen)cls.push('warnday');
     h+='<button class="'+cls.join(' ')+'" data-day="'+ds+'"><span class="wl">'+dt.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3)
       +'</span><span class="wn">'+(+parts[2])+'</span><span class="wc"></span></button>';
   }
@@ -1147,6 +1275,7 @@ function taskCard(k,o){
   if(pp&&isAdmin)meta.push('<span class="m-chip person">@ '+esc(pp.label)+'</span>');
   else if(k.person&&isAdmin)meta.push('<span class="m-chip person">@ '+esc(k.person)+'</span>');
   if(k.status==='review')meta.push('<span class="m-chip rev">⏳ '+(isAdmin?'Awaiting your review':'In review')+'</span>');
+  if(k.status==='progress')meta.push('<span class="m-chip prog">◐ In progress</span>');
   if(k.vmark==='progress')meta.push('<span class="m-chip prog">◐ In progress'+(k.vmarkBy?' · '+esc(k.vmarkBy):'')+'</span>');
   if(k.vmark==='review')meta.push('<span class="m-chip rev">✓ Marked done'+(k.vmarkBy?' by '+esc(k.vmarkBy):'')+' — approve?</span>');
   if(k.selfCreated&&isAdmin)meta.push('<span class="m-chip self">✎ self-created</span>');
@@ -1154,17 +1283,25 @@ function taskCard(k,o){
   if(k.pri)meta.push('<span class="m-chip p-'+k.pri+'">⚑ '+PRI_LABEL[k.pri]+'</span>');
   if(k.subs&&k.subs.length)meta.push('<span class="m-chip">☑ '+k.subs.filter(function(s){return s.done}).length+'/'+k.subs.length+'</span>');
   if(k.tnotes&&k.tnotes.length)meta.push('<span class="m-chip hasnote">💬 '+k.tnotes.length+'</span>');
-  if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
+  /* stalled: assigned to someone, slipped a day+, and they have said/done nothing —
+     no note, no in-progress, no done-mark, still open */
+  var stalled=isAdmin&&k.person&&k.status==='open'&&(k.carried||0)>0
+    &&!(k.tnotes&&k.tnotes.length)&&!k.vmark;
+  if(stalled)meta.push('<span class="m-chip stall">⚠ '+esc((pp&&pp.label)||k.person)+' — no response, carried ×'+k.carried+'</span>');
+  else if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
   if(k.recurId)meta.push('<span class="m-chip">↻ repeats</span>');
   var done=k.status==='done',rev=k.status==='review';
-  var cls=done?'done-card':(rev?'review-card':'');
-  var chk=done?'checked':(rev?'review':'');
+  var cls=done?'done-card':(rev?'review-card':(stalled?'stalled-card':(k.status==='progress'?'prog-card':'')));
+  var chk=done?'checked':(rev?'review':(k.status==='progress'?'prog':''));
   var acts=[];
-  if(isAdmin&&k.vmark==='review'){acts.push('<button class="ta-btn ok" data-act="okmark" title="Approve & close">✓</button>');
-    acts.push('<button class="ta-btn del" data-act="nomark" title="Send back">↩</button>')}
-  else if(isAdmin&&rev){acts.push('<button class="ta-btn ok" data-act="approve" title="Approve">✓</button>');
-    acts.push('<button class="ta-btn del" data-act="reject" title="Send back">↩</button>')}
-  else if(!done&&!rev)acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>');
+  if(isAdmin&&k.vmark==='review'){acts.push('<button class="ta-btn ok always" data-act="okmark" title="Approve & close">✓</button>');
+    acts.push('<button class="ta-btn del always" data-act="nomark" title="Send back">↩</button>')}
+  else if(isAdmin&&rev){acts.push('<button class="ta-btn ok always" data-act="approve" title="Approve">✓</button>');
+    acts.push('<button class="ta-btn del always" data-act="reject" title="Send back">↩</button>')}
+  else if(k.status==='progress'){acts.push('<button class="ta-btn always" data-act="reopen" title="Back to open">↺</button>');
+    acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
+  else if(!done&&!rev){acts.push('<button class="ta-btn always" data-act="startprog" title="Mark in progress">◐</button>');
+    acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
   if(isAdmin||!isShared||k.selfCreated)acts.push('<button class="ta-btn del" data-act="del" title="Delete">✕</button>');
   return'<div class="t-wrap" data-id="'+k.id+'">'
@@ -1180,6 +1317,7 @@ function taskCard(k,o){
 function renderLedger(){
   var L=$('#ledger'),t=todayStr(),A=allTasks(),html='';
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
+  if(view==='activity'){L.innerHTML=renderActivityScreen();bindActivityScreen();return}
   if(view==='requests'){
     var vm=allTasks().filter(function(k){return k.vmark==='review'});
     if(vm.length){
@@ -1238,6 +1376,7 @@ function renderLedger(){
   }
   L.innerHTML=html;
   $$('#ledger .task').forEach(function(el,i){el.style.animationDelay=(Math.min(i,10)*45)+'ms'});
+  if(bulkMode)renderBulkUI();
 }
 /* ---------- ANALYTICS ---------- */
 function renderAnalytics(){
@@ -1350,6 +1489,12 @@ function fadeOut(w,cb){if(!w){cb();return}w.classList.add('leaving');setTimeout(
 function bindLedger(){
   var L=$('#ledger');
   L.addEventListener('click',function(e){
+    if(bulkMode){
+      if(bulkGuard){bulkGuard=false;return}
+      var bc=e.target.closest('.task');
+      if(bc){e.preventDefault();toggleBulk(bc.dataset.id)}
+      return;
+    }
     var rq=e.target.closest('[data-req]');
     if(rq){handleRequest(e.target.closest('[data-rid]').dataset.rid,rq.dataset.req);return}
     var card=e.target.closest('.task');if(!card)return;
@@ -1359,7 +1504,21 @@ function bindLedger(){
     doAction(a.dataset.act,k,card);
   });
   var sw=null;
-  L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c)return;
+  /* long-press → multi-select, with an iOS-style lift cue */
+  var lp=null;
+  function dropLift(){if(lp&&lp.el){lp.el.classList.remove('lifting')}}
+  L.addEventListener('pointerdown',function(e){
+    var c=e.target.closest('.task');if(!c||bulkMode)return;
+    lp={x:e.clientX,y:e.clientY,id:c.dataset.id,el:c,
+      lift:setTimeout(function(){if(lp&&lp.el)lp.el.classList.add('lifting')},250),
+      t:setTimeout(function(){if(lp){dropLift();enterBulk(lp.id);lp=null}},500)};
+  });
+  L.addEventListener('pointermove',function(e){
+    if(lp&&(Math.abs(e.clientX-lp.x)>10||Math.abs(e.clientY-lp.y)>10)){dropLift();clearTimeout(lp.t);clearTimeout(lp.lift);lp=null}});
+  ['pointerup','pointercancel'].forEach(function(ev){
+    L.addEventListener(ev,function(){if(lp){dropLift();clearTimeout(lp.t);clearTimeout(lp.lift);lp=null}})});
+
+  L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c||bulkMode)return;
     sw={c:c,w:c.closest('.t-wrap'),x:e.touches[0].clientX,y:e.touches[0].clientY,dx:0,h:null}},{passive:true});
   L.addEventListener('touchmove',function(e){
     if(!sw)return;
@@ -1394,10 +1553,20 @@ async function doAction(a,k,card){
   var isShared=!!k.assigneeEmail;
   if(a==='okmark'){await approveMark(k.id);return}
   if(a==='nomark'){await rejectMark(k.id);return}
+  if(a==='reopen'){
+    if(isShared){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'open',doneAt:null});toast('Back to open')}catch(e){toast('Failed')}}}
+    else{k.status='open';delete k.doneAt;save();render();toast('Back to open')}
+    logAct('revert',k.title);return;
+  }
+  if(a==='startprog'){
+    if(isShared){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'progress'});toast('In progress')}catch(e){toast('Failed')}}}
+    else{k.status='progress';save();render();toast('In progress')}
+    logAct('progress',k.title);return;
+  }
   if(a==='approve'){
     if(!FB.ready)return;
     try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});
-      bumpDoneDate(todayStr(),1);save();toast('Approved')}catch(e){console.error(e);toast('Failed')}
+      bumpDoneDate(todayStr(),1);save();ding();toast('Approved')}catch(e){console.error(e);toast('Failed')}
     return;
   }
   if(a==='reject'){
@@ -1410,12 +1579,12 @@ async function doAction(a,k,card){
     if(isShared){
       if(!FB.ready){toast('Sync offline');return}
       try{
-        if(k.status==='open'){
-          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done',doneAt:Date.now()});bumpDoneDate(todayStr(),1);save()}
+        if(k.status==='open'||k.status==='progress'){
+          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done',doneAt:Date.now()});bumpDoneDate(todayStr(),1);save();ding();logAct('done',k.title)}
           else{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'review',doneAt:Date.now()});
-            bumpDoneDate(todayStr(),1);save();toast('Done — sent to Kalash for review')}
+            bumpDoneDate(todayStr(),1);save();ding();logAct('review',k.title);toast('Done — sent to Kalash for review')}
         }else if(k.status==='review'){
-          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});bumpDoneDate(todayStr(),1);save();toast('Approved')}
+          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});bumpDoneDate(todayStr(),1);save();ding();toast('Approved')}
           else{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'open',doneAt:null});
             bumpDoneDate(todayStr(),-1);save();toast('Un-marked')}
         }else{
@@ -1426,8 +1595,8 @@ async function doAction(a,k,card){
       }catch(e){console.error(e);toast('Update blocked — check rules')}
       return;
     }
-    if(k.status==='open'){
-      k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1);save();
+    if(k.status!=='done'){
+      k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1);save();ding();logAct('done',k.title);
       card.querySelector('.chk').classList.add('checked');card.classList.add('done-card');card.style.transform='';
       renderMast();renderTabs();setTimeout(function(){render()},450);
     }else{
@@ -1442,10 +1611,11 @@ async function doAction(a,k,card){
     if(isShared){
       if(!isAdmin){toast('Only Kalash can reschedule an assigned task');return}
       if(!FB.ready)return;
-      try{await FB.F.updateDoc(fdoc('tasks',k.id),{date:todayStr(1)});toast('Pushed to tomorrow')}catch(e){toast('Failed')}
+      try{await FB.F.updateDoc(fdoc('tasks',k.id),{date:todayStr(1)});logAct('push',k.title,'tomorrow');toast('Pushed to tomorrow')}catch(e){toast('Failed')}
       return;
     }
     k.date=todayStr(1);save();fadeOut(w,render);
+    logAct('push',k.title,'tomorrow');
     toast('Pushed to tomorrow',function(){k.date=todayStr();save();render()});
     return;
   }
@@ -1457,7 +1627,7 @@ async function doAction(a,k,card){
       try{await FB.F.deleteDoc(fdoc('tasks',k.id));toast('Deleted')}catch(e){toast('No permission')}
       return;
     }
-    var i=S.tasks.indexOf(k);S.tasks.splice(i,1);save();fadeOut(w,render);
+    var i=S.tasks.indexOf(k);S.tasks.splice(i,1);save();fadeOut(w,render);logAct('delete',k.title);
     toast('Deleted',function(){S.tasks.splice(i,0,k);save();render()});
     return;
   }
@@ -1475,9 +1645,11 @@ function openEdit(k){
   $('#eTag').innerHTML='<option value="">No tag</option>'+S.tags.map(function(t){return'<option value="'+t.id+'" '+(k.tag===t.id?'selected':'')+'>'+esc(t.label)+'</option>'}).join('');
   $('#ePerson').innerHTML='<option value="">Just me</option>'+S.people.map(function(p){return'<option value="'+p.id+'" '+(k.person===p.id?'selected':'')+'>'+esc(p.label)+(p.email?' ✓':'')+'</option>'}).join('');
   $('#ePri').value=k.pri||'';
+  $('#eStatus').value=(k.status==='progress'||k.status==='review'||k.status==='done')?k.status:'open';
   var r=k.recurId?S.recurring.find(function(x){return x.id===k.recurId}):null;
   $('#eRecur').value=r?r.freq:'';
-  ['eTitle','eNotes','eDate','eTime','eTag','ePri','eRecur'].forEach(function(id){$('#'+id).disabled=editRO});
+  ['eTitle','eNotes','eDate','eTime','eTag','ePri','eRecur','eStatus'].forEach(function(id){$('#'+id).disabled=editRO});
+  $('#eStatusFld').classList.toggle('hidden',editRO);
   $('#eWhoFld').classList.toggle('hidden',!isAdmin);
   $('#ePerson').disabled=editShared;
   $('#eRecur').disabled=editShared;
@@ -1509,6 +1681,16 @@ async function saveEdit(){
       patch.time=$('#eTime').value||null;
       patch.tag=$('#eTag').value||null;
       patch.pri=$('#ePri').value;
+      var ns=$('#eStatus').value;
+      if(ns!==k.status){
+        patch.status=ns;
+        patch.doneAt=(ns==='done'||ns==='review')?(k.doneAt||Date.now()):null;
+        if(ns==='done'&&k.status!=='done')bumpDoneDate(todayStr(),1);
+        else if(k.status==='done'&&ns!=='done')bumpDoneDate(dsOf(k.doneAt||Date.now()),-1);
+        if(ns==='done'&&isAdmin&&S.view.key&&adminMarks[k.id]){
+          try{FB.F.deleteDoc(fdoc('views',S.view.key,'marks',k.id))}catch(e){}}
+        save(false);
+      }
     }else{
       patch.status=k.status;patch.doneAt=k.doneAt||null;
     }
@@ -1524,6 +1706,15 @@ async function saveEdit(){
   k.tag=$('#eTag').value||null;
   k.pri=$('#ePri').value;
   k.subs=editSubs.filter(function(s){return s.title.trim()});
+  var ns2=$('#eStatus').value;
+  if(ns2!==k.status){
+    if(ns2==='done'&&k.status!=='done'){k.doneAt=k.doneAt||Date.now();bumpDoneDate(todayStr(),1)}
+    if(k.status==='done'&&ns2!=='done'){bumpDoneDate(dsOf(k.doneAt||Date.now()),-1);delete k.doneAt}
+    if(ns2==='review')k.doneAt=k.doneAt||Date.now();
+    k.status=ns2;
+    if(isAdmin&&S.view.key&&adminMarks[k.id]&&ns2==='done'){
+      try{FB.F.deleteDoc(fdoc('views',S.view.key,'marks',k.id))}catch(e){}}
+  }
   var newPerson=isAdmin?($('#ePerson').value||null):null;
   var f=$('#eRecur').value;
   if(f){
@@ -1624,7 +1815,7 @@ async function approveMark(id){
   }
   bumpDoneDate(todayStr(),1);save();
   try{await FB.F.deleteDoc(fdoc('views',S.view.key,'marks',id))}catch(e){console.error(e)}
-  toast('Approved & closed');
+  ding();logAct('approve',k.title);toast('Approved & closed');
 }
 async function rejectMark(id){
   var k=findTask(id);if(!k)return;
@@ -1817,7 +2008,7 @@ async function bootViewer(key){
     vData=snap.data();
     Store.set('dailyops.view.'+key,vData);
     $('#vTitle').innerHTML=esc(vData.owner||'Task')+' <em>board</em>';
-    listenMarks();
+    listenMarks();listenActivity();
     var remembered=Store.get('dailyops.vwho.'+key,null);
     if(remembered&&(vData.people||[]).some(function(x){return x.id===remembered})){
       vWho=remembered;renderViewer();
@@ -1942,13 +2133,16 @@ function renderViewer(){
 }
 function vCard(x){
   var st=vStatus(x),m=vMarks[x.id],meta=[];
+  /* red flag: slipped a day, still nothing done, no in-progress, no viewer note */
+  var vstall=(x.carried||0)>0&&st!=='done';
   if(x.time)meta.push('<span class="m-chip time">⏰ '+fmtTime12(x.time)+'</span>');
   if(x.date)meta.push('<span class="m-chip">📅 '+esc(fmtDateShort(x.date))+'</span>');
   if(x.tag)meta.push('<span class="m-chip tag"><span class="dot" style="background:'+(x.tagColor||'#999')+'"></span>'+esc(x.tag)+'</span>');
   if(x.pri)meta.push('<span class="m-chip p-'+x.pri+'">⚑ '+PRI_LABEL[x.pri]+'</span>');
   if(st==='progress')meta.push('<span class="m-chip prog">◐ In progress</span>');
   if(st==='review')meta.push('<span class="m-chip rev">⏳ Awaiting review</span>');
-  if(x.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+x.carried+'</span>');
+  if(vstall)meta.push('<span class="m-chip vstall">⚠ carried ×'+x.carried+' — overdue</span>');
+  else if(x.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+x.carried+'</span>');
   var subsHtml='';
   if(x.subs&&x.subs.length)subsHtml='<div class="notefeed">'+x.subs.map(function(s){return'<div class="nf">'+(s.done?'☑':'☐')+' <span>'+esc(s.title)+'</span></div>'}).join('')+'</div>';
 
@@ -1957,12 +2151,14 @@ function vCard(x){
     acts='<div class="v-mark">✓ Approved and closed by '+esc(vData.owner||'admin')+'</div>';
   }else{
     acts='<div class="v-acts">'
-      +'<button class="vb prog '+(st==='progress'?'on':'')+'" data-mark="'+(st==='progress'?'open':'progress')+'" data-id="'+x.id+'">◐ '+(st==='progress'?'In progress':'Start')+'</button>'
-      +'<button class="vb done '+(st==='review'?'on':'')+'" data-mark="'+(st==='review'?'open':'review')+'" data-id="'+x.id+'">✓ '+(st==='review'?'Marked done':'Mark done')+'</button>'
+      +'<button class="vb prog '+(st==='progress'?'on':'')+'" data-mark="progress" data-id="'+x.id+'">◐ '+(st==='progress'?'In progress':'Start')+'</button>'
+      +'<button class="vb done '+(st==='review'?'on':'')+'" data-mark="review" data-id="'+x.id+'">✓ '+(st==='review'?'Marked done':'Mark done')+'</button>'
+      +((st==='progress'||st==='review')?'<button class="vb revert" data-mark="open" data-id="'+x.id+'">↺ Back to open</button>':'')
       +'</div>';
+    if(st==='progress')acts+='<div class="v-mark"><b>In progress</b>'+(m&&m.ts?' · since '+ago(m.ts):'')+'</div>';
     if(st==='review')acts+='<div class="v-mark">Sent to <b>'+esc(vData.owner||'admin')+'</b> for review'+(m&&m.ts?' · '+ago(m.ts):'')+'</div>';
   }
-  return'<div class="t-wrap"><article class="task '+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':'')))+'">'
+  return'<div class="t-wrap"><article class="task '+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':(vstall?'vstall':''))))+'">'
     +'<div class="t-body" style="padding-left:2px"><div class="t-title">'+esc(x.title)+'</div>'
     +(x.notes?'<div class="t-notes">'+linkify(esc(x.notes))+'</div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')
@@ -1976,10 +2172,13 @@ async function setMark(taskId,status){
   vMarks[taskId]=Object.assign({},vMarks[taskId],{status:status,by:vWho,byName:(p&&p.name)||'team',ts:Date.now()});
   renderViewer();
   try{
-    if(status==='open'){await FB.F.deleteDoc(fdoc('views',VK,'marks',taskId));delete vMarks[taskId];renderViewer();toast('Cleared')}
+    if(status==='open'){await FB.F.deleteDoc(fdoc('views',VK,'marks',taskId));delete vMarks[taskId];renderViewer();
+      var tt0=((vData&&vData.tasks)||[]).find(function(x){return x.id===taskId});logAct('revert',(tt0&&tt0.title)||'a task');toast('Cleared')}
     else{
+      var tt=((vData&&vData.tasks)||[]).find(function(x){return x.id===taskId});
       await FB.F.setDoc(fdoc('views',VK,'marks',taskId),
-        {status:status,by:vWho,byName:(p&&p.name)||'team',title:'',ts:Date.now()},{merge:true});
+        {status:status,by:vWho,byName:(p&&p.name)||'team',title:(tt&&tt.title)||'',ts:Date.now()},{merge:true});
+      logAct(status==='progress'?'progress':'review',(tt&&tt.title)||'a task');
       toast(status==='progress'?'Marked in progress':'Sent to '+(vData.owner||'admin')+' for review');
     }
   }catch(e){console.error(e);toast('Could not save — check rules');delete vMarks[taskId];renderViewer()}
@@ -1990,7 +2189,7 @@ async function sendNote(taskId){
   var p=vData.people.find(function(x){return x.id===vWho});
   if(!FB.ready){toast('Offline — try again');return}
   try{await FB.F.addDoc(fcol('views',VK,'notes'),{taskId:taskId,text:text,by:vWho,byName:(p&&p.name)||'team',ts:FB.F.serverTimestamp()});
-    inp.value='';toast('Note sent to Kalash')}
+    inp.value='';var tt2=((vData&&vData.tasks)||[]).find(function(x){return x.id===taskId});logAct('note',(tt2&&tt2.title)||'a task');toast('Note sent to Kalash')}
   catch(e){console.error(e);toast('Could not send')}
 }
 function renderVCal(mine){
@@ -2055,6 +2254,8 @@ function bindViewer(){
     var b=e.target.closest('[data-vm]');if(!b)return;
     vMode=b.dataset.vm;renderViewer()});
   $('#vThemeBtn').addEventListener('click',function(){renderVTheme();$('#vSetOv').classList.add('open')});
+  var vbell=$('#vBellBtn');if(vbell)vbell.addEventListener('click',function(e){e.stopPropagation();toggleNotif()});
+  var vpop=$('#vNotifPop');if(vpop)vpop.addEventListener('click',function(e){if(e.target.closest('[data-actseen]'))markActSeen()});
   $('#vSetClose').addEventListener('click',function(){$('#vSetOv').classList.remove('open')});
   $('#vThemeReset').addEventListener('click',function(){
     Store.set(vPrefsKey(),{accent:'gold',bg:'midnight',custom:null});
@@ -2083,9 +2284,9 @@ function bindViewer(){
 }
 /* ---------- SETTINGS ---------- */
 function openSettings(){
-  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();
+  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();renderActivityFull();
   $('#inviteUrl').textContent=location.origin+location.pathname;
-  ['#viewSec','#teamSec','#presenceSec','#guestSec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
+  ['#viewSec','#teamSec','#presenceSec','#guestSec','#activitySec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
   $('#setOv').classList.add('open');
 }
 function renderAppearance(){
@@ -2131,6 +2332,318 @@ function renderGuestMgr(){
     :'<p style="margin:0 0 8px;font-size:12.5px;color:var(--dim)">No guests yet.</p>';
 }
 
+/* ---------- ACTIVITY LOG ---------- */
+/* actor: who did it. In admin app that's you or a team member (email);
+   in the viewer it's the picked person's name. */
+function actorName(){
+  if(mode==='viewer'){var p=(vData&&vData.people||[]).find(function(x){return x.id===vWho});return (p&&p.name)||'A viewer'}
+  if(isAdmin)return 'Kalash';
+  return (me&&me.displayName)||(me&&me.email)||'Team';
+}
+function actorEmail(){
+  if(mode==='viewer')return '';
+  return (me&&me.email)||'';
+}
+async function logAct(kind,taskTitle,extra){
+  if(!FB.ready)return;
+  var vkey=(mode==='viewer')?VK:(S.view&&S.view.key)||null;
+  var ev={kind:kind,title:String(taskTitle||'').slice(0,120),
+    who:actorName(),email:actorEmail(),
+    person:(mode==='viewer'?vWho:null),
+    vkey:vkey,ts:Date.now()};
+  if(extra)ev.extra=String(extra).slice(0,80);
+  try{await FB.F.addDoc(fcol('activity'),ev)}catch(e){console.error('logAct',e)}
+}
+function actIcon(k){return {done:'✓',progress:'◐',reopen:'↺',review:'⏳',create:'＋',push:'→',assign:'@',reassign:'@',revert:'↺',note:'💬','delete':'✕',approve:'✓'}[k]||'•'}
+function actCls(k){return {done:'done',progress:'prog',reopen:'move',revert:'rev',create:'new',push:'move',assign:'move',reassign:'move',note:'note',approve:'done','delete':'rev',review:'prog'}[k]||''}
+function actText(a){
+  var who='<span class="who">'+esc(a.who)+'</span>';
+  var task='<b>'+esc(a.title||'a task')+'</b>';
+  var m={
+    create:who+' created '+task,
+    done:who+' completed '+task,
+    progress:who+' started '+task+' (in progress)',
+    reopen:who+' reopened '+task,
+    revert:who+' reverted '+task+' to open',
+    review:who+' marked '+task+' done — awaiting review',
+    approve:who+' approved '+task,
+    push:who+' pushed '+task+(a.extra?' to '+esc(a.extra):' forward'),
+    assign:who+' assigned '+task+(a.extra?' to '+esc(a.extra):''),
+    reassign:who+' reassigned '+task+(a.extra?' to '+esc(a.extra):''),
+    note:who+' noted on '+task,
+    'delete':who+' deleted '+task
+  };
+  return m[a.kind]||who+' updated '+task;
+}
+/* which events this session should see */
+function visibleActivity(){
+  if(mode==='viewer'){
+    return activity.filter(function(a){return a.vkey===VK&&(a.person===vWho||!a.person)});
+  }
+  if(isAdmin)return activity;   /* global log */
+  var em=(me&&me.email||'').toLowerCase();
+  return activity.filter(function(a){return (a.email||'').toLowerCase()===em});
+}
+function listenActivity(){
+  if(!FB.ready)return;
+  if(unsubActivity)unsubActivity();
+  lastSeenAct=Store.get('dailyops.seenAct',0);
+  unsubActivity=FB.F.onSnapshot(FB.F.query(fcol('activity'),FB.F.orderBy('ts','desc')),function(snap){
+    activity=snap.docs.map(function(d){return Object.assign({id:d.id},d.data())}).slice(0,200);
+    renderNotif();renderActivityFull();if(mode==='app'&&view==='activity')renderLedger();
+  },function(e){console.error('activity',e)});
+}
+function unseenCount(){
+  return visibleActivity().filter(function(a){return a.ts>lastSeenAct&&(a.email||'')!==(actorEmail()||'__self')}).length;
+}
+function renderNotif(){
+  var list=visibleActivity();
+  var n=unseenCount();
+  var badgeId=mode==='viewer'?'#vBellBadge':'#bellBadge';
+  var b=$(badgeId);
+  if(b){b.classList.toggle('hidden',!n);b.textContent=n>99?'99':n}
+  var popId=mode==='viewer'?'#vNotifPop':'#notifPop';
+  var pop=$(popId);if(!pop)return;
+  var rows=list.slice(0,30).map(function(a){
+    return'<div class="act '+(a.ts>lastSeenAct?'unseen':'')+'"><span class="aic '+actCls(a.kind)+'">'+actIcon(a.kind)+'</span>'
+      +'<span class="ab">'+actText(a)+'<span class="at">'+ago(a.ts)+' ago</span></span></div>'}).join('');
+  pop.innerHTML='<div class="notif-head"><h5>Activity</h5>'+(n?'<button data-actseen="1">Mark all read</button>':'')+'</div>'
+    +(rows||'<div class="notif-empty">No activity yet.</div>');
+}
+function renderActivityFull(){
+  var el=$('#activityFull');if(!el||mode!=='app'||!isAdmin)return;
+  var list=visibleActivity();
+  el.innerHTML=list.length?list.slice(0,100).map(function(a){
+    return'<div class="act"><span class="aic '+actCls(a.kind)+'">'+actIcon(a.kind)+'</span>'
+      +'<span class="ab">'+actText(a)+'<span class="at">'+ago(a.ts)+' ago'+(a.email?' · '+esc(a.email):'')+'</span></span></div>'}).join('')
+    :'<p style="margin:0;font-size:12.5px;color:var(--dim)">Nothing yet.</p>';
+}
+function markActSeen(){
+  lastSeenAct=Date.now();Store.set('dailyops.seenAct',lastSeenAct);renderNotif();
+}
+/* ---- ADMIN ACTIVITY SCREEN: filter by user + kind ---- */
+function actActorKey(a){
+  /* stable key per actor: email if signed in, else viewer person id, else name */
+  return (a.email&&a.email.toLowerCase())||('viewer:'+(a.person||a.who||'?'));
+}
+function actActorLabel(a){
+  if(a.email)return a.who+' · '+a.email;
+  return a.who+' (view link)';
+}
+function renderActivityScreen(){
+  var all=activity;   /* admin sees global */
+  /* build actor roster from the log */
+  var actors={};
+  all.forEach(function(a){var k=actActorKey(a);if(!actors[k])actors[k]={label:actActorLabel(a),n:0,email:!!a.email};actors[k].n++});
+  var kinds={all:all.length};
+  all.forEach(function(a){kinds[a.kind]=(kinds[a.kind]||0)+1});
+
+  var list=all.filter(function(a){
+    if(actWho!=='all'&&actActorKey(a)!==actWho)return false;
+    if(actKind!=='all'&&a.kind!==actKind)return false;
+    return true;
+  });
+
+  var KIND_LABEL={create:'Created',done:'Completed',progress:'Started',review:'Sent to review',
+    approve:'Approved',reopen:'Reopened',revert:'Reverted',push:'Pushed',assign:'Assigned',
+    reassign:'Reassigned',note:'Notes','delete':'Deleted'};
+
+  var h='';
+  /* summary cards */
+  var team=Object.keys(actors).filter(function(k){return actors[k].email}).length;
+  var guests=Object.keys(actors).filter(function(k){return !actors[k].email}).length;
+  h+='<div class="actbig">'
+    +'<div class="bc"><div class="v">'+all.length+'</div><div class="l">total events</div></div>'
+    +'<div class="bc"><div class="v">'+(Object.keys(actors).length)+'</div><div class="l">people</div></div>'
+    +'<div class="bc"><div class="v">'+(all.filter(function(a){return a.ts>Date.now()-864e5}).length)+'</div><div class="l">last 24h</div></div>'
+    +'</div>';
+
+  /* WHO filter */
+  h+='<div class="group-h gold">Filter by person</div>';
+  h+='<div class="actfilt"><button class="f-chip '+(actWho==='all'?'on':'')+'" data-aw="all">Everyone<span class="cnt2">'+all.length+'</span></button>'
+    +Object.keys(actors).sort(function(a,b){return actors[b].n-actors[a].n}).map(function(k){
+      return'<button class="f-chip '+(actWho===k?'on':'')+'" data-aw="'+esc(k)+'">'+esc(actors[k].label.split(' · ')[0])
+        +(actors[k].email?' ✓':'')+'<span class="cnt2">'+actors[k].n+'</span></button>'}).join('')+'</div>';
+
+  /* KIND filter */
+  h+='<div class="act-kind-row"><button class="f-chip '+(actKind==='all'?'on':'')+'" data-ak="all">All types</button>'
+    +Object.keys(kinds).filter(function(k){return k!=='all'}).sort(function(a,b){return kinds[b]-kinds[a]}).map(function(k){
+      return'<button class="f-chip '+(actKind===k?'on':'')+'" data-ak="'+k+'">'+(KIND_LABEL[k]||k)+'<span class="cnt2">'+kinds[k]+'</span></button>'}).join('')+'</div>';
+
+  /* the filtered log */
+  h+='<div class="group-h">'+list.length+' event'+(list.length===1?'':'s')
+    +(actWho!=='all'?' · '+esc((actors[actWho]||{}).label||actWho):'')+'</div>';
+  h+='<div class="act-sec">'+(list.length?list.slice(0,150).map(function(a){
+    return'<div class="act"><span class="aic '+actCls(a.kind)+'">'+actIcon(a.kind)+'</span>'
+      +'<span class="ab">'+actText(a)+'<span class="at">'+ago(a.ts)+' ago'
+      +(a.email?' · '+esc(a.email):' · view link')+'</span></span></div>'}).join('')
+    :'<p style="font-size:12.5px;color:var(--dim);padding:8px 2px">No activity matches this filter.</p>')+'</div>';
+  return h;
+}
+function bindActivityScreen(){
+  $$('#ledger [data-aw]').forEach(function(b){b.addEventListener('click',function(){actWho=b.dataset.aw;renderLedger()})});
+  $$('#ledger [data-ak]').forEach(function(b){b.addEventListener('click',function(){actKind=b.dataset.ak;renderLedger()})});
+}
+function toggleNotif(){
+  notifOpen=!notifOpen;
+  var popId=mode==='viewer'?'#vNotifPop':'#notifPop';
+  $(popId).classList.toggle('open',notifOpen);
+  if(notifOpen)setTimeout(markActSeen,1200);
+}
+
+/* ---------- COMPLETION FEEDBACK ---------- */
+function ding(){
+  try{
+    _actx=_actx||new (window.AudioContext||window.webkitAudioContext)();
+    var t=_actx.currentTime;
+    [[880,0],[1318.5,.09]].forEach(function(n){
+      var o=_actx.createOscillator(),g=_actx.createGain();
+      o.frequency.value=n[0];o.type='sine';
+      g.gain.setValueAtTime(0.001,t+n[1]);
+      g.gain.exponentialRampToValueAtTime(0.08,t+n[1]+0.015);
+      g.gain.exponentialRampToValueAtTime(0.001,t+n[1]+0.12);
+      o.connect(g);g.connect(_actx.destination);
+      o.start(t+n[1]);o.stop(t+n[1]+0.14);
+    });
+  }catch(e){}
+  if(navigator.vibrate){try{navigator.vibrate(15)}catch(e){}}
+}
+
+/* ---------- BULK ACTIONS ---------- */
+function enterBulk(id){
+  bulkMode=true;bulkSel={};bulkGuard=true;
+  if(navigator.vibrate){try{navigator.vibrate(10)}catch(e){}}
+  toggleBulk(id);
+}
+function toggleBulk(id){
+  if(bulkSel[id])delete bulkSel[id];else bulkSel[id]=1;
+  renderBulkUI();
+}
+function renderBulkUI(){
+  var n=Object.keys(bulkSel).length;
+  if(bulkMode&&!n){exitBulk();return}
+  $('#bulkBar').classList.toggle('hidden',!bulkMode);
+  $('#bbCount').textContent=n+' selected';
+  $('#bbAssign').style.display=isAdmin?'':'none';
+  $$('#ledger .task').forEach(function(el){el.classList.toggle('bulk-on',!!bulkSel[el.dataset.id])});
+}
+function exitBulk(){
+  bulkMode=false;bulkSel={};
+  $('#bulkBar').classList.add('hidden');$('#bulkTray').classList.add('hidden');
+  $$('#ledger .task.bulk-on').forEach(function(el){el.classList.remove('bulk-on')});
+}
+async function applyBulk(act){
+  if(act==='exit'){exitBulk();return}
+  if(act==='assign'){renderBulkTray();return}
+  var ids=Object.keys(bulkSel);if(!ids.length)return;
+  if(act==='del'&&!confirm('Delete '+ids.length+' task(s)?'))return;
+  var skipped=0;
+  for(var i=0;i<ids.length;i++){
+    var k=findTask(ids[i]);if(!k)continue;
+    var sh=!!k.assigneeEmail;
+    if(act==='today'||act==='tmrw'){
+      var d=act==='today'?todayStr():todayStr(1);
+      if(sh){if(isAdmin&&FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{date:d})}catch(e){skipped++}}else skipped++}
+      else k.date=d;
+    }else if(act==='done'){
+      if(sh){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:isAdmin?'done':'review',doneAt:Date.now()});bumpDoneDate(todayStr(),1)}catch(e){skipped++}}else skipped++}
+      else if(k.status!=='done'){k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1)}
+    }else if(act==='del'){
+      if(sh){if((isAdmin||k.selfCreated)&&FB.ready){try{await FB.F.deleteDoc(fdoc('tasks',k.id))}catch(e){skipped++}}else skipped++}
+      else{var ix=S.tasks.indexOf(k);if(ix>=0)S.tasks.splice(ix,1)}
+    }
+  }
+  save();if(act==='done')ding();
+  exitBulk();render();
+  toast((act==='del'?'Deleted':act==='done'?'Completed':'Moved')+' '+(ids.length-skipped)
+    +(skipped?' · '+skipped+' skipped (no permission)':''));
+}
+function renderBulkTray(){
+  var el=$('#bulkTray');
+  el.innerHTML=S.people.map(function(p){
+    return'<button class="tr-chip" data-bp="'+p.id+'">@ '+esc(p.label)+(p.email?' ✓':'')+'</button>'}).join('')
+    +'<button class="tr-chip clear" data-bp="">Unassign</button>';
+  el.classList.remove('hidden');
+}
+async function bulkAssign(pid){
+  $('#bulkTray').classList.add('hidden');
+  var p=pid?personOf(pid):null,em=String((p&&p.email)||'').toLowerCase();
+  var ids=Object.keys(bulkSel),skipped=0,moved=0;
+  for(var i=0;i<ids.length;i++){
+    var k=findTask(ids[i]);if(!k)continue;
+    if(k.assigneeEmail){
+      /* shared: retarget to another login-enabled person, or skip */
+      if(pid&&em&&FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{person:pid,assigneeEmail:em});moved++}catch(e){skipped++}}
+      else skipped++;
+    }else{
+      if(pid&&em&&FB.ready){
+        await createShared({title:k.title,date:k.date,time:k.time,tag:k.tag,pri:k.pri,person:pid,assigneeEmail:em,selfCreated:false});
+        var ix=S.tasks.indexOf(k);if(ix>=0)S.tasks.splice(ix,1);moved++;
+      }else{k.person=pid||null;moved++}
+    }
+  }
+  save();exitBulk();render();
+  toast((pid?('Assigned '+moved+' to '+((p&&p.label)||'')):'Unassigned '+moved)
+    +(skipped?' · '+skipped+' skipped':''));
+}
+
+/* ---------- COMMAND PALETTE ---------- */
+function fuzzy(q,str){
+  var sl=str.toLowerCase();
+  var i=sl.indexOf(q);
+  if(i>=0)return 200-i;
+  var qi=0;
+  for(var j=0;j<sl.length&&qi<q.length;j++)if(sl[j]===q[qi])qi++;
+  return qi===q.length?10:-1;
+}
+function buildCmd(q){
+  q=q.trim().toLowerCase();
+  var items=[];
+  var nav=[['today','Go: Today'],['upcoming','Go: Upcoming'],['history','Go: History'],['analytics','Go: Analytics']];
+  if(isAdmin)nav.push(['requests','Go: Requests']);
+  nav.forEach(function(v){items.push({t:'nav',id:v[0],label:v[1],icon:'→'})});
+  items.push({t:'act',id:'new',label:'New task',icon:'+'});
+  items.push({t:'act',id:'settings',label:'Open settings',icon:'⚙'});
+  if(isAdmin&&S.view.key)items.push({t:'act',id:'copylink',label:'Copy view link',icon:'🔗'});
+  allTasks().forEach(function(k){
+    items.push({t:'task',id:k.id,label:k.title,icon:k.status==='done'?'✓':(k.status==='progress'?'◐':'○'),
+      sub:(k.date?fmtDateShort(k.date):'no date')+(k.person?' · @'+((personOf(k.person)||{}).label||k.person):'')
+        +(k.status!=='open'?' · '+k.status:'')});
+  });
+  if(q){
+    items=items.map(function(it){return{it:it,sc:fuzzy(q,it.label)}})
+      .filter(function(x){return x.sc>0})
+      .sort(function(a,b){return b.sc-a.sc})
+      .map(function(x){return x.it});
+  }
+  return items.slice(0,12);
+}
+function renderCmd(){
+  cmdItems=buildCmd($('#cmdIn').value);
+  if(cmdIdx>=cmdItems.length)cmdIdx=Math.max(0,cmdItems.length-1);
+  $('#cmdList').innerHTML=cmdItems.length?cmdItems.map(function(it,i){
+    return'<div class="ci '+(i===cmdIdx?'on':'')+'" data-ci="'+i+'"><span class="cico">'+it.icon+'</span>'
+      +'<span class="clab">'+esc(it.label)+(it.sub?'<small>'+esc(it.sub)+'</small>':'')+'</span></div>'}).join('')
+    :'<div class="ci dim">No matches</div>';
+}
+function runCmd(it){
+  if(!it)return;
+  closeOv('cmdOv');
+  if(it.t==='nav'){view=it.id;selDate=null;render()}
+  else if(it.t==='act'){
+    if(it.id==='new')$('#capInput').focus();
+    if(it.id==='settings')openSettings();
+    if(it.id==='copylink')navigator.clipboard.writeText(location.origin+location.pathname+'?view='+S.view.key).then(function(){toast('Link copied')});
+  }
+  else if(it.t==='task'){var k=findTask(it.id);if(k)openEdit(k)}
+}
+function openCmd(){
+  cmdIdx=0;$('#cmdIn').value='';
+  $('#cmdOv').classList.add('open');
+  renderCmd();
+  setTimeout(function(){$('#cmdIn').focus()},60);
+}
+
 /* ---------- BINDINGS ---------- */
 function bindAll(){
   bindCapture();bindLedger();bindViewer();
@@ -2142,6 +2655,13 @@ function bindAll(){
   $('#fab').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){$('#capInput').focus()},250)});
   $('#settingsBtn').addEventListener('click',openSettings);
   $('#syncBtn').addEventListener('click',openSettings);
+  $('#bellBtn').addEventListener('click',function(e){e.stopPropagation();toggleNotif()});
+  $('#notifPop').addEventListener('click',function(e){
+    if(e.target.closest('[data-actseen]'))markActSeen()});
+  document.addEventListener('click',function(e){
+    if(notifOpen&&!e.target.closest('#notifPop')&&!e.target.closest('#bellBtn')
+       &&!e.target.closest('#vNotifPop')&&!e.target.closest('#vBellBtn')){
+      notifOpen=false;var a=$('#notifPop'),b=$('#vNotifPop');if(a)a.classList.remove('open');if(b)b.classList.remove('open')}});
   $('#setClose').addEventListener('click',function(){closeOv('setOv')});
   $$('.overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)closeOv(o.id)})});
 
@@ -2265,6 +2785,20 @@ function bindAll(){
       prefs:Object.assign({},S.prefs),view:Object.assign({},S.view),meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
     migrate();save();render();toast('Wiped')});
 
+  $('#bulkBar').addEventListener('click',function(e){
+    var b=e.target.closest('[data-bulk]');if(b)applyBulk(b.dataset.bulk)});
+  $('#bulkTray').addEventListener('click',function(e){
+    var b=e.target.closest('[data-bp]');if(b)bulkAssign(b.dataset.bp)});
+
+  $('#cmdIn').addEventListener('input',function(){cmdIdx=0;renderCmd()});
+  $('#cmdIn').addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown'){e.preventDefault();cmdIdx=Math.min(cmdIdx+1,cmdItems.length-1);renderCmd()}
+    else if(e.key==='ArrowUp'){e.preventDefault();cmdIdx=Math.max(cmdIdx-1,0);renderCmd()}
+    else if(e.key==='Enter'){e.preventDefault();runCmd(cmdItems[cmdIdx])}
+  });
+  $('#cmdList').addEventListener('click',function(e){
+    var r=e.target.closest('[data-ci]');if(r)runCmd(cmdItems[+r.dataset.ci])});
+
   $('#guestAdd').addEventListener('click',function(){
     S.guests=S.guests||[];S.guests.push('');
     renderGuestMgr();
@@ -2292,7 +2826,8 @@ function bindAll(){
   document.addEventListener('keydown',function(e){
     if(mode!=='app')return;
     var typing=/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');
-    if(e.key==='Escape'){$$('.overlay.open').forEach(function(o){closeOv(o.id)});openTray=null;renderCapture();return}
+    if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return}
+    if(e.key==='Escape'){$$('.overlay.open').forEach(function(o){closeOv(o.id)});exitBulk();openTray=null;renderCapture();return}
     if(typing)return;
     if(e.key==='n'||e.key==='/'){e.preventDefault();$('#capInput').focus()}
     if(e.key>='1'&&e.key<='5'){var v=VIEWS[+e.key-1];
@@ -2333,13 +2868,16 @@ $('#toSignup').addEventListener('click',function(){
 $('#toSignin').addEventListener('click',function(){
   gateStep(2);$('#gateMsg').textContent='Sign in to load your board.';});
 
-/* Only an email the admin has already added to the team list may register. */
+/* Best-effort invite pre-check. Anonymous users can't read the allowlist
+   (by design — it keeps team emails private), so a failed read returns null
+   = "unknown, proceed". The REAL enforcement happens in onAuth after account
+   creation: non-invited accounts are signed out and get no data access. */
 async function emailIsInvited(em){
   if(em===ADMIN_EMAIL)return true;
   try{
     var c=await FB.F.getDoc(fdoc('config','allowlist'));var d0=c.data()||{};
     return (d0.emails||[]).concat(d0.guests||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0;
-  }catch(e){console.error(e);return false}
+  }catch(e){return null}
 }
 $('#emailBtn').addEventListener('click',async function(){
   var em=$('#gEmail').value.trim().toLowerCase(),pw=$('#gPass').value;
@@ -2364,10 +2902,13 @@ $('#signupBtn').addEventListener('click',async function(){
   $('#gateErr3').textContent='Checking your invite…';
   if(!FB.ready){var ok=await initFirebase();if(!ok){$('#gateErr3').textContent='Firebase unreachable.';return}}
   var invited=await emailIsInvited(em);
-  if(!invited){
+  if(invited===false){
     $('#gateErr3').textContent='That email hasn’t been invited. Ask Kalash to add it in Settings → Team first.';
     return;
   }
+  /* invited===null → can't verify anonymously; create the account and let
+     the sign-in check enforce the invite */
+  $('#gateErr3').textContent='Creating your account…';
   try{
     await FB.A.createUserWithEmailAndPassword(FB.auth,em,pw);
     $('#gateErr3').textContent='';
@@ -2447,7 +2988,7 @@ async function bootApp(user,live){
   if(isAdmin)syncAllowlist();
   renderCapture();render();
   listenBoard();listenShared();
-  startPresence();
+  startPresence();listenActivity();
   if(isAdmin&&S.view.key){loadRequests();loadTeamNotes();loadMarks();if(S.view.live)schedulePublish()}
 }
 
