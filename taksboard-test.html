@@ -471,6 +471,16 @@ html.compact .group-h{margin:14px 0 8px}
 .ci .clab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ci .clab small{display:block;color:var(--dim);font-size:11px}
 .ci.dim{color:var(--dim);cursor:default}
+/* iOS-style long-press lift */
+.task.lifting{transform:scale(1.035);box-shadow:0 22px 44px -14px rgba(0,0,0,.75);z-index:5;transition:transform .22s var(--ease-spring),box-shadow .22s}
+.task.pressing{transform:scale(.97);transition:transform .18s ease}
+/* viewer: carried, no response */
+.task.vstall{border-color:var(--red)!important;box-shadow:0 0 0 1px rgba(201,123,110,.4)}
+.task.vstall::before{background:rgba(201,123,110,.11)!important}
+.task.vstall .t-title{color:var(--red)}
+.m-chip.vstall{color:#fff;background:var(--red);border-color:var(--red);font-weight:600}
+.vb.revert{color:var(--dim)}
+.vb.revert:hover{color:var(--text);border-color:var(--line-hi)}
 </style>
 </head>
 <body>
@@ -1230,6 +1240,8 @@ function taskCard(k,o){
     acts.push('<button class="ta-btn del" data-act="nomark" title="Send back">↩</button>')}
   else if(isAdmin&&rev){acts.push('<button class="ta-btn ok" data-act="approve" title="Approve">✓</button>');
     acts.push('<button class="ta-btn del" data-act="reject" title="Send back">↩</button>')}
+  else if(k.status==='progress'){acts.push('<button class="ta-btn" data-act="reopen" title="Back to open">↺</button>');
+    acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
   else if(!done&&!rev)acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>');
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
   if(isAdmin||!isShared||k.selfCreated)acts.push('<button class="ta-btn del" data-act="del" title="Delete">✕</button>');
@@ -1432,17 +1444,19 @@ function bindLedger(){
     doAction(a.dataset.act,k,card);
   });
   var sw=null;
-  /* long-press → multi-select */
+  /* long-press → multi-select, with an iOS-style lift cue */
   var lp=null;
+  function dropLift(){if(lp&&lp.el){lp.el.classList.remove('lifting')}}
   L.addEventListener('pointerdown',function(e){
     var c=e.target.closest('.task');if(!c||bulkMode)return;
-    lp={x:e.clientX,y:e.clientY,id:c.dataset.id,
-      t:setTimeout(function(){if(lp){enterBulk(lp.id);lp=null}},500)};
+    lp={x:e.clientX,y:e.clientY,id:c.dataset.id,el:c,
+      lift:setTimeout(function(){if(lp&&lp.el)lp.el.classList.add('lifting')},250),
+      t:setTimeout(function(){if(lp){dropLift();enterBulk(lp.id);lp=null}},500)};
   });
   L.addEventListener('pointermove',function(e){
-    if(lp&&(Math.abs(e.clientX-lp.x)>10||Math.abs(e.clientY-lp.y)>10)){clearTimeout(lp.t);lp=null}});
+    if(lp&&(Math.abs(e.clientX-lp.x)>10||Math.abs(e.clientY-lp.y)>10)){dropLift();clearTimeout(lp.t);clearTimeout(lp.lift);lp=null}});
   ['pointerup','pointercancel'].forEach(function(ev){
-    L.addEventListener(ev,function(){if(lp){clearTimeout(lp.t);lp=null}})});
+    L.addEventListener(ev,function(){if(lp){dropLift();clearTimeout(lp.t);clearTimeout(lp.lift);lp=null}})});
 
   L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c||bulkMode)return;
     sw={c:c,w:c.closest('.t-wrap'),x:e.touches[0].clientX,y:e.touches[0].clientY,dx:0,h:null}},{passive:true});
@@ -1479,6 +1493,11 @@ async function doAction(a,k,card){
   var isShared=!!k.assigneeEmail;
   if(a==='okmark'){await approveMark(k.id);return}
   if(a==='nomark'){await rejectMark(k.id);return}
+  if(a==='reopen'){
+    if(isShared){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'open',doneAt:null});toast('Back to open')}catch(e){toast('Failed')}}}
+    else{k.status='open';delete k.doneAt;save();render();toast('Back to open')}
+    return;
+  }
   if(a==='approve'){
     if(!FB.ready)return;
     try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});
@@ -2048,13 +2067,16 @@ function renderViewer(){
 }
 function vCard(x){
   var st=vStatus(x),m=vMarks[x.id],meta=[];
+  /* red flag: slipped a day, still nothing done, no in-progress, no viewer note */
+  var vstall=(x.carried||0)>0&&st==='open'&&!m;
   if(x.time)meta.push('<span class="m-chip time">⏰ '+fmtTime12(x.time)+'</span>');
   if(x.date)meta.push('<span class="m-chip">📅 '+esc(fmtDateShort(x.date))+'</span>');
   if(x.tag)meta.push('<span class="m-chip tag"><span class="dot" style="background:'+(x.tagColor||'#999')+'"></span>'+esc(x.tag)+'</span>');
   if(x.pri)meta.push('<span class="m-chip p-'+x.pri+'">⚑ '+PRI_LABEL[x.pri]+'</span>');
   if(st==='progress')meta.push('<span class="m-chip prog">◐ In progress</span>');
   if(st==='review')meta.push('<span class="m-chip rev">⏳ Awaiting review</span>');
-  if(x.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+x.carried+'</span>');
+  if(vstall)meta.push('<span class="m-chip vstall">⚠ overdue ×'+x.carried+' — no response</span>');
+  else if(x.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+x.carried+'</span>');
   var subsHtml='';
   if(x.subs&&x.subs.length)subsHtml='<div class="notefeed">'+x.subs.map(function(s){return'<div class="nf">'+(s.done?'☑':'☐')+' <span>'+esc(s.title)+'</span></div>'}).join('')+'</div>';
 
@@ -2063,12 +2085,14 @@ function vCard(x){
     acts='<div class="v-mark">✓ Approved and closed by '+esc(vData.owner||'admin')+'</div>';
   }else{
     acts='<div class="v-acts">'
-      +'<button class="vb prog '+(st==='progress'?'on':'')+'" data-mark="'+(st==='progress'?'open':'progress')+'" data-id="'+x.id+'">◐ '+(st==='progress'?'In progress':'Start')+'</button>'
-      +'<button class="vb done '+(st==='review'?'on':'')+'" data-mark="'+(st==='review'?'open':'review')+'" data-id="'+x.id+'">✓ '+(st==='review'?'Marked done':'Mark done')+'</button>'
+      +'<button class="vb prog '+(st==='progress'?'on':'')+'" data-mark="progress" data-id="'+x.id+'">◐ '+(st==='progress'?'In progress':'Start')+'</button>'
+      +'<button class="vb done '+(st==='review'?'on':'')+'" data-mark="review" data-id="'+x.id+'">✓ '+(st==='review'?'Marked done':'Mark done')+'</button>'
+      +((st==='progress'||st==='review')?'<button class="vb revert" data-mark="open" data-id="'+x.id+'">↺ Back to open</button>':'')
       +'</div>';
+    if(st==='progress')acts+='<div class="v-mark"><b>In progress</b>'+(m&&m.ts?' · since '+ago(m.ts):'')+'</div>';
     if(st==='review')acts+='<div class="v-mark">Sent to <b>'+esc(vData.owner||'admin')+'</b> for review'+(m&&m.ts?' · '+ago(m.ts):'')+'</div>';
   }
-  return'<div class="t-wrap"><article class="task '+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':'')))+'">'
+  return'<div class="t-wrap"><article class="task '+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':(vstall?'vstall':''))))+'">'
     +'<div class="t-body" style="padding-left:2px"><div class="t-title">'+esc(x.title)+'</div>'
     +(x.notes?'<div class="t-notes">'+linkify(esc(x.notes))+'</div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')
