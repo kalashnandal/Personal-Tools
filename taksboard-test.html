@@ -440,6 +440,37 @@ html.compact .group-h{margin:14px 0 8px}
 .cal-legend{display:flex;gap:14px;margin-top:10px;font-size:10.5px;color:var(--dim);flex-wrap:wrap}
 .cal-legend span{display:inline-flex;align-items:center;gap:5px}
 .cal-legend i{width:6px;height:6px;border-radius:50%;display:inline-block}
+/* stalled: delegated, carried, zero response */
+.task.stalled-card{border-color:rgba(201,123,110,.55);background:rgba(201,123,110,.04)}
+.task.stalled-card::after{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:var(--red)}
+.m-chip.stall{color:var(--red);border-color:rgba(201,123,110,.5);background:rgba(201,123,110,.1);font-weight:600}
+.stat.danger{border-color:rgba(201,123,110,.45)}
+.stat.danger b{color:var(--red)}
+/* week strip: days carrying overdue work */
+.wd.warnday .wc{background:var(--red);box-shadow:0 0 7px var(--red)}
+/* bulk select */
+.task{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.task.bulk-on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
+.task.bulk-on::after{content:"✓";position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:700;display:grid;place-items:center;z-index:2}
+.bulkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:70;display:flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line-hi);border-radius:14px;padding:8px 10px;box-shadow:0 20px 50px -16px rgba(0,0,0,.8);max-width:94vw;flex-wrap:wrap;justify-content:center}
+@media(max-width:640px){.bulkbar{bottom:calc(84px + env(safe-area-inset-bottom))}}
+.bulkbar .bb-count{font-size:12px;color:var(--gold);font-weight:600;padding:0 6px;white-space:nowrap}
+.bb{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:7px 11px;color:var(--mute);transition:all .15s;min-height:32px}
+.bb:hover{color:var(--text);border-color:var(--line-hi)}
+.bb.danger{color:var(--red);border-color:rgba(201,123,110,.35)}
+.bulktray{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom));z-index:71;display:flex;flex-wrap:wrap;gap:6px;background:var(--ink);border:1px solid var(--line-hi);border-radius:12px;padding:10px;max-width:92vw;box-shadow:0 20px 50px -16px rgba(0,0,0,.8)}
+@media(max-width:640px){.bulktray{bottom:calc(150px + env(safe-area-inset-bottom))}}
+/* command palette */
+.modal.cmd{padding:12px;max-width:560px}
+.modal.cmd input{width:100%;background:var(--pane);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;outline:none;position:relative}
+.modal.cmd input:focus{border-color:var(--gold)}
+#cmdList{margin-top:8px;max-height:52vh;overflow-y:auto;position:relative}
+.ci{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:9px;cursor:pointer;font-size:13.5px}
+.ci:hover,.ci.on{background:var(--pane-hi)}
+.ci .cico{width:20px;text-align:center;color:var(--gold);flex:none}
+.ci .clab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci .clab small{display:block;color:var(--dim);font-size:11px}
+.ci.dim{color:var(--dim);cursor:default}
 </style>
 </head>
 <body>
@@ -580,6 +611,10 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="fld"><label>Title</label><input id="eTitle" type="text"></div>
   <div class="fld"><label>Notes</label><textarea id="eNotes"></textarea></div>
   <div class="fld"><label>Checklist</label><div id="eSubs"></div><button class="btn ghost sm" id="eSubAdd">+ Add item</button></div>
+  <div class="fld" id="eStatusFld"><label>Status</label><select id="eStatus">
+    <option value="open">Open</option><option value="progress">In progress</option>
+    <option value="review">In review</option><option value="done">Done</option>
+  </select></div>
   <div class="fld-row cols-3">
     <div class="fld"><label>Date</label><input id="eDate" type="date"></div>
     <div class="fld"><label>Time</label><input id="eTime" type="time"></div>
@@ -683,6 +718,24 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="m-foot"><button class="btn ghost" id="rqCancel">Cancel</button><button class="btn gold" id="rqSend">Send request</button></div>
 </div></div>
 
+<!-- BULK ACTIONS -->
+<div class="bulkbar hidden" id="bulkBar">
+  <span class="bb-count" id="bbCount">0 selected</span>
+  <button class="bb" data-bulk="today">Today</button>
+  <button class="bb" data-bulk="tmrw">Tomorrow</button>
+  <button class="bb" data-bulk="assign" id="bbAssign">Assign</button>
+  <button class="bb" data-bulk="done">✓ Done</button>
+  <button class="bb danger" data-bulk="del">Delete</button>
+  <button class="bb" data-bulk="exit">✕</button>
+</div>
+<div class="bulktray hidden" id="bulkTray"></div>
+
+<!-- COMMAND PALETTE -->
+<div class="overlay" id="cmdOv"><div class="modal cmd">
+  <input id="cmdIn" placeholder="Search tasks, jump anywhere…  (Esc to close)" autocomplete="off" spellcheck="false">
+  <div id="cmdList"></div>
+</div></div>
+
 <div class="toasts" id="toasts"></div>
 <script>
 /* ================================================================
@@ -780,6 +833,8 @@ var suppressPush=false,unsubBoard=null,unsubShared=null,unsubReq=null,unsubNotes
 var shared=[],requests=[],allowCfg={emails:[],people:[]};
 var hydrated=false,unsubAdminMarks=null;
 var vMode='list',vCalMonth=null,vSelDay=null;
+var bulkMode=false,bulkSel={},bulkGuard=false;
+var cmdIdx=0,cmdItems=[],_actx=null;
 var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 var openTray=null,qIdx=0;
@@ -1072,15 +1127,18 @@ function renderMast(){
     +now.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
   var t=todayStr(),A=allTasks();
   var due=A.filter(function(k){return k.date===t});
-  var done=due.filter(function(k){return k.status!=='open'}).length;
+  var done=due.filter(function(k){return k.status==='done'||k.status==='review'}).length;
   var p=due.length?Math.round(done/due.length*100):0;
   $('#pct').textContent=done+'/'+due.length+' · '+p+'%';
   $('#inkFill').style.width=p+'%';
   var carried=A.filter(function(k){return k.status==='open'&&k.date===t&&k.carried>0}).length;
+  var stalled=isAdmin?A.filter(function(k){return k.person&&k.status==='open'&&(k.carried||0)>0
+    &&!(k.tnotes&&k.tnotes.length)&&!k.vmark}).length:0;
   var rev=shared.filter(function(k){return k.status==='review'}).length;
   $('#stats').innerHTML='<span class="stat"><b>'+done+'</b> done today</span>'
     +(carried?'<span class="stat warn"><b>'+carried+'</b> carried over</span>':'')
     +'<span class="stat"><span class="flame">◆</span> <b>'+calcStreak()+'</b> day streak</span>'
+    +(stalled?'<span class="stat danger"><b>'+stalled+'</b> unresponsive</span>':'')
     +(isAdmin&&rev?'<span class="stat warn"><b>'+rev+'</b> awaiting review</span>':'')
     +(isAdmin&&requests.length?'<span class="stat warn"><b>'+requests.length+'</b> requests</span>':'');
   var b=$('#reqBadge'),n=isAdmin?counts().requests:0;
@@ -1120,11 +1178,13 @@ function renderWeek(){
     var ds=todayStr(i),parts=ds.split('-'),dt=new Date(+parts[0],+parts[1]-1,+parts[2]);
     var all=A.filter(function(k){return k.date===ds});
     var open=all.filter(function(k){return k.status!=='done'}).length;
+    var carriedOpen=all.filter(function(k){return k.status==='open'&&(k.carried||0)>0}).length;
     var cls=['wd'];
     if(ds===sel)cls.push('on');
     if(ds===todayStr())cls.push('today');
     if(i<0)cls.push('past');
     if(open)cls.push('has');else if(all.length)cls.push('allclear');
+    if(carriedOpen)cls.push('warnday');
     h+='<button class="'+cls.join(' ')+'" data-day="'+ds+'"><span class="wl">'+dt.toLocaleDateString('en-IN',{weekday:'short'}).slice(0,3)
       +'</span><span class="wn">'+(+parts[2])+'</span><span class="wc"></span></button>';
   }
@@ -1147,6 +1207,7 @@ function taskCard(k,o){
   if(pp&&isAdmin)meta.push('<span class="m-chip person">@ '+esc(pp.label)+'</span>');
   else if(k.person&&isAdmin)meta.push('<span class="m-chip person">@ '+esc(k.person)+'</span>');
   if(k.status==='review')meta.push('<span class="m-chip rev">⏳ '+(isAdmin?'Awaiting your review':'In review')+'</span>');
+  if(k.status==='progress')meta.push('<span class="m-chip prog">◐ In progress</span>');
   if(k.vmark==='progress')meta.push('<span class="m-chip prog">◐ In progress'+(k.vmarkBy?' · '+esc(k.vmarkBy):'')+'</span>');
   if(k.vmark==='review')meta.push('<span class="m-chip rev">✓ Marked done'+(k.vmarkBy?' by '+esc(k.vmarkBy):'')+' — approve?</span>');
   if(k.selfCreated&&isAdmin)meta.push('<span class="m-chip self">✎ self-created</span>');
@@ -1154,11 +1215,16 @@ function taskCard(k,o){
   if(k.pri)meta.push('<span class="m-chip p-'+k.pri+'">⚑ '+PRI_LABEL[k.pri]+'</span>');
   if(k.subs&&k.subs.length)meta.push('<span class="m-chip">☑ '+k.subs.filter(function(s){return s.done}).length+'/'+k.subs.length+'</span>');
   if(k.tnotes&&k.tnotes.length)meta.push('<span class="m-chip hasnote">💬 '+k.tnotes.length+'</span>');
-  if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
+  /* stalled: assigned to someone, slipped a day+, and they have said/done nothing —
+     no note, no in-progress, no done-mark, still open */
+  var stalled=isAdmin&&k.person&&k.status==='open'&&(k.carried||0)>0
+    &&!(k.tnotes&&k.tnotes.length)&&!k.vmark;
+  if(stalled)meta.push('<span class="m-chip stall">⚠ '+esc((pp&&pp.label)||k.person)+' — no response, carried ×'+k.carried+'</span>');
+  else if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
   if(k.recurId)meta.push('<span class="m-chip">↻ repeats</span>');
   var done=k.status==='done',rev=k.status==='review';
-  var cls=done?'done-card':(rev?'review-card':'');
-  var chk=done?'checked':(rev?'review':'');
+  var cls=done?'done-card':(rev?'review-card':(stalled?'stalled-card':(k.status==='progress'?'prog-card':'')));
+  var chk=done?'checked':(rev?'review':(k.status==='progress'?'prog':''));
   var acts=[];
   if(isAdmin&&k.vmark==='review'){acts.push('<button class="ta-btn ok" data-act="okmark" title="Approve & close">✓</button>');
     acts.push('<button class="ta-btn del" data-act="nomark" title="Send back">↩</button>')}
@@ -1238,6 +1304,7 @@ function renderLedger(){
   }
   L.innerHTML=html;
   $$('#ledger .task').forEach(function(el,i){el.style.animationDelay=(Math.min(i,10)*45)+'ms'});
+  if(bulkMode)renderBulkUI();
 }
 /* ---------- ANALYTICS ---------- */
 function renderAnalytics(){
@@ -1350,6 +1417,12 @@ function fadeOut(w,cb){if(!w){cb();return}w.classList.add('leaving');setTimeout(
 function bindLedger(){
   var L=$('#ledger');
   L.addEventListener('click',function(e){
+    if(bulkMode){
+      if(bulkGuard){bulkGuard=false;return}
+      var bc=e.target.closest('.task');
+      if(bc){e.preventDefault();toggleBulk(bc.dataset.id)}
+      return;
+    }
     var rq=e.target.closest('[data-req]');
     if(rq){handleRequest(e.target.closest('[data-rid]').dataset.rid,rq.dataset.req);return}
     var card=e.target.closest('.task');if(!card)return;
@@ -1359,7 +1432,19 @@ function bindLedger(){
     doAction(a.dataset.act,k,card);
   });
   var sw=null;
-  L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c)return;
+  /* long-press → multi-select */
+  var lp=null;
+  L.addEventListener('pointerdown',function(e){
+    var c=e.target.closest('.task');if(!c||bulkMode)return;
+    lp={x:e.clientX,y:e.clientY,id:c.dataset.id,
+      t:setTimeout(function(){if(lp){enterBulk(lp.id);lp=null}},500)};
+  });
+  L.addEventListener('pointermove',function(e){
+    if(lp&&(Math.abs(e.clientX-lp.x)>10||Math.abs(e.clientY-lp.y)>10)){clearTimeout(lp.t);lp=null}});
+  ['pointerup','pointercancel'].forEach(function(ev){
+    L.addEventListener(ev,function(){if(lp){clearTimeout(lp.t);lp=null}})});
+
+  L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c||bulkMode)return;
     sw={c:c,w:c.closest('.t-wrap'),x:e.touches[0].clientX,y:e.touches[0].clientY,dx:0,h:null}},{passive:true});
   L.addEventListener('touchmove',function(e){
     if(!sw)return;
@@ -1397,7 +1482,7 @@ async function doAction(a,k,card){
   if(a==='approve'){
     if(!FB.ready)return;
     try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});
-      bumpDoneDate(todayStr(),1);save();toast('Approved')}catch(e){console.error(e);toast('Failed')}
+      bumpDoneDate(todayStr(),1);save();ding();toast('Approved')}catch(e){console.error(e);toast('Failed')}
     return;
   }
   if(a==='reject'){
@@ -1410,12 +1495,12 @@ async function doAction(a,k,card){
     if(isShared){
       if(!FB.ready){toast('Sync offline');return}
       try{
-        if(k.status==='open'){
-          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done',doneAt:Date.now()});bumpDoneDate(todayStr(),1);save()}
+        if(k.status==='open'||k.status==='progress'){
+          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done',doneAt:Date.now()});bumpDoneDate(todayStr(),1);save();ding()}
           else{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'review',doneAt:Date.now()});
-            bumpDoneDate(todayStr(),1);save();toast('Done — sent to Kalash for review')}
+            bumpDoneDate(todayStr(),1);save();ding();toast('Done — sent to Kalash for review')}
         }else if(k.status==='review'){
-          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});bumpDoneDate(todayStr(),1);save();toast('Approved')}
+          if(isAdmin){await FB.F.updateDoc(fdoc('tasks',k.id),{status:'done'});bumpDoneDate(todayStr(),1);save();ding();toast('Approved')}
           else{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'open',doneAt:null});
             bumpDoneDate(todayStr(),-1);save();toast('Un-marked')}
         }else{
@@ -1426,8 +1511,8 @@ async function doAction(a,k,card){
       }catch(e){console.error(e);toast('Update blocked — check rules')}
       return;
     }
-    if(k.status==='open'){
-      k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1);save();
+    if(k.status!=='done'){
+      k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1);save();ding();
       card.querySelector('.chk').classList.add('checked');card.classList.add('done-card');card.style.transform='';
       renderMast();renderTabs();setTimeout(function(){render()},450);
     }else{
@@ -1475,9 +1560,11 @@ function openEdit(k){
   $('#eTag').innerHTML='<option value="">No tag</option>'+S.tags.map(function(t){return'<option value="'+t.id+'" '+(k.tag===t.id?'selected':'')+'>'+esc(t.label)+'</option>'}).join('');
   $('#ePerson').innerHTML='<option value="">Just me</option>'+S.people.map(function(p){return'<option value="'+p.id+'" '+(k.person===p.id?'selected':'')+'>'+esc(p.label)+(p.email?' ✓':'')+'</option>'}).join('');
   $('#ePri').value=k.pri||'';
+  $('#eStatus').value=(k.status==='progress'||k.status==='review'||k.status==='done')?k.status:'open';
   var r=k.recurId?S.recurring.find(function(x){return x.id===k.recurId}):null;
   $('#eRecur').value=r?r.freq:'';
-  ['eTitle','eNotes','eDate','eTime','eTag','ePri','eRecur'].forEach(function(id){$('#'+id).disabled=editRO});
+  ['eTitle','eNotes','eDate','eTime','eTag','ePri','eRecur','eStatus'].forEach(function(id){$('#'+id).disabled=editRO});
+  $('#eStatusFld').classList.toggle('hidden',editRO);
   $('#eWhoFld').classList.toggle('hidden',!isAdmin);
   $('#ePerson').disabled=editShared;
   $('#eRecur').disabled=editShared;
@@ -1509,6 +1596,16 @@ async function saveEdit(){
       patch.time=$('#eTime').value||null;
       patch.tag=$('#eTag').value||null;
       patch.pri=$('#ePri').value;
+      var ns=$('#eStatus').value;
+      if(ns!==k.status){
+        patch.status=ns;
+        patch.doneAt=(ns==='done'||ns==='review')?(k.doneAt||Date.now()):null;
+        if(ns==='done'&&k.status!=='done')bumpDoneDate(todayStr(),1);
+        else if(k.status==='done'&&ns!=='done')bumpDoneDate(dsOf(k.doneAt||Date.now()),-1);
+        if(ns==='done'&&isAdmin&&S.view.key&&adminMarks[k.id]){
+          try{FB.F.deleteDoc(fdoc('views',S.view.key,'marks',k.id))}catch(e){}}
+        save(false);
+      }
     }else{
       patch.status=k.status;patch.doneAt=k.doneAt||null;
     }
@@ -1524,6 +1621,15 @@ async function saveEdit(){
   k.tag=$('#eTag').value||null;
   k.pri=$('#ePri').value;
   k.subs=editSubs.filter(function(s){return s.title.trim()});
+  var ns2=$('#eStatus').value;
+  if(ns2!==k.status){
+    if(ns2==='done'&&k.status!=='done'){k.doneAt=k.doneAt||Date.now();bumpDoneDate(todayStr(),1)}
+    if(k.status==='done'&&ns2!=='done'){bumpDoneDate(dsOf(k.doneAt||Date.now()),-1);delete k.doneAt}
+    if(ns2==='review')k.doneAt=k.doneAt||Date.now();
+    k.status=ns2;
+    if(isAdmin&&S.view.key&&adminMarks[k.id]&&ns2==='done'){
+      try{FB.F.deleteDoc(fdoc('views',S.view.key,'marks',k.id))}catch(e){}}
+  }
   var newPerson=isAdmin?($('#ePerson').value||null):null;
   var f=$('#eRecur').value;
   if(f){
@@ -1624,7 +1730,7 @@ async function approveMark(id){
   }
   bumpDoneDate(todayStr(),1);save();
   try{await FB.F.deleteDoc(fdoc('views',S.view.key,'marks',id))}catch(e){console.error(e)}
-  toast('Approved & closed');
+  ding();toast('Approved & closed');
 }
 async function rejectMark(id){
   var k=findTask(id);if(!k)return;
@@ -2131,6 +2237,159 @@ function renderGuestMgr(){
     :'<p style="margin:0 0 8px;font-size:12.5px;color:var(--dim)">No guests yet.</p>';
 }
 
+/* ---------- COMPLETION FEEDBACK ---------- */
+function ding(){
+  try{
+    _actx=_actx||new (window.AudioContext||window.webkitAudioContext)();
+    var t=_actx.currentTime;
+    [[880,0],[1318.5,.09]].forEach(function(n){
+      var o=_actx.createOscillator(),g=_actx.createGain();
+      o.frequency.value=n[0];o.type='sine';
+      g.gain.setValueAtTime(0.001,t+n[1]);
+      g.gain.exponentialRampToValueAtTime(0.08,t+n[1]+0.015);
+      g.gain.exponentialRampToValueAtTime(0.001,t+n[1]+0.12);
+      o.connect(g);g.connect(_actx.destination);
+      o.start(t+n[1]);o.stop(t+n[1]+0.14);
+    });
+  }catch(e){}
+  if(navigator.vibrate){try{navigator.vibrate(15)}catch(e){}}
+}
+
+/* ---------- BULK ACTIONS ---------- */
+function enterBulk(id){
+  bulkMode=true;bulkSel={};bulkGuard=true;
+  if(navigator.vibrate){try{navigator.vibrate(10)}catch(e){}}
+  toggleBulk(id);
+}
+function toggleBulk(id){
+  if(bulkSel[id])delete bulkSel[id];else bulkSel[id]=1;
+  renderBulkUI();
+}
+function renderBulkUI(){
+  var n=Object.keys(bulkSel).length;
+  if(bulkMode&&!n){exitBulk();return}
+  $('#bulkBar').classList.toggle('hidden',!bulkMode);
+  $('#bbCount').textContent=n+' selected';
+  $('#bbAssign').style.display=isAdmin?'':'none';
+  $$('#ledger .task').forEach(function(el){el.classList.toggle('bulk-on',!!bulkSel[el.dataset.id])});
+}
+function exitBulk(){
+  bulkMode=false;bulkSel={};
+  $('#bulkBar').classList.add('hidden');$('#bulkTray').classList.add('hidden');
+  $$('#ledger .task.bulk-on').forEach(function(el){el.classList.remove('bulk-on')});
+}
+async function applyBulk(act){
+  if(act==='exit'){exitBulk();return}
+  if(act==='assign'){renderBulkTray();return}
+  var ids=Object.keys(bulkSel);if(!ids.length)return;
+  if(act==='del'&&!confirm('Delete '+ids.length+' task(s)?'))return;
+  var skipped=0;
+  for(var i=0;i<ids.length;i++){
+    var k=findTask(ids[i]);if(!k)continue;
+    var sh=!!k.assigneeEmail;
+    if(act==='today'||act==='tmrw'){
+      var d=act==='today'?todayStr():todayStr(1);
+      if(sh){if(isAdmin&&FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{date:d})}catch(e){skipped++}}else skipped++}
+      else k.date=d;
+    }else if(act==='done'){
+      if(sh){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:isAdmin?'done':'review',doneAt:Date.now()});bumpDoneDate(todayStr(),1)}catch(e){skipped++}}else skipped++}
+      else if(k.status!=='done'){k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1)}
+    }else if(act==='del'){
+      if(sh){if((isAdmin||k.selfCreated)&&FB.ready){try{await FB.F.deleteDoc(fdoc('tasks',k.id))}catch(e){skipped++}}else skipped++}
+      else{var ix=S.tasks.indexOf(k);if(ix>=0)S.tasks.splice(ix,1)}
+    }
+  }
+  save();if(act==='done')ding();
+  exitBulk();render();
+  toast((act==='del'?'Deleted':act==='done'?'Completed':'Moved')+' '+(ids.length-skipped)
+    +(skipped?' · '+skipped+' skipped (no permission)':''));
+}
+function renderBulkTray(){
+  var el=$('#bulkTray');
+  el.innerHTML=S.people.map(function(p){
+    return'<button class="tr-chip" data-bp="'+p.id+'">@ '+esc(p.label)+(p.email?' ✓':'')+'</button>'}).join('')
+    +'<button class="tr-chip clear" data-bp="">Unassign</button>';
+  el.classList.remove('hidden');
+}
+async function bulkAssign(pid){
+  $('#bulkTray').classList.add('hidden');
+  var p=pid?personOf(pid):null,em=String((p&&p.email)||'').toLowerCase();
+  var ids=Object.keys(bulkSel),skipped=0,moved=0;
+  for(var i=0;i<ids.length;i++){
+    var k=findTask(ids[i]);if(!k)continue;
+    if(k.assigneeEmail){
+      /* shared: retarget to another login-enabled person, or skip */
+      if(pid&&em&&FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{person:pid,assigneeEmail:em});moved++}catch(e){skipped++}}
+      else skipped++;
+    }else{
+      if(pid&&em&&FB.ready){
+        await createShared({title:k.title,date:k.date,time:k.time,tag:k.tag,pri:k.pri,person:pid,assigneeEmail:em,selfCreated:false});
+        var ix=S.tasks.indexOf(k);if(ix>=0)S.tasks.splice(ix,1);moved++;
+      }else{k.person=pid||null;moved++}
+    }
+  }
+  save();exitBulk();render();
+  toast((pid?('Assigned '+moved+' to '+((p&&p.label)||'')):'Unassigned '+moved)
+    +(skipped?' · '+skipped+' skipped':''));
+}
+
+/* ---------- COMMAND PALETTE ---------- */
+function fuzzy(q,str){
+  var sl=str.toLowerCase();
+  var i=sl.indexOf(q);
+  if(i>=0)return 200-i;
+  var qi=0;
+  for(var j=0;j<sl.length&&qi<q.length;j++)if(sl[j]===q[qi])qi++;
+  return qi===q.length?10:-1;
+}
+function buildCmd(q){
+  q=q.trim().toLowerCase();
+  var items=[];
+  var nav=[['today','Go: Today'],['upcoming','Go: Upcoming'],['history','Go: History'],['analytics','Go: Analytics']];
+  if(isAdmin)nav.push(['requests','Go: Requests']);
+  nav.forEach(function(v){items.push({t:'nav',id:v[0],label:v[1],icon:'→'})});
+  items.push({t:'act',id:'new',label:'New task',icon:'+'});
+  items.push({t:'act',id:'settings',label:'Open settings',icon:'⚙'});
+  if(isAdmin&&S.view.key)items.push({t:'act',id:'copylink',label:'Copy view link',icon:'🔗'});
+  allTasks().forEach(function(k){
+    items.push({t:'task',id:k.id,label:k.title,icon:k.status==='done'?'✓':(k.status==='progress'?'◐':'○'),
+      sub:(k.date?fmtDateShort(k.date):'no date')+(k.person?' · @'+((personOf(k.person)||{}).label||k.person):'')
+        +(k.status!=='open'?' · '+k.status:'')});
+  });
+  if(q){
+    items=items.map(function(it){return{it:it,sc:fuzzy(q,it.label)}})
+      .filter(function(x){return x.sc>0})
+      .sort(function(a,b){return b.sc-a.sc})
+      .map(function(x){return x.it});
+  }
+  return items.slice(0,12);
+}
+function renderCmd(){
+  cmdItems=buildCmd($('#cmdIn').value);
+  if(cmdIdx>=cmdItems.length)cmdIdx=Math.max(0,cmdItems.length-1);
+  $('#cmdList').innerHTML=cmdItems.length?cmdItems.map(function(it,i){
+    return'<div class="ci '+(i===cmdIdx?'on':'')+'" data-ci="'+i+'"><span class="cico">'+it.icon+'</span>'
+      +'<span class="clab">'+esc(it.label)+(it.sub?'<small>'+esc(it.sub)+'</small>':'')+'</span></div>'}).join('')
+    :'<div class="ci dim">No matches</div>';
+}
+function runCmd(it){
+  if(!it)return;
+  closeOv('cmdOv');
+  if(it.t==='nav'){view=it.id;selDate=null;render()}
+  else if(it.t==='act'){
+    if(it.id==='new')$('#capInput').focus();
+    if(it.id==='settings')openSettings();
+    if(it.id==='copylink')navigator.clipboard.writeText(location.origin+location.pathname+'?view='+S.view.key).then(function(){toast('Link copied')});
+  }
+  else if(it.t==='task'){var k=findTask(it.id);if(k)openEdit(k)}
+}
+function openCmd(){
+  cmdIdx=0;$('#cmdIn').value='';
+  $('#cmdOv').classList.add('open');
+  renderCmd();
+  setTimeout(function(){$('#cmdIn').focus()},60);
+}
+
 /* ---------- BINDINGS ---------- */
 function bindAll(){
   bindCapture();bindLedger();bindViewer();
@@ -2265,6 +2524,20 @@ function bindAll(){
       prefs:Object.assign({},S.prefs),view:Object.assign({},S.view),meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
     migrate();save();render();toast('Wiped')});
 
+  $('#bulkBar').addEventListener('click',function(e){
+    var b=e.target.closest('[data-bulk]');if(b)applyBulk(b.dataset.bulk)});
+  $('#bulkTray').addEventListener('click',function(e){
+    var b=e.target.closest('[data-bp]');if(b)bulkAssign(b.dataset.bp)});
+
+  $('#cmdIn').addEventListener('input',function(){cmdIdx=0;renderCmd()});
+  $('#cmdIn').addEventListener('keydown',function(e){
+    if(e.key==='ArrowDown'){e.preventDefault();cmdIdx=Math.min(cmdIdx+1,cmdItems.length-1);renderCmd()}
+    else if(e.key==='ArrowUp'){e.preventDefault();cmdIdx=Math.max(cmdIdx-1,0);renderCmd()}
+    else if(e.key==='Enter'){e.preventDefault();runCmd(cmdItems[cmdIdx])}
+  });
+  $('#cmdList').addEventListener('click',function(e){
+    var r=e.target.closest('[data-ci]');if(r)runCmd(cmdItems[+r.dataset.ci])});
+
   $('#guestAdd').addEventListener('click',function(){
     S.guests=S.guests||[];S.guests.push('');
     renderGuestMgr();
@@ -2292,7 +2565,8 @@ function bindAll(){
   document.addEventListener('keydown',function(e){
     if(mode!=='app')return;
     var typing=/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');
-    if(e.key==='Escape'){$$('.overlay.open').forEach(function(o){closeOv(o.id)});openTray=null;renderCapture();return}
+    if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return}
+    if(e.key==='Escape'){$$('.overlay.open').forEach(function(o){closeOv(o.id)});exitBulk();openTray=null;renderCapture();return}
     if(typing)return;
     if(e.key==='n'||e.key==='/'){e.preventDefault();$('#capInput').focus()}
     if(e.key>='1'&&e.key<='5'){var v=VIEWS[+e.key-1];
@@ -2333,13 +2607,16 @@ $('#toSignup').addEventListener('click',function(){
 $('#toSignin').addEventListener('click',function(){
   gateStep(2);$('#gateMsg').textContent='Sign in to load your board.';});
 
-/* Only an email the admin has already added to the team list may register. */
+/* Best-effort invite pre-check. Anonymous users can't read the allowlist
+   (by design — it keeps team emails private), so a failed read returns null
+   = "unknown, proceed". The REAL enforcement happens in onAuth after account
+   creation: non-invited accounts are signed out and get no data access. */
 async function emailIsInvited(em){
   if(em===ADMIN_EMAIL)return true;
   try{
     var c=await FB.F.getDoc(fdoc('config','allowlist'));var d0=c.data()||{};
     return (d0.emails||[]).concat(d0.guests||[]).map(function(x){return String(x).toLowerCase()}).indexOf(em)>=0;
-  }catch(e){console.error(e);return false}
+  }catch(e){return null}
 }
 $('#emailBtn').addEventListener('click',async function(){
   var em=$('#gEmail').value.trim().toLowerCase(),pw=$('#gPass').value;
@@ -2364,10 +2641,13 @@ $('#signupBtn').addEventListener('click',async function(){
   $('#gateErr3').textContent='Checking your invite…';
   if(!FB.ready){var ok=await initFirebase();if(!ok){$('#gateErr3').textContent='Firebase unreachable.';return}}
   var invited=await emailIsInvited(em);
-  if(!invited){
+  if(invited===false){
     $('#gateErr3').textContent='That email hasn’t been invited. Ask Kalash to add it in Settings → Team first.';
     return;
   }
+  /* invited===null → can't verify anonymously; create the account and let
+     the sign-in check enforce the invite */
+  $('#gateErr3').textContent='Creating your account…';
   try{
     await FB.A.createUserWithEmailAndPassword(FB.auth,em,pw);
     $('#gateErr3').textContent='';
