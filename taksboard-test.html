@@ -207,7 +207,10 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .m-chip.shared{color:var(--ok);border-color:rgba(143,191,155,.3)}
 .t-acts{flex:none;display:flex;gap:2px;opacity:0;transition:opacity .2s;margin-top:-2px}
 .task:hover .t-acts{opacity:1}
-@media(hover:none){.t-acts{display:none}}
+/* status-change buttons stay visible — they're not discoverable on hover-only */
+.t-acts .ta-btn.always{opacity:1}
+.t-acts:has(.always){opacity:1}
+@media(hover:none){.t-acts{display:flex;opacity:1}.t-acts .ta-btn:not(.always){display:none}.t-acts .ta-btn.always{display:grid}}
 .ta-btn{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--dim);transition:all .15s;font-size:14px}
 .ta-btn:hover{color:var(--gold);background:var(--gold-soft)}
 .ta-btn.del:hover{color:var(--red);background:rgba(201,123,110,.1)}
@@ -1236,13 +1239,14 @@ function taskCard(k,o){
   var cls=done?'done-card':(rev?'review-card':(stalled?'stalled-card':(k.status==='progress'?'prog-card':'')));
   var chk=done?'checked':(rev?'review':(k.status==='progress'?'prog':''));
   var acts=[];
-  if(isAdmin&&k.vmark==='review'){acts.push('<button class="ta-btn ok" data-act="okmark" title="Approve & close">✓</button>');
-    acts.push('<button class="ta-btn del" data-act="nomark" title="Send back">↩</button>')}
-  else if(isAdmin&&rev){acts.push('<button class="ta-btn ok" data-act="approve" title="Approve">✓</button>');
-    acts.push('<button class="ta-btn del" data-act="reject" title="Send back">↩</button>')}
-  else if(k.status==='progress'){acts.push('<button class="ta-btn" data-act="reopen" title="Back to open">↺</button>');
+  if(isAdmin&&k.vmark==='review'){acts.push('<button class="ta-btn ok always" data-act="okmark" title="Approve & close">✓</button>');
+    acts.push('<button class="ta-btn del always" data-act="nomark" title="Send back">↩</button>')}
+  else if(isAdmin&&rev){acts.push('<button class="ta-btn ok always" data-act="approve" title="Approve">✓</button>');
+    acts.push('<button class="ta-btn del always" data-act="reject" title="Send back">↩</button>')}
+  else if(k.status==='progress'){acts.push('<button class="ta-btn always" data-act="reopen" title="Back to open">↺</button>');
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
-  else if(!done&&!rev)acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>');
+  else if(!done&&!rev){acts.push('<button class="ta-btn always" data-act="startprog" title="Mark in progress">◐</button>');
+    acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
   if(isAdmin||!isShared||k.selfCreated)acts.push('<button class="ta-btn del" data-act="del" title="Delete">✕</button>');
   return'<div class="t-wrap" data-id="'+k.id+'">'
@@ -1496,6 +1500,11 @@ async function doAction(a,k,card){
   if(a==='reopen'){
     if(isShared){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'open',doneAt:null});toast('Back to open')}catch(e){toast('Failed')}}}
     else{k.status='open';delete k.doneAt;save();render();toast('Back to open')}
+    return;
+  }
+  if(a==='startprog'){
+    if(isShared){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'progress'});toast('In progress')}catch(e){toast('Failed')}}}
+    else{k.status='progress';save();render();toast('In progress')}
     return;
   }
   if(a==='approve'){
