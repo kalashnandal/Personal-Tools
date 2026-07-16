@@ -21,6 +21,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Daily Ops">
+<link rel="icon" type="image/png" href="https://kalashnandal.co.in/Personal-Tools/DAA82F6B-029B-444F-B1AE-D50BDBD2D7B8.png">
+<link rel="apple-touch-icon" href="https://kalashnandal.co.in/Personal-Tools/DAA82F6B-029B-444F-B1AE-D50BDBD2D7B8.png">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -46,7 +48,7 @@ input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus
 input::placeholder,textarea::placeholder{color:var(--dim);-webkit-text-fill-color:var(--dim);opacity:1;font-weight:400}
 input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-visible{outline:1.5px solid var(--gold);outline-offset:2px;border-radius:6px}
 .hidden{display:none!important}
-.shell{position:relative;z-index:1;max-width:768px;margin:0 auto;padding:clamp(18px,4vw,44px) clamp(16px,4vw,24px) calc(120px + env(safe-area-inset-bottom))}
+.shell{position:relative;z-index:1;max-width:768px;margin:0 auto;padding:calc(clamp(18px,4vw,44px) + env(safe-area-inset-top,0px)) clamp(16px,4vw,24px) calc(120px + env(safe-area-inset-bottom))}
 .gate{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--ink)}
 .gate::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 45% at 50% 0%,var(--gold-soft),transparent 70%)}
 .gate-card{position:relative;width:100%;max-width:400px;text-align:center}
@@ -736,6 +738,10 @@ html.compact .group-h{margin:14px 0 8px}
       <button class="btn gold sm hidden" id="installBtn">📲 Install app</button>
       <span style="font-size:11.5px;color:var(--dim)" id="installHint"></span>
     </div>
+    <div class="set-row" style="margin-top:10px">
+      <button class="btn ghost sm" id="notifPermBtn">🔔 Enable notifications</button>
+      <span style="font-size:11.5px;color:var(--dim)" id="notifHint"></span>
+    </div>
   </div>
 
   <div class="set-sec" id="activitySec">
@@ -928,6 +934,8 @@ var activity=[],unsubActivity=null,lastSeenAct=0,notifOpen=false;
 var actWho='all',actKind='all';
 var logActWarned=false,impUid=null;
 var deferredPrompt=null;
+var APP_ICON='https://kalashnandal.co.in/Personal-Tools/DAA82F6B-029B-444F-B1AE-D50BDBD2D7B8.png';
+var notifWatermark=0;
 var aCalMonth=null,aSelDay=null;
 var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
@@ -2291,7 +2299,9 @@ function bindViewer(){
     vMode=b.dataset.vm;renderViewer()});
   $('#vThemeBtn').addEventListener('click',function(){renderVTheme();$('#vSetOv').classList.add('open')});
   var vbell=$('#vBellBtn');if(vbell)vbell.addEventListener('click',function(e){e.stopPropagation();toggleNotif()});
-  var vpop=$('#vNotifPop');if(vpop)vpop.addEventListener('click',function(e){if(e.target.closest('[data-actseen]'))markActSeen()});
+  var vpop=$('#vNotifPop');if(vpop)vpop.addEventListener('click',function(e){
+    if(e.target.closest('[data-actseen]'))markActSeen();
+    if(e.target.closest('[data-notifperm]'))reqNotifPerm()});
   $('#vSetClose').addEventListener('click',function(){$('#vSetOv').classList.remove('open')});
   $('#vThemeReset').addEventListener('click',function(){
     Store.set(vPrefsKey(),{accent:'gold',bg:'midnight',custom:null});
@@ -2322,6 +2332,11 @@ function bindViewer(){
 function openSettings(){
   renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();renderActivityFull();
   $('#inviteUrl').textContent=location.origin+location.pathname;
+  var perm=('Notification' in window)?Notification.permission:'unsupported';
+  $('#notifHint').textContent=perm==='granted'?'On — alerts fire while the app is open':
+    perm==='denied'?'Blocked in browser settings':
+    perm==='unsupported'?'Not supported here (iPhone needs true push)':'Alerts for team activity';
+  $('#notifPermBtn').style.display=perm==='granted'?'none':'';
   var stand=(matchMedia('(display-mode: standalone)').matches||navigator.standalone);
   $('#installHint').textContent=stand?'Installed ✓'
     :(deferredPrompt?'Ready to install':'iPhone: Share → Add to Home Screen · Android/desktop: browser menu → Install');
@@ -2452,6 +2467,22 @@ function listenActivity(){
   unsubActivity=FB.F.onSnapshot(fcol('activity'),function(snap){
     activity=snap.docs.map(function(d){return Object.assign({id:d.id},d.data())})
       .sort(function(a,b){return (b.ts||0)-(a.ts||0)}).slice(0,300);
+    /* OS notifications: only events newer than the watermark, never our own,
+       first snapshot is baseline-only (no notification storm on load) */
+    if(!notifWatermark){
+      notifWatermark=Date.now();
+    }else{
+      var fresh=visibleActivity().filter(function(a){
+        return a.ts>notifWatermark
+          &&(a.email||'')!==(actorEmail()||'__self')
+          &&!(mode==='viewer'&&a.person===vWho);
+      });
+      if(fresh.length){
+        notifWatermark=Math.max.apply(null,fresh.map(function(a){return a.ts}).concat([notifWatermark]));
+        if(fresh.length===1)osNotify('Daily Ops',stripHtml(actText(fresh[0])));
+        else osNotify('Daily Ops',fresh.length+' new updates \u2014 '+stripHtml(actText(fresh[0]))+' \u2026');
+      }
+    }
     renderNotif();renderActivityFull();
     if(mode==='app'&&view==='activity')renderLedger();
   },function(e){
@@ -2474,7 +2505,10 @@ function renderNotif(){
   var rows=list.slice(0,30).map(function(a){
     return'<div class="act '+(a.ts>lastSeenAct?'unseen':'')+'"><span class="aic '+actCls(a.kind)+'">'+actIcon(a.kind)+'</span>'
       +'<span class="ab">'+actText(a)+'<span class="at">'+ago(a.ts)+' ago</span></span></div>'}).join('');
-  pop.innerHTML='<div class="notif-head"><h5>Activity</h5>'+(n?'<button data-actseen="1">Mark all read</button>':'')+'</div>'
+  var permBtn=('Notification' in window&&Notification.permission==='default')
+    ?'<button data-notifperm="1">Enable alerts</button>':'';
+  pop.innerHTML='<div class="notif-head"><h5>Activity</h5><span style="display:flex;gap:12px">'+permBtn
+    +(n?'<button data-actseen="1">Mark all read</button>':'')+'</span></div>'
     +(rows||'<div class="notif-empty">No activity yet.</div>');
 }
 function renderActivityFull(){
@@ -2484,6 +2518,23 @@ function renderActivityFull(){
     return'<div class="act"><span class="aic '+actCls(a.kind)+'">'+actIcon(a.kind)+'</span>'
       +'<span class="ab">'+actText(a)+'<span class="at">'+ago(a.ts)+' ago'+(a.email?' · '+esc(a.email):'')+'</span></span></div>'}).join('')
     :'<p style="margin:0;font-size:12.5px;color:var(--dim)">Nothing yet.</p>';
+}
+async function osNotify(title,body){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  try{
+    var reg=('serviceWorker' in navigator)?await navigator.serviceWorker.getRegistration():null;
+    var opts={body:body,icon:APP_ICON,badge:APP_ICON,tag:'dailyops-'+Date.now()};
+    if(reg&&reg.showNotification)reg.showNotification(title,opts);
+    else new Notification(title,opts);
+  }catch(e){try{new Notification(title,{body:body})}catch(e2){}}
+}
+function stripHtml(h){var d=document.createElement('div');d.innerHTML=h;return d.textContent||''}
+async function reqNotifPerm(){
+  if(!('Notification' in window)){toast('Notifications aren\u2019t supported in this browser');return}
+  var r=await Notification.requestPermission();
+  if(r==='granted'){toast('Notifications on');osNotify('Daily Ops','You\u2019ll be notified of team activity while the app is open.')}
+  else toast('Notifications blocked \u2014 enable them in browser site settings');
+  renderNotif();
 }
 function markActSeen(){
   lastSeenAct=Date.now();Store.set('dailyops.seenAct',lastSeenAct);renderNotif();
@@ -2822,7 +2873,8 @@ function bindAll(){
   $('#syncBtn').addEventListener('click',openSettings);
   $('#bellBtn').addEventListener('click',function(e){e.stopPropagation();toggleNotif()});
   $('#notifPop').addEventListener('click',function(e){
-    if(e.target.closest('[data-actseen]'))markActSeen()});
+    if(e.target.closest('[data-actseen]'))markActSeen();
+    if(e.target.closest('[data-notifperm]'))reqNotifPerm()});
   document.addEventListener('click',function(e){
     if(notifOpen&&!e.target.closest('#notifPop')&&!e.target.closest('#bellBtn')
        &&!e.target.closest('#vNotifPop')&&!e.target.closest('#vBellBtn')){
@@ -2950,6 +3002,7 @@ function bindAll(){
       prefs:Object.assign({},S.prefs),view:Object.assign({},S.view),meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
     migrate();save();render();toast('Wiped')});
 
+  $('#notifPermBtn').addEventListener('click',reqNotifPerm);
   $('#installBtn').addEventListener('click',async function(){
     if(!deferredPrompt){toast('Use your browser menu → Install / Add to Home Screen');return}
     deferredPrompt.prompt();
@@ -3178,16 +3231,12 @@ if(location.protocol==='file:')setTimeout(function(){toast('Open via https:// (G
 /* ---------- PWA ---------- */
 (function pwa(){
   try{
-    var ICON='data:image/svg+xml,'+encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">'
-      +'<rect width="512" height="512" rx="100" fill="#07080B"/>'
-      +'<rect x="14" y="14" width="484" height="484" rx="88" fill="none" stroke="#E2C27A" stroke-opacity=".35" stroke-width="6"/>'
-      +'<text x="256" y="300" font-family="Georgia,serif" font-style="italic" font-size="190" fill="#E2C27A" text-anchor="middle">Do</text></svg>');
+    var ICON=APP_ICON;
     var man={name:'Daily Ops',short_name:'Daily Ops',
       start_url:location.pathname,scope:'./',display:'standalone',
       background_color:'#07080B',theme_color:'#07080B',
-      icons:[{src:ICON,sizes:'512x512',type:'image/svg+xml',purpose:'any'},
-             {src:ICON,sizes:'512x512',type:'image/svg+xml',purpose:'maskable'}]};
+      icons:[{src:ICON,sizes:'1024x1024',type:'image/png',purpose:'any'},
+             {src:ICON,sizes:'1024x1024',type:'image/png',purpose:'maskable'}]};
     var l=document.createElement('link');l.rel='manifest';
     l.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(man));
     document.head.appendChild(l);
