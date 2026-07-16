@@ -16,6 +16,11 @@
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js" crossorigin>
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js" crossorigin>
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js" crossorigin>
+<meta name="theme-color" content="#07080B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daily Ops">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -414,6 +419,7 @@ html.compact .group-h{margin:14px 0 8px}
 .pr-row .pdot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex:none}
 .pr-row .pdot.live{background:var(--ok);box-shadow:0 0 8px var(--ok)}
 .pr-row .pt{font-size:11px;color:var(--dim);flex:none}
+.pr-row .btn{flex:none;padding:5px 9px;font-size:10.5px}
 .inv-box{background:var(--pane);border:1px dashed var(--line-hi);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--mute);line-height:1.6;margin-top:10px}
 .inv-box b{color:var(--gold)}
 /* gate email/pw */
@@ -440,6 +446,7 @@ html.compact .group-h{margin:14px 0 8px}
 .cdots .dp{background:var(--amber)}
 .cdots .dr{background:var(--blue)}
 .cdots .dd{background:var(--dim)}
+.cdots .dx{background:var(--red)}
 .cal-legend{display:flex;gap:14px;margin-top:10px;font-size:10.5px;color:var(--dim);flex-wrap:wrap}
 .cal-legend span{display:inline-flex;align-items:center;gap:5px}
 .cal-legend i{width:6px;height:6px;border-radius:50%;display:inline-block}
@@ -722,6 +729,15 @@ html.compact .group-h{margin:14px 0 8px}
     <button class="btn ghost sm" id="guestAdd">+ Invite a guest</button>
   </div>
 
+  <div class="set-sec">
+    <h4>App</h4>
+    <p>Install Daily Ops on your device — home-screen icon, full screen, loads offline.</p>
+    <div class="set-row">
+      <button class="btn gold sm hidden" id="installBtn">📲 Install app</button>
+      <span style="font-size:11.5px;color:var(--dim)" id="installHint"></span>
+    </div>
+  </div>
+
   <div class="set-sec" id="activitySec">
     <h4>Activity — full history</h4>
     <p>Everything that's happened across all tasks. Newest first.</p>
@@ -780,6 +796,15 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="fld"><label>Context / why</label><textarea id="rqNotes"></textarea></div>
   <div class="fld"><label>Suggested date</label><input id="rqDate" type="date"></div>
   <div class="m-foot"><button class="btn ghost" id="rqCancel">Cancel</button><button class="btn gold" id="rqSend">Send request</button></div>
+</div></div>
+
+<!-- ADMIN: VIEW A USER'S BOARD -->
+<div class="overlay" id="impOv"><div class="modal">
+  <div class="grab"></div>
+  <h3 id="impTitle">Board</h3>
+  <p style="font-size:12px;color:var(--dim);margin-bottom:12px;position:relative">Read-only — their private board, live from the server.</p>
+  <div id="impBody" style="max-height:56vh;overflow-y:auto;position:relative"></div>
+  <div class="m-foot"><button class="btn ghost sm" id="impRefresh">↻ Refresh</button><button class="btn gold" id="impClose">Close</button></div>
 </div></div>
 
 <!-- BULK ACTIONS -->
@@ -901,6 +926,9 @@ var bulkMode=false,bulkSel={},bulkGuard=false;
 var cmdIdx=0,cmdItems=[],_actx=null;
 var activity=[],unsubActivity=null,lastSeenAct=0,notifOpen=false;
 var actWho='all',actKind='all';
+var logActWarned=false,impUid=null;
+var deferredPrompt=null;
+var aCalMonth=null,aSelDay=null;
 var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 var openTray=null,qIdx=0;
@@ -1169,13 +1197,14 @@ async function createShared(o){
 }
 
 /* ---------- VIEWS / RENDER ---------- */
-var VIEWS=[['today','Today'],['upcoming','Upcoming'],['history','History'],['analytics','Analytics'],['activity','Activity'],['requests','Requests']];
+var VIEWS=[['today','Today'],['upcoming','Upcoming'],['calendar','Calendar'],['history','History'],['analytics','Analytics'],['activity','Activity'],['requests','Requests']];
 var NAVICONS={
   today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
   upcoming:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
   history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 7v5l3 2"/><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.5 8.5 0 005 7"/><path d="M3.5 4v3.5H7"/></svg>',
   analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>',
+  calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
   requests:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="4"/><path d="M18 15.5v3M16.5 17h3"/></svg>'
 };
 function counts(){
@@ -1183,7 +1212,7 @@ function counts(){
   return{today:A.filter(function(k){return k.status!=='done'&&k.date===t}).length,
     upcoming:A.filter(function(k){return k.status!=='done'&&k.date&&k.date>t}).length,
     history:A.filter(function(k){return k.status==='done'}).length,
-    analytics:0,activity:0,
+    analytics:0,activity:0,calendar:0,
     requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
 function matches(k){return(activeTag==='all'||k.tag===activeTag)&&(!query||((k.title+' '+(k.notes||'')).toLowerCase().indexOf(query)>=0))}
@@ -1223,13 +1252,13 @@ function renderTabs(){
   $('#tabs').innerHTML=tabs.map(function(v){
     return'<button class="tab '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]
       +(v[0]==='requests'?(c.requests?'<span class="alert"></span>':'')
-        :((v[0]==='analytics'||v[0]==='activity')?'':'<span class="n">'+(c[v[0]]||0)+'</span>'))+'</button>'}).join('');
+        :((v[0]==='analytics'||v[0]==='activity'||v[0]==='calendar')?'':'<span class="n">'+(c[v[0]]||0)+'</span>'))+'</button>'}).join('');
   $('#bnav').innerHTML=tabs.map(function(v){
     return'<button class="bn '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+NAVICONS[v[0]]+'<span>'+v[1]+'</span>'
       +((v[0]!=='analytics'&&c[v[0]])?'<span class="bd '+(v[0]==='requests'?'alert':'')+'">'+(c[v[0]]>99?'99':c[v[0]])+'</span>':'')+'</button>'}).join('');
 }
 function renderFilters(){
-  var show=view!=='requests'&&view!=='analytics'&&view!=='activity';
+  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar';
   $('#filters').style.display=show?'flex':'none';
   if(!show)return;
   $('#filters').innerHTML='<button class="f-chip '+(activeTag==='all'?'on':'')+'" data-tag="all">All</button>'
@@ -1318,6 +1347,7 @@ function renderLedger(){
   var L=$('#ledger'),t=todayStr(),A=allTasks(),html='';
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
   if(view==='activity'){L.innerHTML=renderActivityScreen();bindActivityScreen();return}
+  if(view==='calendar'){L.innerHTML=renderCalScreen();bindCalScreen();return}
   if(view==='requests'){
     var vm=allTasks().filter(function(k){return k.vmark==='review'});
     if(vm.length){
@@ -1657,7 +1687,7 @@ function openEdit(k){
   renderSubs();
   $('#eNoteFeed').innerHTML=(k.tnotes&&k.tnotes.length)
     ?'<div class="fld"><label>Team notes</label><div class="notefeed">'
-      +k.tnotes.map(function(n){return'<div class="nf"><b>'+esc(n.by)+'</b><span>'+esc(n.text)+'</span><span class="ts">'+(n.ts?ago(n.ts):'')+'</span></div>'}).join('')+'</div></div>':'';
+      +k.tnotes.map(function(n){return'<div class="nf"><b>'+esc(n.by)+'</b><span>'+hlM(esc(n.text))+'</span><span class="ts">'+(n.ts?ago(n.ts):'')+'</span></div>'}).join('')+'</div></div>':'';
   $('#editOv').classList.add('open');
   if(window.innerWidth>640&&!editRO)setTimeout(function(){$('#eTitle').focus()},80);
 }
@@ -1855,6 +1885,7 @@ function renderPresence(){
       +'<span class="pav">'+esc(initials(p.name||p.email||'?'))+'</span>'
       +'<span class="pe">'+esc(p.email||'—')+(p.admin?' <b style="color:var(--gold)">· admin</b>':'')
       +'<small>'+(live?'active now':'last seen '+(p.lastSeen?ago(p.lastSeen):'—'))+'</small></span>'
+      +(p.admin?'':'<button class="btn ghost sm" data-imp="'+p.uid+'" data-impname="'+esc(p.email||p.name||'user')+'">View board</button>')
       +'<span class="pt">'+(live?'●':'')+'</span></div>';
   }).join('');
 }
@@ -2189,7 +2220,12 @@ async function sendNote(taskId){
   var p=vData.people.find(function(x){return x.id===vWho});
   if(!FB.ready){toast('Offline — try again');return}
   try{await FB.F.addDoc(fcol('views',VK,'notes'),{taskId:taskId,text:text,by:vWho,byName:(p&&p.name)||'team',ts:FB.F.serverTimestamp()});
-    inp.value='';var tt2=((vData&&vData.tasks)||[]).find(function(x){return x.id===taskId});logAct('note',(tt2&&tt2.title)||'a task');toast('Note sent to Kalash')}
+    inp.value='';var tt2=((vData&&vData.tasks)||[]).find(function(x){return x.id===taskId});
+    logAct('note',(tt2&&tt2.title)||'a task');
+    parseMentions(text).forEach(function(mp){
+      logAct('mention',(tt2&&tt2.title)||'a task',mp.name,
+        {mention:mp.id,mentionEmail:(mp.email||'').toLowerCase()})});
+    toast('Note sent to Kalash')}
   catch(e){console.error(e);toast('Could not send')}
 }
 function renderVCal(mine){
@@ -2286,6 +2322,10 @@ function bindViewer(){
 function openSettings(){
   renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();renderActivityFull();
   $('#inviteUrl').textContent=location.origin+location.pathname;
+  var stand=(matchMedia('(display-mode: standalone)').matches||navigator.standalone);
+  $('#installHint').textContent=stand?'Installed ✓'
+    :(deferredPrompt?'Ready to install':'iPhone: Share → Add to Home Screen · Android/desktop: browser menu → Install');
+  if(deferredPrompt)$('#installBtn').classList.remove('hidden');
   ['#viewSec','#teamSec','#presenceSec','#guestSec','#activitySec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
   $('#setOv').classList.add('open');
 }
@@ -2335,6 +2375,22 @@ function renderGuestMgr(){
 /* ---------- ACTIVITY LOG ---------- */
 /* actor: who did it. In admin app that's you or a team member (email);
    in the viewer it's the picked person's name. */
+function parseMentions(text){
+  var ppl=(mode==='viewer')
+    ?((vData&&vData.people)||[]).map(function(p){return{id:p.id,name:p.name,email:p.email||''}})
+    :S.people.map(function(p){return{id:p.id,name:p.label,email:p.email||''}});
+  var out=[],seen={};
+  (String(text).match(/@([A-Za-z0-9_]+)/g)||[]).forEach(function(tok){
+    var q=tok.slice(1).toLowerCase();
+    var hit=ppl.find(function(pp){return pp.name.toLowerCase().replace(/\s+/g,'').indexOf(q)===0});
+    if(hit&&!seen[hit.id]){seen[hit.id]=1;out.push(hit)}
+  });
+  return out;
+}
+function hlM(escText){
+  return String(escText).replace(/@[A-Za-z0-9_]+/g,function(m){
+    return'<b style="color:var(--gold)">'+m+'</b>'});
+}
 function actorName(){
   if(mode==='viewer'){var p=(vData&&vData.people||[]).find(function(x){return x.id===vWho});return (p&&p.name)||'A viewer'}
   if(isAdmin)return 'Kalash';
@@ -2344,7 +2400,7 @@ function actorEmail(){
   if(mode==='viewer')return '';
   return (me&&me.email)||'';
 }
-async function logAct(kind,taskTitle,extra){
+async function logAct(kind,taskTitle,extra,more){
   if(!FB.ready)return;
   var vkey=(mode==='viewer')?VK:(S.view&&S.view.key)||null;
   var ev={kind:kind,title:String(taskTitle||'').slice(0,120),
@@ -2352,10 +2408,14 @@ async function logAct(kind,taskTitle,extra){
     person:(mode==='viewer'?vWho:null),
     vkey:vkey,ts:Date.now()};
   if(extra)ev.extra=String(extra).slice(0,80);
-  try{await FB.F.addDoc(fcol('activity'),ev)}catch(e){console.error('logAct',e)}
+  if(more)Object.assign(ev,more);
+  try{await FB.F.addDoc(fcol('activity'),ev)}
+  catch(e){console.error('logAct',e);
+    if(e&&e.code==='permission-denied'&&!logActWarned){logActWarned=true;
+      toast('Activity rule missing \u2014 events aren\u2019t being saved')}}
 }
-function actIcon(k){return {done:'✓',progress:'◐',reopen:'↺',review:'⏳',create:'＋',push:'→',assign:'@',reassign:'@',revert:'↺',note:'💬','delete':'✕',approve:'✓'}[k]||'•'}
-function actCls(k){return {done:'done',progress:'prog',reopen:'move',revert:'rev',create:'new',push:'move',assign:'move',reassign:'move',note:'note',approve:'done','delete':'rev',review:'prog'}[k]||''}
+function actIcon(k){return {done:'✓',progress:'◐',reopen:'↺',review:'⏳',create:'＋',push:'→',assign:'@',reassign:'@',revert:'↺',note:'💬','delete':'✕',approve:'✓',mention:'@'}[k]||'•'}
+function actCls(k){return {done:'done',progress:'prog',reopen:'move',revert:'rev',create:'new',push:'move',assign:'move',reassign:'move',note:'note',approve:'done','delete':'rev',review:'prog',mention:'note'}[k]||''}
 function actText(a){
   var who='<span class="who">'+esc(a.who)+'</span>';
   var task='<b>'+esc(a.title||'a task')+'</b>';
@@ -2371,27 +2431,34 @@ function actText(a){
     assign:who+' assigned '+task+(a.extra?' to '+esc(a.extra):''),
     reassign:who+' reassigned '+task+(a.extra?' to '+esc(a.extra):''),
     note:who+' noted on '+task,
-    'delete':who+' deleted '+task
+    'delete':who+' deleted '+task,
+    mention:who+' mentioned <span class="who">'+esc(a.extra||'someone')+'</span> on '+task
   };
   return m[a.kind]||who+' updated '+task;
 }
 /* which events this session should see */
 function visibleActivity(){
   if(mode==='viewer'){
-    return activity.filter(function(a){return a.vkey===VK&&(a.person===vWho||!a.person)});
+    return activity.filter(function(a){return a.mention===vWho||(a.vkey===VK&&(a.person===vWho||!a.person))});
   }
   if(isAdmin)return activity;   /* global log */
   var em=(me&&me.email||'').toLowerCase();
-  return activity.filter(function(a){return (a.email||'').toLowerCase()===em});
+  return activity.filter(function(a){return (a.email||'').toLowerCase()===em||(a.mentionEmail||'').toLowerCase()===em});
 }
 function listenActivity(){
   if(!FB.ready)return;
   if(unsubActivity)unsubActivity();
   lastSeenAct=Store.get('dailyops.seenAct',0);
-  unsubActivity=FB.F.onSnapshot(FB.F.query(fcol('activity'),FB.F.orderBy('ts','desc')),function(snap){
-    activity=snap.docs.map(function(d){return Object.assign({id:d.id},d.data())}).slice(0,200);
-    renderNotif();renderActivityFull();if(mode==='app'&&view==='activity')renderLedger();
-  },function(e){console.error('activity',e)});
+  unsubActivity=FB.F.onSnapshot(fcol('activity'),function(snap){
+    activity=snap.docs.map(function(d){return Object.assign({id:d.id},d.data())})
+      .sort(function(a,b){return (b.ts||0)-(a.ts||0)}).slice(0,300);
+    renderNotif();renderActivityFull();
+    if(mode==='app'&&view==='activity')renderLedger();
+  },function(e){
+    console.error('activity listener',e);
+    if(e&&e.code==='permission-denied')
+      toast('Activity blocked — the activity rule isn\u2019t published in Firestore');
+  });
 }
 function unseenCount(){
   return visibleActivity().filter(function(a){return a.ts>lastSeenAct&&(a.email||'')!==(actorEmail()||'__self')}).length;
@@ -2446,7 +2513,7 @@ function renderActivityScreen(){
 
   var KIND_LABEL={create:'Created',done:'Completed',progress:'Started',review:'Sent to review',
     approve:'Approved',reopen:'Reopened',revert:'Reverted',push:'Pushed',assign:'Assigned',
-    reassign:'Reassigned',note:'Notes','delete':'Deleted'};
+    reassign:'Reassigned',note:'Notes','delete':'Deleted',mention:'Mentions'};
 
   var h='';
   /* summary cards */
@@ -2644,6 +2711,104 @@ function openCmd(){
   setTimeout(function(){$('#cmdIn').focus()},60);
 }
 
+/* ---------- ADMIN CALENDAR ---------- */
+function renderCalScreen(){
+  if(!aCalMonth){var n0=new Date();aCalMonth=new Date(n0.getFullYear(),n0.getMonth(),1)}
+  var y=aCalMonth.getFullYear(),mo=aCalMonth.getMonth();
+  var first=new Date(y,mo,1),startDow=first.getDay(),dim=new Date(y,mo+1,0).getDate(),t=todayStr();
+  var byDay={};
+  allTasks().forEach(function(k){if(k.date)(byDay[k.date]=byDay[k.date]||[]).push(k)});
+  var h='<div class="cal"><div class="cal-head">'
+    +'<button class="btn ghost sm" data-acnav="-1">‹</button>'
+    +'<span class="cal-title">'+esc(first.toLocaleDateString('en-IN',{month:'long',year:'numeric'}))+'</span>'
+    +'<div style="display:flex;gap:6px"><button class="btn ghost sm" data-acnav="0">Today</button>'
+    +'<button class="btn ghost sm" data-acnav="1">›</button></div></div><div class="cal-grid">';
+  ['S','M','T','W','T','F','S'].forEach(function(d){h+='<div class="cal-dow">'+d+'</div>'});
+  for(var i=0;i<startDow;i++)h+='<div></div>';
+  for(var d2=1;d2<=dim;d2++){
+    var ds=y+'-'+pad(mo+1)+'-'+pad(d2),items=byDay[ds]||[],dots='';
+    items.slice(0,4).forEach(function(x){
+      var c=x.status==='done'?'dd':(x.status==='review'?'dr':(x.status==='progress'?'dp':((x.carried||0)>0?'dx':'do')));
+      dots+='<i class="'+c+'"></i>'});
+    h+='<button class="cal-cell '+(ds===t?'today ':'')+(ds===aSelDay?'on':'')+'" data-acd="'+ds+'">'
+      +(items.length?'<span class="cn">'+items.length+'</span>':'')
+      +'<span class="cd">'+d2+'</span><span class="cdots">'+dots+'</span></button>';
+  }
+  h+='</div><div class="cal-legend"><span><i style="background:var(--gold)"></i>open</span>'
+    +'<span><i style="background:var(--amber)"></i>in progress</span>'
+    +'<span><i style="background:var(--blue)"></i>review</span>'
+    +'<span><i style="background:var(--red)"></i>carried</span>'
+    +'<span><i style="background:var(--dim)"></i>done</span></div></div>';
+  if(aSelDay){
+    var sel=byDay[aSelDay]||[];
+    h+='<div class="group-h gold">'+esc(dayLabel(aSelDay))+' · '+sel.length+'</div>';
+    h+=sel.length?sel.map(function(k){return taskCard(k,{showDate:false})}).join('')
+      :emptyState('Free day.','Nothing scheduled — tap another date.');
+  }else{
+    h+='<p style="font-size:12px;color:var(--dim);margin-top:12px">Tap a date to see and manage its tasks — all card actions work here.</p>';
+  }
+  return h;
+}
+function bindCalScreen(){
+  $$('#ledger [data-acnav]').forEach(function(b){b.addEventListener('click',function(e){
+    e.stopPropagation();
+    var n=+b.dataset.acnav;
+    if(n===0){var x=new Date();aCalMonth=new Date(x.getFullYear(),x.getMonth(),1);aSelDay=todayStr()}
+    else aCalMonth=new Date(aCalMonth.getFullYear(),aCalMonth.getMonth()+n,1);
+    renderLedger();
+  })});
+  $$('#ledger [data-acd]').forEach(function(b){b.addEventListener('click',function(e){
+    e.stopPropagation();
+    aSelDay=(aSelDay===b.dataset.acd)?null:b.dataset.acd;
+    renderLedger();
+  })});
+}
+
+/* ---------- ADMIN: INSPECT A USER'S BOARD ---------- */
+async function openImp(uid,label){
+  impUid=uid;
+  $('#impTitle').innerHTML=esc(label)+' <em>· board</em>';
+  $('#impBody').innerHTML='<p style="font-size:12.5px;color:var(--dim)">Loading…</p>';
+  $('#impOv').classList.add('open');
+  loadImp();
+}
+async function loadImp(){
+  if(!FB.ready||!impUid)return;
+  try{
+    var snap=await FB.F.getDoc(fdoc('boards',impUid));
+    if(!snap.exists()){
+      $('#impBody').innerHTML='<p style="font-size:12.5px;color:var(--dim)">No board yet — they haven\u2019t created any tasks.</p>';return}
+    var d=snap.data(),tasks=d.tasks||[],tags=d.tags||[];
+    function tg(id){var t=tags.find(function(x){return x.id===id});return t?t.label:null}
+    var h='<div class="stats" style="margin:0 0 12px">'
+      +'<span class="stat"><b>'+tasks.filter(function(k){return k.status!=='done'}).length+'</b> open</span>'
+      +'<span class="stat"><b>'+tasks.filter(function(k){return k.status==='done'}).length+'</b> done</span>'
+      +'<span class="stat"><b>'+tasks.filter(function(k){return (k.carried||0)>0&&k.status!=='done'}).length+'</b> carried</span></div>';
+    [['open','Open'],['progress','In progress'],['review','In review'],['done','Done — latest 10']].forEach(function(g){
+      var list=tasks.filter(function(k){return (k.status||'open')===g[0]});
+      if(g[0]==='done')list=list.sort(function(a,b){return(b.doneAt||0)-(a.doneAt||0)}).slice(0,10);
+      if(!list.length)return;
+      h+='<div class="group-h'+(g[0]==='open'?' gold':'')+'">'+g[1]+' · '+list.length+'</div>';
+      h+=list.map(function(k){
+        var meta=[];
+        if(k.date)meta.push('<span class="m-chip">📅 '+esc(fmtDateShort(k.date))+'</span>');
+        if((k.carried||0)>0)meta.push('<span class="m-chip carried">↻ ×'+k.carried+'</span>');
+        var t2=tg(k.tag);if(t2)meta.push('<span class="m-chip tag">'+esc(t2)+'</span>');
+        if(k.pri)meta.push('<span class="m-chip p-'+k.pri+'">⚑ '+PRI_LABEL[k.pri]+'</span>');
+        return'<article class="task '+(k.status==='done'?'done-card':'')+'" style="margin-bottom:8px;transform:none">'
+          +'<div class="t-body" style="padding-left:2px"><div class="t-title">'+esc(k.title)+'</div>'
+          +(k.notes?'<div class="t-notes">'+esc(k.notes)+'</div>':'')
+          +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div></article>';
+      }).join('');
+    });
+    $('#impBody').innerHTML=h;
+  }catch(e){
+    console.error('loadImp',e);
+    $('#impBody').innerHTML='<p style="font-size:12.5px;color:var(--red)">Blocked ('+esc((e&&e.code)||'error')
+      +'). Publish the updated <b>boards</b> rule so admin can read boards.</p>';
+  }
+}
+
 /* ---------- BINDINGS ---------- */
 function bindAll(){
   bindCapture();bindLedger();bindViewer();
@@ -2784,6 +2949,19 @@ function bindAll(){
     S={tasks:[],recurring:[],tags:DEFAULT_TAGS.map(function(t){return Object.assign({},t)}),people:S.people,
       prefs:Object.assign({},S.prefs),view:Object.assign({},S.view),meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
     migrate();save();render();toast('Wiped')});
+
+  $('#installBtn').addEventListener('click',async function(){
+    if(!deferredPrompt){toast('Use your browser menu → Install / Add to Home Screen');return}
+    deferredPrompt.prompt();
+    var r=await deferredPrompt.userChoice;deferredPrompt=null;
+    if(r&&r.outcome==='accepted')$('#installBtn').classList.add('hidden');
+  });
+
+  $('#impClose').addEventListener('click',function(){closeOv('impOv')});
+  $('#impRefresh').addEventListener('click',loadImp);
+  $('#presenceList').addEventListener('click',function(e){
+    var b=e.target.closest('[data-imp]');if(!b)return;
+    openImp(b.dataset.imp,b.dataset.impname)});
 
   $('#bulkBar').addEventListener('click',function(e){
     var b=e.target.closest('[data-bulk]');if(b)applyBulk(b.dataset.bulk)});
@@ -2996,6 +3174,32 @@ async function bootApp(user,live){
 bindAll();applyTheme();startClockAndQuotes();
 if(!Store.ok)toast('Storage blocked here — data won’t persist in this preview.');
 if(location.protocol==='file:')setTimeout(function(){toast('Open via https:// (GitHub Pages) — Google sign-in is blocked on file://')},400);
+
+/* ---------- PWA ---------- */
+(function pwa(){
+  try{
+    var ICON='data:image/svg+xml,'+encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">'
+      +'<rect width="512" height="512" rx="100" fill="#07080B"/>'
+      +'<rect x="14" y="14" width="484" height="484" rx="88" fill="none" stroke="#E2C27A" stroke-opacity=".35" stroke-width="6"/>'
+      +'<text x="256" y="300" font-family="Georgia,serif" font-style="italic" font-size="190" fill="#E2C27A" text-anchor="middle">Do</text></svg>');
+    var man={name:'Daily Ops',short_name:'Daily Ops',
+      start_url:location.pathname,scope:'./',display:'standalone',
+      background_color:'#07080B',theme_color:'#07080B',
+      icons:[{src:ICON,sizes:'512x512',type:'image/svg+xml',purpose:'any'},
+             {src:ICON,sizes:'512x512',type:'image/svg+xml',purpose:'maskable'}]};
+    var l=document.createElement('link');l.rel='manifest';
+    l.href='data:application/manifest+json,'+encodeURIComponent(JSON.stringify(man));
+    document.head.appendChild(l);
+  }catch(e){}
+  if('serviceWorker' in navigator&&location.protocol==='https:')
+    navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('sw',e)});
+})();
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();deferredPrompt=e;
+  var b=$('#installBtn');if(b)b.classList.remove('hidden');
+});
+window.addEventListener('appinstalled',function(){deferredPrompt=null;toast('Daily Ops installed')});
 
 (function boot(){
   var vk=new URLSearchParams(location.search).get('view');
