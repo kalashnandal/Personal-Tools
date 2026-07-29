@@ -355,7 +355,6 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .vnote input{flex:1;background:var(--pane);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13.5px;outline:none}
 .vnote input:focus{border-color:var(--gold)}
 .bnav{display:none}
-.fab{display:none}
 @media(max-width:640px){
   .tabs{display:none}
   .shell{padding-bottom:calc(140px + env(safe-area-inset-bottom))}
@@ -366,8 +365,6 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
   .bn.on{color:var(--gold)}
   .bn .bd{position:absolute;top:2px;right:calc(50% - 15px);min-width:14px;height:14px;border-radius:99px;background:var(--gold);color:var(--on-gold);font-size:8.5px;font-weight:700;display:grid;place-items:center;padding:0 4px}
   .bn .bd.alert{background:var(--red);color:#fff}
-  .fab{display:grid;place-items:center;position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:49;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:var(--on-gold);font-size:26px;font-weight:300;box-shadow:0 12px 30px -8px var(--gold-soft),0 6px 20px rgba(0,0,0,.45)}
-  .fab:active{transform:scale(.92)}
   .overlay{align-items:flex-end;padding:0}
   .modal{max-width:none;border-radius:22px 22px 0 0;max-height:92dvh;padding:14px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(100%)}
   .overlay.open .modal{transform:none}
@@ -528,6 +525,76 @@ html.compact .group-h{margin:14px 0 8px}
 .actbig .bc{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--pane);text-align:center}
 .actbig .bc .v{font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--gold)}
 .actbig .bc .l{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+
+/* ============ v4.2 — groups, bulk edit, desktop quick-add ============ */
+
+/* ---- sticky quick-add FAB (desktop + mobile) ---- */
+.fab{display:grid;place-items:center;position:fixed;right:clamp(16px,3vw,34px);bottom:clamp(20px,3vw,34px);z-index:49;
+  width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:var(--on-gold);
+  font-size:27px;font-weight:300;line-height:1;box-shadow:0 14px 34px -8px var(--gold-soft),0 8px 24px rgba(0,0,0,.5);
+  transition:transform .22s var(--ease-spring),box-shadow .22s}
+.fab:hover{transform:translateY(-2px) scale(1.05);box-shadow:0 18px 42px -8px var(--gold-soft),0 10px 28px rgba(0,0,0,.55)}
+.fab:active{transform:scale(.93)}
+.fab .fk{position:absolute;right:calc(100% + 12px);top:50%;transform:translateY(-50%) translateX(6px);white-space:nowrap;
+  background:var(--ink);border:1px solid var(--line-hi);color:var(--mute);font-size:11.5px;font-weight:600;letter-spacing:.02em;
+  border-radius:8px;padding:6px 10px;opacity:0;pointer-events:none;transition:all .2s}
+.fab:hover .fk{opacity:1;transform:translateY(-50%)}
+@media(hover:none){.fab .fk{display:none}}
+@media(max-width:640px){
+  .fab{right:16px;bottom:calc(78px + env(safe-area-inset-bottom));width:54px;height:54px;font-size:26px}
+  .fab:hover{transform:none}
+}
+
+/* quick-add modal hosts the real capture section (moved, not cloned) */
+.modal.quick{max-width:560px}
+.modal.quick .capture{margin:0}
+.modal.quick .cap-hint{display:block;margin-top:12px}
+/* inside the sheet the pills wrap instead of scrolling off the edge, and the
+   in-field Add button steps aside for the footer's */
+.modal.quick .pick-row{flex-wrap:wrap;overflow:visible}
+.modal.quick .cap-box.has-text .cap-add{display:none}
+.modal.quick .cap-box.has-text .cap-kbd{display:none}
+.qa-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;position:relative}
+
+/* ---- task groups (Chrome tab-group style) ---- */
+.tgrp{position:relative;border:1px solid var(--gc-soft,var(--line));border-radius:16px;padding:8px;margin:0 0 12px;
+  background:var(--gc-bg,var(--pane));animation:taskIn .35s var(--ease-spring) backwards}
+.tgrp-h{display:flex;align-items:center;gap:9px;padding:4px 6px 9px;cursor:pointer}
+.tgrp-chip{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:5px 12px;font-size:12px;font-weight:600;
+  letter-spacing:.01em;background:var(--gc);color:var(--gc-on);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:none}
+.tgrp-chip .gcv{display:inline-block;transition:transform .2s;font-size:9px;opacity:.75}
+.tgrp.collapsed .tgrp-chip .gcv{transform:rotate(-90deg)}
+.tgrp-h .gcount{font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums;flex:none}
+.tgrp-h .gbar{flex:1;height:1px;background:var(--gc-soft)}
+.tgrp-h .gact{flex:none;display:flex;gap:2px;opacity:0;transition:opacity .2s}
+.tgrp:hover .tgrp-h .gact{opacity:1}
+@media(hover:none){.tgrp-h .gact{opacity:1}}
+.tgrp-body{display:block}
+.tgrp.collapsed .tgrp-body{display:none}
+.tgrp .t-wrap:last-child{margin-bottom:0}
+.tgrp.done-all .tgrp-chip{opacity:.6}
+.m-chip.grp{color:var(--gc,var(--mute));border-color:var(--gc-soft,var(--line));background:var(--gc-bg,transparent);font-weight:600}
+.m-chip.grp .dot{width:6px;height:6px;border-radius:50%;background:var(--gc,var(--mute))}
+.gsw{display:flex;flex-wrap:wrap;gap:9px;margin-top:2px}
+.gsw button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;transition:all .18s var(--ease-spring)}
+.gsw button:hover{transform:scale(1.12)}
+.gsw button.on{border-color:var(--text);box-shadow:0 0 0 3px var(--pane-hi)}
+
+/* ---- bulk select ---- */
+.bb.primary{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.bulkbar .bb-count{cursor:default}
+.task.bulk-on::after{content:"✓"}
+.ta-btn.sel:hover{color:var(--gold);background:var(--gold-soft)}
+.bulk-hint{font-size:11px;color:var(--dim);padding:0 4px;white-space:nowrap}
+@media(max-width:640px){.bulk-hint{display:none}}
+.bulk-sum{font-size:12.5px;color:var(--mute);border-left:2px solid var(--gold);padding:2px 0 2px 12px;
+  margin-bottom:8px;position:relative;line-height:1.55}
+.bulk-sum b{color:var(--gold)}
+.keepnote{font-size:11.5px;color:var(--dim);margin:0 0 18px 14px;position:relative}
+
+/* ---- sync chip states ---- */
+.sync-dot.pending{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.sync-dot.offline{background:var(--dim)}
 </style>
 </head>
 <body>
@@ -646,7 +713,8 @@ html.compact .group-h{margin:14px 0 8px}
     <div class="stats" id="stats"></div>
   </header>
 
-  <section class="capture">
+  <div id="capHome"></div>
+  <section class="capture" id="capSection">
     <div class="cap-box" id="capBox">
       <span class="cap-plus">+</span>
       <input id="capInput" type="text" autocomplete="off" spellcheck="false" placeholder="Capture a task… (Defaults to Today)">
@@ -666,7 +734,15 @@ html.compact .group-h{margin:14px 0 8px}
 </div>
 
 <nav class="bnav" id="bnav"></nav>
-<button class="fab" id="fab" aria-label="New task">+</button>
+<button class="fab hidden" id="fab" aria-label="New task" title="New task"><span class="fk">New task</span>+</button>
+
+<!-- QUICK ADD (hosts the real capture section while open) -->
+<div class="overlay" id="addOv"><div class="modal quick">
+  <div class="grab"></div>
+  <h3>New <em>task</em></h3>
+  <div id="addHost"></div>
+  <div class="qa-foot"><button class="btn ghost" id="qaCancel">Cancel</button><button class="btn gold" id="qaAdd">Add task</button></div>
+</div></div>
 
 <!-- EDIT MODAL -->
 <div class="overlay" id="editOv"><div class="modal">
@@ -775,6 +851,9 @@ html.compact .group-h{margin:14px 0 8px}
   </div>
 
   <div class="set-sec"><h4>Tags</h4><div id="tagMgr"></div><button class="btn ghost sm" id="tagAdd">+ Add tag</button></div>
+  <div class="set-sec"><h4>Groups</h4>
+    <p>Select tasks on the board (long-press, or ⌘/Ctrl+click) and hit <b>Group</b> to build one.</p>
+    <div id="groupMgr"></div></div>
   <div class="set-sec"><h4>Repeating tasks</h4><div id="recurMgr"></div></div>
 
   <div class="set-sec">
@@ -816,14 +895,69 @@ html.compact .group-h{margin:14px 0 8px}
 <!-- BULK ACTIONS -->
 <div class="bulkbar hidden" id="bulkBar">
   <span class="bb-count" id="bbCount">0 selected</span>
+  <button class="bb" data-bulk="all" id="bbAll">Select all</button>
+  <button class="bb primary" data-bulk="edit">✎ Edit</button>
+  <button class="bb primary" data-bulk="group">⬚ Group</button>
   <button class="bb" data-bulk="today">Today</button>
   <button class="bb" data-bulk="tmrw">Tomorrow</button>
   <button class="bb" data-bulk="assign" id="bbAssign">Assign</button>
   <button class="bb" data-bulk="done">✓ Done</button>
   <button class="bb danger" data-bulk="del">Delete</button>
   <button class="bb" data-bulk="exit">✕</button>
+  <span class="bulk-hint">⌘/Ctrl+click · Shift+click for a range · Esc to exit</span>
 </div>
 <div class="bulktray hidden" id="bulkTray"></div>
+
+<!-- BULK EDIT -->
+<div class="overlay" id="bulkOv"><div class="modal">
+  <div class="grab"></div>
+  <h3>Edit <em>together</em></h3>
+  <div class="bulk-sum" id="beSum"></div>
+  <p class="keepnote">Every field starts on <b>Keep as-is</b> — only what you change is applied.</p>
+  <div class="fld-row cols-3">
+    <div class="fld"><label>Date</label><select id="beDateMode">
+      <option value="">Keep as-is</option><option value="today">Today</option><option value="tmrw">Tomorrow</option>
+      <option value="week">In a week</option><option value="pick">Pick a date…</option><option value="clear">No date</option>
+    </select></div>
+    <div class="fld"><label>Time</label><select id="beTimeMode">
+      <option value="">Keep as-is</option><option value="pick">Pick a time…</option><option value="clear">No time</option>
+    </select></div>
+    <div class="fld"><label>Priority</label><select id="bePri">
+      <option value="">Keep as-is</option><option value="high">High</option><option value="med">Medium</option>
+      <option value="low">Low</option><option value="__none">Normal (clear)</option>
+    </select></div>
+  </div>
+  <div class="fld-row cols-3">
+    <div class="fld hidden" id="beDateFld"><label>Date</label><input id="beDate" type="date"></div>
+    <div class="fld hidden" id="beTimeFld"><label>Time</label><input id="beTime" type="time"></div>
+  </div>
+  <div class="fld-row cols-3">
+    <div class="fld"><label>Tag</label><select id="beTag"></select></div>
+    <div class="fld"><label>Group</label><select id="beGroup"></select></div>
+    <div class="fld"><label>Status</label><select id="beStatus">
+      <option value="">Keep as-is</option><option value="open">Open</option><option value="progress">In progress</option>
+      <option value="done">Done</option>
+    </select></div>
+  </div>
+  <div class="fld" id="beWhoFld"><label>Assignee</label><select id="bePerson"></select></div>
+  <div class="fld"><label>Append to notes</label><textarea id="beNotes" placeholder="Optional — appended on a new line to every selected task"></textarea></div>
+  <div class="m-foot">
+    <button class="btn ghost" id="beCancel">Cancel</button>
+    <button class="btn gold" id="beApply">Apply to all</button>
+  </div>
+</div></div>
+
+<!-- GROUP EDITOR -->
+<div class="overlay" id="grpOv"><div class="modal">
+  <div class="grab"></div>
+  <h3 id="grpTitle">New <em>group</em></h3>
+  <div class="fld"><label>Name</label><input id="grpName" type="text" placeholder="e.g. Summit launch" maxlength="60"></div>
+  <div class="fld"><label>Colour</label><div class="gsw" id="grpSw"></div></div>
+  <div class="m-foot">
+    <button class="btn danger hidden" id="grpDelete">Ungroup &amp; delete</button>
+    <div style="display:flex;gap:8px"><button class="btn ghost" id="grpCancel">Cancel</button><button class="btn gold" id="grpSave">Save</button></div>
+  </div>
+</div></div>
 
 <!-- COMMAND PALETTE -->
 <div class="overlay" id="cmdOv"><div class="modal cmd">
@@ -863,6 +997,8 @@ var KEY='dailyops.v1';
 
 /* ---------- CONSTANTS ---------- */
 var TAGCOLORS=['#E2C27A','#7FA3C9','#A88FC9','#8FBF9B','#D98A7C','#D9A05B','#7CC4C9','#C97BAF','#9AA3B2','#B9C97B'];
+/* Chrome-tab-group style palette for task groups */
+var GROUPCOLORS=['#9AA3B2','#7FA3C9','#D98A7C','#E2C27A','#8FBF9B','#C97BAF','#A88FC9','#7CC4C9','#D9A05B'];
 var DEFAULT_TAGS=[{id:'summit',label:'Summit',color:'#E2C27A'},{id:'imark',label:'iMark',color:'#7FA3C9'},
   {id:'portfolio',label:'Portfolio',color:'#A88FC9'},{id:'personal',label:'Personal',color:'#8FBF9B'}];
 var DEFAULT_PEOPLE=[{id:'riya',label:'Riya',email:''},{id:'arun',label:'Arun',email:''},{id:'manish',label:'Manish',email:''},
@@ -905,11 +1041,13 @@ function initials(n){return String(n).trim().split(/\s+/).map(function(w){return
 function ago(ms){var s=(Date.now()-ms)/1000;if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
 
 /* ---------- STATE ---------- */
-var S=Store.get(KEY,null)||{tasks:[],recurring:[],tags:[],people:[],prefs:{},view:{key:null,live:false},meta:{updatedAt:0,lastCarry:'',doneDates:{}}};
+var S=Store.get(KEY,null)||{tasks:[],recurring:[],tags:[],people:[],groups:[],prefs:{},view:{key:null,live:false},meta:{updatedAt:0,lastCarry:'',doneDates:{},tomb:{}}};
 function migrate(){
-  S.tasks=S.tasks||[];S.recurring=S.recurring||[];S.guests=S.guests||[];
-  S.meta=S.meta||{updatedAt:0,lastCarry:'',doneDates:{}};S.meta.doneDates=S.meta.doneDates||{};
+  S.tasks=S.tasks||[];S.recurring=S.recurring||[];S.guests=S.guests||[];S.groups=S.groups||[];
+  S.meta=S.meta||{updatedAt:0,lastCarry:'',doneDates:{},tomb:{}};S.meta.doneDates=S.meta.doneDates||{};
+  S.meta.tomb=S.meta.tomb||{};
   S.view=Object.assign({key:null,live:false},S.view||{});
+  S.groups.forEach(function(g){if(!g.color)g.color=GROUPCOLORS[0];if(g.collapsed==null)g.collapsed=false});
   if(!S.tags||!S.tags.length)S.tags=DEFAULT_TAGS.map(function(t){return Object.assign({},t)});
   if(!S.people||!S.people.length)S.people=DEFAULT_PEOPLE.map(function(p){return Object.assign({},p)});
   S.people.forEach(function(p){if(p.email==null)p.email='';if(!p.label&&p.name)p.label=p.name});
@@ -917,7 +1055,15 @@ function migrate(){
   S.tags.forEach(function(t){if(map[t.color])t.color=map[t.color];if(!/^#/.test(t.color||''))t.color='#9AA3B2'});
   S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy'},S.prefs||{});
   var t=todayStr();
-  S.tasks.forEach(function(k){k.subs=k.subs||[];k.tnotes=k.tnotes||[];if(!k.date&&k.status==='open')k.date=t});
+  var gids={};S.groups.forEach(function(g){gids[g.id]=1});
+  S.tasks.forEach(function(k){
+    k.subs=k.subs||[];k.tnotes=k.tnotes||[];if(!k.date&&k.status==='open')k.date=t;
+    if(!k.id)k.id=uid();
+    if(k.group&&!gids[k.group])delete k.group;   /* group was deleted elsewhere */
+    /* every task carries its own change stamp so a merge can resolve per task
+       instead of letting one whole board clobber another */
+    if(!k.upd)k.upd=k.doneAt||k.created||1;
+  });
 }
 migrate();
 
@@ -944,9 +1090,49 @@ var openTray=null,qIdx=0;
 function tagOf(id){return S.tags.find(function(t){return t.id===id})}
 function personOf(id){return S.people.find(function(p){return p.id===id})||(allowCfg.people||[]).find(function(p){return p.id===id})}
 function allTasks(){return S.tasks.concat(shared)}
+function groupOf(id){return S.groups.find(function(g){return g.id===id})}
+
+/* ---------- CHANGE STAMPS (hybrid logical clock) ----------
+   Device clocks disagree — sometimes by minutes. A plain Date.now() stamp lets
+   the device with the faster clock win every conflict, which is how a task that
+   was ticked off on one device reappears open on another. We keep a monotonic
+   floor that also absorbs every timestamp we see from the server, so our stamps
+   can only ever move forward and stay comparable across devices.              */
+var _clockFloor=0;
+function stamp(){var n=Date.now();if(n<=_clockFloor)n=_clockFloor+1;_clockFloor=n;return n}
+function observeStamp(t){if(typeof t==='number'&&t>_clockFloor&&t<Date.now()+864e5)_clockFloor=t}
+function taskStamp(k){return(k&&(k.upd||k.doneAt||k.created))||0}
+
+/* Signature of a task, excluding its own stamp, so save() can tell which tasks
+   actually changed and stamp exactly those — no mutation site can forget to. */
+var _shadow={};
+function taskSig(k){
+  var c={},ks=Object.keys(k).sort();
+  for(var i=0;i<ks.length;i++)if(ks[i]!=='upd')c[ks[i]]=k[ks[i]];
+  return JSON.stringify(c);
+}
+function stampDirty(){
+  var seen={},now=0;
+  S.tasks.forEach(function(k){
+    if(!k.id)k.id=uid();
+    seen[k.id]=1;
+    if(S.meta.tomb[k.id])delete S.meta.tomb[k.id];   /* resurrected via undo */
+    var sig=taskSig(k);
+    if(_shadow[k.id]!==sig){k.upd=stamp();_shadow[k.id]=sig}
+  });
+  Object.keys(_shadow).forEach(function(id){
+    if(!seen[id]){delete _shadow[id];S.meta.tomb[id]=stamp()}   /* tombstone the delete */
+  });
+  /* tombstones are only needed long enough for every device to see them */
+  var cut=Date.now()-60*864e5;
+  Object.keys(S.meta.tomb).forEach(function(id){if(S.meta.tomb[id]<cut)delete S.meta.tomb[id]});
+}
+function resetShadow(){_shadow={};S.tasks.forEach(function(k){if(k.id)_shadow[k.id]=taskSig(k)})}
+
 function save(push){
   if(push===undefined)push=true;
-  S.meta.updatedAt=Date.now();
+  stampDirty();
+  S.meta.updatedAt=stamp();
   Store.set(KEY,S);
   if(push&&!suppressPush){queuePush();if(isAdmin&&S.view.live)schedulePublish()}
 }
@@ -1013,7 +1199,13 @@ function startClockAndQuotes(){
 }
 
 /* ---------- CARRY-FORWARD / RECURRING ---------- */
-function rollDay(){
+/* Carry-forward rewrites dates and bumps the board timestamp. Running it on a
+   stale cache before the server has spoken is how a device used to make its
+   own copy look "newest" and win the first merge. Hold it until we're hydrated
+   — or until we've given up on reaching the server. */
+var carryDone=false;
+function rollDay(force){
+  if(!carryDone&&!force)return;
   var t=todayStr(),ch=false;
   S.tasks.forEach(function(k){if(k.status==='open'&&k.date&&k.date<t){k.date=t;k.carried=(k.carried||0)+1;ch=true}});
   var dow=new Date().getDay();
@@ -1173,8 +1365,8 @@ async function commitCapture(){
   if(m.person&&!personOf(m.person)){S.people.push({id:m.person,label:m.person[0].toUpperCase()+m.person.slice(1),email:''});syncAllowlist()}
   if(m.recur){
     S.recurring.push({id:uid(),title:m.title,time:m.time||null,tag:m.tag,pri:m.pri,freq:m.recur});
-    save();rollDay();toast('Repeating — '+recurLabel(m.recur));
-    resetCapture();render();return;
+    save();rollDay(true);toast('Repeating — '+recurLabel(m.recur));
+    resetCapture();if(quickAddOpen())closeOv('addOv');render();return;
   }
   var d=m.date||todayStr();
   var pEmail=m.person?String((personOf(m.person)||{}).email||'').toLowerCase():'';
@@ -1193,7 +1385,7 @@ async function commitCapture(){
     save();toast(m.person?('Assigned to '+((personOf(m.person)||{}).label||'')+' (view-link only)'):'Added to '+dayLabel(d));
   }
   logAct('create',m.title);
-  resetCapture();render();
+  resetCapture();if(quickAddOpen())closeOv('addOv');render();
 }
 async function createShared(o){
   if(!FB.ready){toast('Sync offline — saved locally instead');return}
@@ -1223,7 +1415,12 @@ function counts(){
     analytics:0,activity:0,calendar:0,
     requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
-function matches(k){return(activeTag==='all'||k.tag===activeTag)&&(!query||((k.title+' '+(k.notes||'')).toLowerCase().indexOf(query)>=0))}
+function matches(k){
+  if(activeTag!=='all'&&k.tag!==activeTag)return false;
+  if(!query)return true;
+  var g=k.group?groupOf(k.group):null;
+  return(k.title+' '+(k.notes||'')+' '+((g&&g.label)||'')).toLowerCase().indexOf(query)>=0;
+}
 function render(){renderMast();renderTabs();renderFilters();renderWeek();renderLedger()}
 function renderMast(){
   var now=new Date(),wk=now.toLocaleDateString('en-IN',{weekday:'long'});
@@ -1327,6 +1524,8 @@ function taskCard(k,o){
   if(stalled)meta.push('<span class="m-chip stall">⚠ '+esc((pp&&pp.label)||k.person)+' — no response, carried ×'+k.carried+'</span>');
   else if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
   if(k.recurId)meta.push('<span class="m-chip">↻ repeats</span>');
+  if(o.showGroup&&k.group){var gg=groupOf(k.group);
+    if(gg)meta.push('<span class="m-chip grp" style="'+grpVars(gg)+'"><span class="dot"></span>'+esc(gg.label||'Group')+'</span>')}
   var done=k.status==='done',rev=k.status==='review';
   var cls=done?'done-card':(rev?'review-card':(stalled?'stalled-card':(k.status==='progress'?'prog-card':'')));
   var chk=done?'checked':(rev?'review':(k.status==='progress'?'prog':''));
@@ -1339,6 +1538,7 @@ function taskCard(k,o){
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
   else if(!done&&!rev){acts.push('<button class="ta-btn always" data-act="startprog" title="Mark in progress">◐</button>');
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
+  acts.push('<button class="ta-btn sel" data-act="select" title="Select (⌘/Ctrl+click)">◻</button>');
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
   if(isAdmin||!isShared||k.selfCreated)acts.push('<button class="ta-btn del" data-act="del" title="Delete">✕</button>');
   return'<div class="t-wrap" data-id="'+k.id+'">'
@@ -1351,6 +1551,104 @@ function taskCard(k,o){
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div>'
     +'<div class="t-acts">'+acts.join('')+'</div></article></div>';
 }
+
+/* ---------- GROUPS ----------
+   Chrome-tab-group behaviour: a named, coloured band that wraps its members,
+   collapses in place, and travels with them wherever they're listed.          */
+function onColor(c){var x=hexRGB(c);return((0.299*x[0]+0.587*x[1]+0.114*x[2])/255>0.6)?'#07080B':'#FFFFFF'}
+function grpVars(g){
+  var c=g.color||GROUPCOLORS[0];
+  return'--gc:'+c+';--gc-soft:'+rgba(c,.34)+';--gc-bg:'+rgba(c,.055)+';--gc-on:'+onColor(c);
+}
+function groupWrap(g,mem,o){
+  var done=mem.filter(function(k){return k.status==='done'}).length;
+  return'<section class="tgrp'+(g.collapsed?' collapsed':'')+(done&&done===mem.length?' done-all':'')
+    +'" data-gid="'+g.id+'" style="'+grpVars(g)+'">'
+    +'<header class="tgrp-h" data-gact="toggle">'
+      +'<span class="tgrp-chip"><span class="gcv">▼</span>'+esc(g.label||'Group')+'</span>'
+      +'<span class="gcount">'+done+'/'+mem.length+'</span>'
+      +'<span class="gbar"></span>'
+      +'<span class="gact">'
+        +'<button class="ta-btn sel" data-gact="select" title="Select every task in this group">◻</button>'
+        +'<button class="ta-btn" data-gact="edit" title="Rename or recolour">✎</button>'
+        +'<button class="ta-btn del" data-gact="ungroup" title="Ungroup — the tasks stay">⤫</button>'
+      +'</span>'
+    +'</header>'
+    +'<div class="tgrp-body">'+mem.map(function(k){return taskCard(k,o)}).join('')+'</div>'
+  +'</section>';
+}
+/* Renders a list, clustering grouped tasks into their band at the position of
+   the group's first member so the surrounding sort order still reads true.
+   o.nowAt — drop the NOW divider before the first entry at/after that time.   */
+function cards(list,o){
+  o=o||{};
+  var seen={},out='',placed=false;
+  function mark(t){if(o.nowAt&&!placed&&t&&t>=o.nowAt){out+=nowLine();placed=true}}
+  list.forEach(function(k){
+    if(seen[k.id])return;
+    var g=(!o.flat&&k.group)?groupOf(k.group):null;
+    if(!g){seen[k.id]=1;mark(k.time);out+=taskCard(k,o);return}
+    var mem=list.filter(function(x){return x.group===g.id&&!seen[x.id]});
+    mem.forEach(function(x){seen[x.id]=1});
+    mark(mem.map(function(x){return x.time}).filter(Boolean).sort()[0]);
+    out+=groupWrap(g,mem,o);
+  });
+  if(o.nowAt&&!placed)out+=nowLine();
+  return out;
+}
+function groupAction(a,gid){
+  var g=groupOf(gid);if(!g)return;
+  if(a==='toggle'){g.collapsed=!g.collapsed;save();renderLedger();return}
+  if(a==='edit'){openGroupEditor(g);return}
+  if(a==='select'){
+    var ids=S.tasks.filter(function(k){return k.group===gid}).map(function(k){return k.id});
+    if(!ids.length)return;
+    if(!bulkMode){bulkMode=true;bulkSel={}}
+    ids.forEach(function(id){bulkSel[id]=1});
+    renderBulkUI();return;
+  }
+  if(a==='ungroup'){
+    var n=0;S.tasks.forEach(function(k){if(k.group===gid){delete k.group;n++}});
+    S.groups=S.groups.filter(function(x){return x.id!==gid});
+    save();render();toast('Ungrouped '+n+' task'+(n===1?'':'s'));
+    if($('#setOv').classList.contains('open'))renderGroupMgr();
+  }
+}
+var grpEditing=null,grpPendingIds=null,grpColor=GROUPCOLORS[0];
+function openGroupEditor(g,ids){
+  grpEditing=g||null;grpPendingIds=ids||null;
+  grpColor=(g&&g.color)||GROUPCOLORS[S.groups.length%GROUPCOLORS.length];
+  $('#grpTitle').innerHTML=g?'Edit <em>group</em>':'New <em>group</em>';
+  $('#grpName').value=g?(g.label||''):'';
+  $('#grpDelete').classList.toggle('hidden',!g);
+  renderGrpSw();
+  $('#grpOv').classList.add('open');
+  setTimeout(function(){$('#grpName').focus();$('#grpName').select()},80);
+}
+function renderGrpSw(){
+  $('#grpSw').innerHTML=GROUPCOLORS.map(function(c){
+    return'<button data-gc="'+c+'" class="'+(grpColor===c?'on':'')+'" style="background:'+c+'" aria-label="'+c+'"></button>'}).join('');
+}
+function saveGroupEditor(){
+  var lb=$('#grpName').value.trim();
+  if(!lb){toast('Give the group a name');$('#grpName').focus();return}
+  var g=grpEditing;
+  if(!g){g={id:'g-'+uid().slice(0,8),label:lb,color:grpColor,collapsed:false,created:Date.now()};S.groups.push(g)}
+  else{g.label=lb;g.color=grpColor}
+  if(grpPendingIds&&grpPendingIds.length){
+    var n=0;
+    grpPendingIds.forEach(function(id){
+      var k=S.tasks.find(function(x){return x.id===id});
+      if(k){k.group=g.id;n++}
+    });
+    toast('Grouped '+n+' task'+(n===1?'':'s')+' into “'+lb+'”');
+    exitBulk();
+  }else toast('Group saved');
+  grpEditing=null;grpPendingIds=null;
+  save();closeOv('grpOv');render();
+  if($('#setOv').classList.contains('open'))renderGroupMgr();
+}
+
 function renderLedger(){
   var L=$('#ledger'),t=todayStr(),A=allTasks(),html='';
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
@@ -1387,13 +1685,11 @@ function renderLedger(){
     if(timed.length){
       if(day===t){
         var nt=pad(new Date().getHours())+':'+pad(new Date().getMinutes());
-        html+='<div class="group-h gold">Scheduled</div>';var placed=false;
-        timed.forEach(function(k){if(!placed&&k.time>=nt){html+=nowLine();placed=true}html+=taskCard(k)});
-        if(!placed)html+=nowLine();
-      }else html+='<div class="group-h">Scheduled</div>'+timed.map(function(k){return taskCard(k)}).join('');
+        html+='<div class="group-h gold">Scheduled</div>'+cards(timed,{nowAt:nt});
+      }else html+='<div class="group-h">Scheduled</div>'+cards(timed);
     }
-    if(uo.length)html+='<div class="group-h">'+(day<t?'Unfinished':'Anytime')+'</div>'+uo.map(function(k){return taskCard(k)}).join('');
-    if(ud.length)html+='<div class="group-h">Completed</div>'+ud.map(function(k){return taskCard(k)}).join('');
+    if(uo.length)html+='<div class="group-h">'+(day<t?'Unfinished':'Anytime')+'</div>'+cards(uo);
+    if(ud.length)html+='<div class="group-h">Completed</div>'+cards(ud);
     if(!list.length)html+=emptyState(day<t?'Nothing logged that day.':(day===t?'Clear runway.':'Nothing scheduled.'),
       'Scroll the strip to review any past day. <code>swipe →</code> completes · <code>swipe ←</code> pushes a day.');
   }
@@ -1401,7 +1697,7 @@ function renderLedger(){
     var ulist=A.filter(function(k){return k.date&&k.date>t&&matches(k)})
       .sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:((a.status==='done')-(b.status==='done'))||String(a.time||'99')<String(b.time||'99')?-1:1});
     var by={};ulist.forEach(function(k){(by[k.date]=by[k.date]||[]).push(k)});
-    html=Object.keys(by).sort().map(function(d){return'<div class="group-h">'+esc(dayLabel(d))+'</div>'+by[d].map(function(k){return taskCard(k)}).join('')}).join('');
+    html=Object.keys(by).sort().map(function(d){return'<div class="group-h">'+esc(dayLabel(d))+'</div>'+cards(by[d])}).join('');
     if(!ulist.length)html=emptyState('Nothing scheduled ahead.','Add a date — <code>fri</code>, <code>21/7</code>, <code>next week</code>.');
   }
   if(view==='history'){
@@ -1409,7 +1705,8 @@ function renderLedger(){
       .sort(function(a,b){return(b.doneAt||0)-(a.doneAt||0)}).slice(0,200);
     var hby={};hlist.forEach(function(k){var ds=dsOf(k.doneAt||Date.now());(hby[ds]=hby[ds]||[]).push(k)});
     html=Object.keys(hby).sort().reverse().map(function(d){return'<div class="group-h">'+esc(dayLabel(d))
-      +' <span style="color:var(--gold)">· '+hby[d].length+'</span></div>'+hby[d].map(function(k){return taskCard(k,{showDate:true})}).join('')}).join('');
+      +' <span style="color:var(--gold)">· '+hby[d].length+'</span></div>'
+      +cards(hby[d],{showDate:true,showGroup:true,flat:true})}).join('');
     if(!hlist.length)html=emptyState('Nothing in history yet.','Completed tasks collect here — your receipts.');
   }
   L.innerHTML=html;
@@ -1527,17 +1824,25 @@ function fadeOut(w,cb){if(!w){cb();return}w.classList.add('leaving');setTimeout(
 function bindLedger(){
   var L=$('#ledger');
   L.addEventListener('click',function(e){
+    var ga=e.target.closest('[data-gact]'),gs=e.target.closest('[data-gid]');
+    if(ga&&gs){e.preventDefault();groupAction(ga.dataset.gact,gs.dataset.gid);return}
     if(bulkMode){
       if(bulkGuard){bulkGuard=false;return}
       var bc=e.target.closest('.task');
-      if(bc){e.preventDefault();toggleBulk(bc.dataset.id)}
+      if(bc){e.preventDefault();
+        if(e.shiftKey)rangeBulk(bc.dataset.id);else toggleBulk(bc.dataset.id)}
       return;
     }
+    var card0=e.target.closest('.task');
+    /* desktop: ⌘/Ctrl+click or shift+click starts a multi-select, same as a
+       long-press does on touch */
+    if(card0&&(e.metaKey||e.ctrlKey||e.shiftKey)){e.preventDefault();enterBulk(card0.dataset.id);bulkGuard=false;return}
     var rq=e.target.closest('[data-req]');
     if(rq){handleRequest(e.target.closest('[data-rid]').dataset.rid,rq.dataset.req);return}
-    var card=e.target.closest('.task');if(!card)return;
+    var card=card0;if(!card)return;
     if(card.dataset.swiped){delete card.dataset.swiped;return}
     var a=e.target.closest('[data-act]');if(!a)return;
+    if(a.dataset.act==='select'){enterBulk(card.dataset.id);bulkGuard=false;return}
     var k=findTask(card.dataset.id);if(!k)return;
     doAction(a.dataset.act,k,card);
   });
@@ -1903,54 +2208,164 @@ function setSync(c,l){
   ['#syncDot','#setDot'].forEach(function(s){var e=$(s);if(e)e.className='sync-dot '+c});
   var sl=$('#syncLbl');if(sl)sl.textContent=l;
   var st=$('#setStatus');
-  if(st)st.textContent=c==='synced'?('Synced · '+((me&&me.email)||'')):c==='error'?'Sync error — check rules / connection':'Connecting…';
+  if(st)st.textContent=
+    c==='synced'?('Synced · '+((me&&me.email)||'')):
+    c==='error'?'Sync error — retrying. Check rules / connection.':
+    c==='offline'?'Offline — your changes are saved here and will sync when you reconnect.':
+    c==='pending'?'Changes waiting to sync…':'Connecting…';
 }
+/* ---------- MERGE ----------
+   The board is one Firestore document, so a naive "newest document wins" makes
+   every save a full-board overwrite: whichever device writes last silently
+   reverts everything the other one did — including tasks ticked off minutes
+   earlier. We merge instead. Board-level settings still follow newest-wins, but
+   tasks are reconciled one at a time on their own stamps, and deletes leave a
+   tombstone so a stale copy can't resurrect them.                             */
+function mergeBoards(L,R,preferRemoteScalars){
+  var lAt=(L.meta&&L.meta.updatedAt)||0,rAt=(R.meta&&R.meta.updatedAt)||0;
+  var base=(preferRemoteScalars||rAt>lAt)?R:L,other=(base===R)?L:R;
+  var out={};
+  Object.keys(other).forEach(function(f){out[f]=other[f]});
+  Object.keys(base).forEach(function(f){if(base[f]!==undefined)out[f]=base[f]});
+  out.meta=Object.assign({},other.meta||{},base.meta||{});
+  out.meta.updatedAt=Math.max(lAt,rAt);
+
+  /* tombstones: union, newest wins */
+  var tomb=Object.assign({},(other.meta&&other.meta.tomb)||{});
+  var bt=(base.meta&&base.meta.tomb)||{};
+  Object.keys(bt).forEach(function(id){if(!tomb[id]||bt[id]>tomb[id])tomb[id]=bt[id]});
+
+  /* done-day counters drive the streak — take the higher count per day so a
+     stale copy can never shrink it */
+  var dd=Object.assign({},(other.meta&&other.meta.doneDates)||{});
+  var bd=(base.meta&&base.meta.doneDates)||{};
+  Object.keys(bd).forEach(function(d){if(!(dd[d]>bd[d]))dd[d]=bd[d]});
+  out.meta.doneDates=dd;
+
+  /* tasks: per-task newest-wins */
+  var byId={},order=[],localAhead=false,rById={};
+  (R.tasks||[]).forEach(function(k){if(k&&k.id)rById[k.id]=k});
+  function take(list){(list||[]).forEach(function(k){
+    if(!k||!k.id)return;
+    var p=byId[k.id];
+    if(!p){byId[k.id]=k;order.push(k.id)}
+    else if(taskStamp(k)>taskStamp(p))byId[k.id]=k;
+  })}
+  take(L.tasks);take(R.tasks);
+  out.tasks=order.map(function(id){return byId[id]}).filter(function(k){
+    return !(tomb[k.id]&&tomb[k.id]>=taskStamp(k));
+  });
+  /* Groups are unioned rather than taken from whichever board is newer: a group
+     made here shouldn't vanish just because the other device edited something
+     unrelated a second later. A group that survives on only one side with no
+     members left was deleted on the other — let that deletion through.        */
+  var gById={},gOrder=[],inBase={},inOther={};
+  (base.groups||[]).forEach(function(g){if(g&&g.id)inBase[g.id]=1});
+  (other.groups||[]).forEach(function(g){if(g&&g.id)inOther[g.id]=1});
+  (other.groups||[]).concat(base.groups||[]).forEach(function(g){
+    if(!g||!g.id)return;
+    if(!gById[g.id])gOrder.push(g.id);
+    gById[g.id]=g;                                    /* base listed last, so it wins */
+  });
+  var used={};out.tasks.forEach(function(k){if(k.group)used[k.group]=1});
+  out.groups=gOrder.map(function(id){return gById[id]})
+    .filter(function(g){return used[g.id]||(inBase[g.id]&&inOther[g.id])});
+
+  var cut=Date.now()-60*864e5;
+  Object.keys(tomb).forEach(function(id){if(tomb[id]<cut)delete tomb[id]});
+  out.meta.tomb=tomb;
+
+  /* Do we hold anything the server doesn't know yet? Only then do we owe it a
+     push — otherwise two converged devices would write to each other forever. */
+  var rTomb=(R.meta&&R.meta.tomb)||{};
+  out.tasks.forEach(function(k){
+    var rv=rById[k.id];
+    if(!rv||taskStamp(k)>taskStamp(rv))localAhead=true;
+  });
+  Object.keys(tomb).forEach(function(id){if(!(rTomb[id]>=tomb[id]))localAhead=true});
+  var rGroups={};(R.groups||[]).forEach(function(g){if(g&&g.id)rGroups[g.id]=1});
+  if(out.groups.length!==Object.keys(rGroups).length)localAhead=true;
+  else out.groups.forEach(function(g){if(!rGroups[g.id])localAhead=true});
+  return{board:out,localAhead:localAhead};
+}
+function adoptBoard(b){
+  suppressPush=true;
+  S=b;migrate();resetShadow();Store.set(KEY,S);
+  suppressPush=false;
+}
+
+/* ---------- PUSH ----------
+   A debounced write that is simply dropped when the tab is backgrounded, goes
+   offline, or fails is the other half of "it didn't sync". Every change stays
+   flagged until the server confirms it, and we flush on the way out.          */
+var pendingPush=false,pushFails=0;
 function queuePush(){
-  if(!me||!FB.ready)return;
-  if(!hydrated)return;   /* never push before the server has spoken —
-                            a fresh device must not overwrite the real board */
+  pendingPush=true;
+  if(!me||!FB.ready||!hydrated){setSync('pending','Pending');return}
   setSync('syncing','Syncing');
   clearTimeout(pushTimer);
-  pushTimer=setTimeout(async function(){
-    try{await FB.F.setDoc(fdoc('boards',me.uid),JSON.parse(JSON.stringify(S)));setSync('synced','Synced')}
-    catch(e){console.error(e);setSync('error','Error')}
-  },800);
+  pushTimer=setTimeout(doPush,600);
 }
+async function doPush(){
+  clearTimeout(pushTimer);
+  if(!pendingPush)return;
+  if(!me||!FB.ready||!hydrated){setSync('pending','Pending');return}
+  var body;
+  try{body=JSON.parse(JSON.stringify(S))}catch(e){console.error(e);return}
+  pendingPush=false;
+  try{
+    await FB.F.setDoc(fdoc('boards',me.uid),body);
+    pushFails=0;
+    if(!pendingPush)setSync('synced','Synced');
+  }catch(e){
+    console.error(e);
+    pendingPush=true;                       /* keep it queued — never lose it */
+    pushFails++;
+    setSync(navigator.onLine?'error':'offline',navigator.onLine?'Retrying':'Offline');
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(doPush,Math.min(30000,800*Math.pow(2,Math.min(pushFails,6))));
+  }
+}
+function flushPush(){if(pendingPush){clearTimeout(pushTimer);doPush()}}
+
 function listenBoard(){
   if(!FB.ready)return;
   if(unsubBoard)unsubBoard();
   unsubBoard=FB.F.onSnapshot(fdoc('boards',me.uid),function(snap){
     var r=snap.data();
-    var remoteAt=(r&&r.meta&&r.meta.updatedAt)||0;
+    /* our own optimistic echo — nothing new to learn from it */
+    if(snap.metadata&&snap.metadata.hasPendingWrites)return;
+    if(r){
+      observeStamp((r.meta&&r.meta.updatedAt)||0);
+      (r.tasks||[]).forEach(function(k){observeStamp(taskStamp(k))});
+      var rt=(r.meta&&r.meta.tomb)||{};
+      Object.keys(rt).forEach(function(id){observeStamp(rt[id])});
+    }
 
-    /* ---- FIRST SNAPSHOT: decide which copy wins, once ---- */
+    /* ---- FIRST SNAPSHOT ---- */
     if(!hydrated){
       hydrated=true;
-      var localAt=(S.meta&&S.meta.updatedAt)||0;
       var neverSynced=!Store.get('dailyops.synced.'+me.uid,0);
-      /* On a device that has never synced this account (new phone, incognito,
-         cleared cache) the server ALWAYS wins — even if local carries a fresher
-         timestamp from a local carry-forward. Otherwise newest-wins. */
-      if(r&&(neverSynced||remoteAt>localAt)){
-        suppressPush=true;
-        S=r;migrate();Store.set(KEY,S);
-        suppressPush=false;
-      }
+      if(r){
+        var m=mergeBoards(S,r,neverSynced);
+        adoptBoard(m.board);
+        if(m.localAhead)queuePush();
+      }else queuePush();             /* brand-new account: seed the server */
       Store.set('dailyops.synced.'+me.uid,1);
-      rollDay();                     /* safe now — operating on the real board */
+      carryDone=true;rollDay();      /* safe now — operating on the real board */
       applyTheme();renderCapture();render();
-      setSync('synced','Synced');
-      if(!r)queuePush();             /* brand-new account: seed the server */
+      if(pendingPush)flushPush();else setSync('synced','Synced');
       return;
     }
 
-    /* ---- LIVE UPDATES: newest wins ---- */
-    if(r&&remoteAt>(S.meta.updatedAt||0)){
-      suppressPush=true;
-      S=r;migrate();Store.set(KEY,S);rollDay();applyTheme();render();
-      suppressPush=false;
+    /* ---- LIVE UPDATES ---- */
+    if(r){
+      var mm=mergeBoards(S,r,false);
+      adoptBoard(mm.board);
+      rollDay();applyTheme();render();
+      if(mm.localAhead)queuePush();
     }
-    setSync('synced','Synced');
+    if(!pendingPush)setSync('synced','Synced');
   },function(e){console.error(e);setSync('error','Error')});
 }
 function listenShared(){
@@ -2330,7 +2745,7 @@ function bindViewer(){
 }
 /* ---------- SETTINGS ---------- */
 function openSettings(){
-  renderAppearance();renderTagMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();renderActivityFull();
+  renderAppearance();renderTagMgr();renderGroupMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();renderActivityFull();
   $('#inviteUrl').textContent=location.origin+location.pathname;
   var perm=('Notification' in window)?Notification.permission:'unsupported';
   $('#notifHint').textContent=perm==='granted'?'On — alerts fire while the app is open':
@@ -2366,6 +2781,18 @@ function renderPersonMgr(){
       +'<input value="'+esc(p.label)+'" data-f="label" placeholder="Name">'
       +'<input value="'+esc(p.email||'')+'" data-f="email" placeholder="email (optional)" style="max-width:150px">'
       +'<span class="cnt">'+n+'</span><button class="sx">✕</button></div>'}).join('');
+}
+function renderGroupMgr(){
+  $('#groupMgr').innerHTML=S.groups.length?S.groups.map(function(g){
+    var n=S.tasks.filter(function(k){return k.group===g.id}).length;
+    var open=S.tasks.filter(function(k){return k.group===g.id&&k.status!=='done'}).length;
+    return'<div class="mgr-row" data-gmid="'+g.id+'">'
+      +'<span class="tdot" style="background:'+(g.color||GROUPCOLORS[0])+'"></span>'
+      +'<input value="'+esc(g.label||'')+'" placeholder="Group name">'
+      +'<span class="cnt">'+open+'/'+n+'</span>'
+      +'<button class="sx" data-gm="edit" title="Colour">🎨</button>'
+      +'<button class="sx" data-gm="del" title="Ungroup &amp; delete">✕</button></div>'}).join('')
+    :'<p style="margin:0;font-size:12.5px;color:var(--dim)">No groups yet.</p>';
 }
 function renderRecurMgr(){
   $('#recurMgr').innerHTML=S.recurring.length?S.recurring.map(function(r){
@@ -2635,7 +3062,19 @@ function enterBulk(id){
 }
 function toggleBulk(id){
   if(bulkSel[id])delete bulkSel[id];else bulkSel[id]=1;
+  bulkAnchor=id;
   renderBulkUI();
+}
+var bulkAnchor=null;
+function visibleIds(){return $$('#ledger .task').map(function(el){return el.dataset.id})}
+/* shift+click selects everything between the last click and this one, in the
+   order the board is actually showing */
+function rangeBulk(id){
+  var ids=visibleIds(),a=ids.indexOf(bulkAnchor),b=ids.indexOf(id);
+  if(a<0||b<0){toggleBulk(id);return}
+  if(a>b){var s=a;a=b;b=s}
+  for(var i=a;i<=b;i++)bulkSel[ids[i]]=1;
+  bulkAnchor=id;renderBulkUI();
 }
 function renderBulkUI(){
   var n=Object.keys(bulkSel).length;
@@ -2643,16 +3082,27 @@ function renderBulkUI(){
   $('#bulkBar').classList.toggle('hidden',!bulkMode);
   $('#bbCount').textContent=n+' selected';
   $('#bbAssign').style.display=isAdmin?'':'none';
+  var vis=visibleIds();
+  $('#bbAll').textContent=(n>=vis.length&&vis.length)?'Select none':'Select all';
   $$('#ledger .task').forEach(function(el){el.classList.toggle('bulk-on',!!bulkSel[el.dataset.id])});
 }
 function exitBulk(){
-  bulkMode=false;bulkSel={};
+  bulkMode=false;bulkSel={};bulkAnchor=null;
   $('#bulkBar').classList.add('hidden');$('#bulkTray').classList.add('hidden');
   $$('#ledger .task.bulk-on').forEach(function(el){el.classList.remove('bulk-on')});
 }
 async function applyBulk(act){
   if(act==='exit'){exitBulk();return}
   if(act==='assign'){renderBulkTray();return}
+  if(act==='group'){renderGroupTray();return}
+  if(act==='all'){
+    var vis=visibleIds();
+    if(Object.keys(bulkSel).length>=vis.length)bulkSel={};
+    else vis.forEach(function(id){bulkSel[id]=1});
+    if(!Object.keys(bulkSel).length)exitBulk();else renderBulkUI();
+    return;
+  }
+  if(act==='edit'){openBulkEdit();return}
   var ids=Object.keys(bulkSel);if(!ids.length)return;
   if(act==='del'&&!confirm('Delete '+ids.length+' task(s)?'))return;
   var skipped=0;
@@ -2682,6 +3132,104 @@ function renderBulkTray(){
     return'<button class="tr-chip" data-bp="'+p.id+'">@ '+esc(p.label)+(p.email?' ✓':'')+'</button>'}).join('')
     +'<button class="tr-chip clear" data-bp="">Unassign</button>';
   el.classList.remove('hidden');
+}
+function renderGroupTray(){
+  var el=$('#bulkTray');
+  el.innerHTML=S.groups.map(function(g){
+    return'<button class="tr-chip" data-bg="'+g.id+'"><span class="dot" style="background:'+(g.color||GROUPCOLORS[0])+'"></span>'+esc(g.label||'Group')+'</button>'}).join('')
+    +'<button class="tr-chip" data-bg="__new">＋ New group…</button>'
+    +'<button class="tr-chip clear" data-bg="">Remove from group</button>';
+  el.classList.remove('hidden');
+}
+/* Only private-board tasks carry a group — delegated tasks live in their own
+   collection and belong to whoever they're assigned to. */
+function bulkGroup(gid){
+  $('#bulkTray').classList.add('hidden');
+  var ids=Object.keys(bulkSel).filter(function(id){
+    var k=findTask(id);return k&&!k.assigneeEmail});
+  var skipped=Object.keys(bulkSel).length-ids.length;
+  if(gid==='__new'){
+    if(!ids.length){toast('Delegated tasks can’t be grouped');return}
+    openGroupEditor(null,ids);return;
+  }
+  ids.forEach(function(id){
+    var k=S.tasks.find(function(x){return x.id===id});if(!k)return;
+    if(gid)k.group=gid;else delete k.group;
+  });
+  save();exitBulk();render();
+  toast((gid?('Grouped '+ids.length+' into “'+((groupOf(gid)||{}).label||'group')+'”'):('Removed '+ids.length+' from their group'))
+    +(skipped?' · '+skipped+' delegated skipped':''));
+}
+
+/* ---------- BULK EDIT ---------- */
+function bulkTargets(){return Object.keys(bulkSel).map(findTask).filter(Boolean)}
+function openBulkEdit(){
+  var t=bulkTargets();if(!t.length)return;
+  var sh=t.filter(function(k){return k.assigneeEmail}).length;
+  $('#beSum').innerHTML='Editing <b>'+t.length+'</b> task'+(t.length===1?'':'s')
+    +(sh?(' · <b>'+sh+'</b> delegated (only Kalash can change those, and they can’t be grouped)'):'');
+  $('#beDateMode').value='';$('#beTimeMode').value='';$('#bePri').value='';$('#beStatus').value='';
+  $('#beDate').value=todayStr();$('#beTime').value='09:00';
+  $('#beNotes').value='';
+  $('#beDateFld').classList.add('hidden');$('#beTimeFld').classList.add('hidden');
+  $('#beTag').innerHTML='<option value="">Keep as-is</option><option value="__none">No tag</option>'
+    +S.tags.map(function(x){return'<option value="'+x.id+'">'+esc(x.label)+'</option>'}).join('');
+  $('#beGroup').innerHTML='<option value="">Keep as-is</option><option value="__none">No group</option>'
+    +S.groups.map(function(g){return'<option value="'+g.id+'">'+esc(g.label||'Group')+'</option>'}).join('');
+  $('#bePerson').innerHTML='<option value="">Keep as-is</option><option value="__none">Just me</option>'
+    +S.people.map(function(p){return'<option value="'+p.id+'">'+esc(p.label)+(p.email?' ✓':'')+'</option>'}).join('');
+  $('#beWhoFld').classList.toggle('hidden',!isAdmin);
+  $('#bulkOv').classList.add('open');
+}
+async function applyBulkEdit(){
+  var t=bulkTargets();if(!t.length){closeOv('bulkOv');return}
+  var dm=$('#beDateMode').value,tm=$('#beTimeMode').value;
+  var patch={};
+  if(dm==='today')patch.date=todayStr();
+  else if(dm==='tmrw')patch.date=todayStr(1);
+  else if(dm==='week')patch.date=todayStr(7);
+  else if(dm==='pick')patch.date=$('#beDate').value||null;
+  else if(dm==='clear')patch.date=null;
+  if(tm==='pick')patch.time=$('#beTime').value||null;
+  else if(tm==='clear')patch.time=null;
+  var pri=$('#bePri').value;if(pri)patch.pri=(pri==='__none')?'':pri;
+  var tag=$('#beTag').value;if(tag)patch.tag=(tag==='__none')?null:tag;
+  var st=$('#beStatus').value;
+  var grp=$('#beGroup').value;
+  var person=isAdmin?$('#bePerson').value:'';
+  var extra=$('#beNotes').value.trim();
+
+  if(!Object.keys(patch).length&&!st&&!grp&&!person&&!extra){closeOv('bulkOv');toast('Nothing to change');return}
+
+  var changed=0,skipped=0,groupSkipped=0;
+  for(var i=0;i<t.length;i++){
+    var k=t[i],shared_=!!k.assigneeEmail;
+    var p=Object.assign({},patch);
+    if(st&&st!==k.status){
+      p.status=st;
+      if(st==='done'){p.doneAt=k.doneAt||Date.now();if(k.status!=='done')bumpDoneDate(todayStr(),1)}
+      else{p.doneAt=null;if(k.status==='done')bumpDoneDate(dsOf(k.doneAt||Date.now()),-1)}
+    }
+    if(extra)p.notes=(k.notes?k.notes+'\n':'')+extra;
+    if(shared_){
+      if(grp||person)groupSkipped++;
+      if(!isAdmin&&!k.selfCreated){skipped++;continue}
+      if(!Object.keys(p).length)continue;
+      if(!FB.ready){skipped++;continue}
+      try{await FB.F.updateDoc(fdoc('tasks',k.id),p);changed++}catch(e){console.error(e);skipped++}
+      continue;
+    }
+    Object.keys(p).forEach(function(f){
+      if(p[f]===null||p[f]===undefined)delete k[f];else k[f]=p[f]});
+    if(grp){if(grp==='__none')delete k.group;else k.group=grp}
+    if(person)k.person=(person==='__none')?null:person;
+    changed++;
+  }
+  save();if(st==='done')ding();
+  closeOv('bulkOv');exitBulk();render();
+  toast('Updated '+changed+' task'+(changed===1?'':'s')
+    +(skipped?' · '+skipped+' skipped (no permission)':'')
+    +(groupSkipped&&!skipped?' · group/assignee not applied to delegated tasks':''));
 }
 async function bulkAssign(pid){
   $('#bulkTray').classList.add('hidden');
@@ -2868,9 +3416,14 @@ function bindAll(){
   $('#filters').addEventListener('click',function(e){var b=e.target.closest('.f-chip');if(!b)return;activeTag=b.dataset.tag;render()});
   $('#week').addEventListener('click',function(e){var b=e.target.closest('.wd');if(!b)return;
     selDate=b.dataset.day===todayStr()?null:b.dataset.day;renderWeek();renderLedger()});
-  $('#fab').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});setTimeout(function(){$('#capInput').focus()},250)});
+  $('#fab').addEventListener('click',openQuickAdd);
+  $('#qaCancel').addEventListener('click',function(){closeOv('addOv')});
+  $('#qaAdd').addEventListener('click',commitCapture);
   $('#settingsBtn').addEventListener('click',openSettings);
-  $('#syncBtn').addEventListener('click',openSettings);
+  $('#syncBtn').addEventListener('click',function(){
+    if(pendingPush){pushFails=0;flushPush();toast('Pushing your changes…')}
+    openSettings();
+  });
   $('#bellBtn').addEventListener('click',function(e){e.stopPropagation();toggleNotif()});
   $('#notifPop').addEventListener('click',function(e){
     if(e.target.closest('[data-actseen]'))markActSeen();
@@ -2933,6 +3486,19 @@ function bindAll(){
     if(r&&e.target.tagName==='INPUT'){var t=tagOf(r.dataset.tid);if(t)t.label=e.target.value}});
   $('#tagMgr').addEventListener('change',function(){save();renderFilters()});
 
+  $('#groupMgr').addEventListener('click',function(e){
+    var r=e.target.closest('.mgr-row');if(!r)return;
+    var b=e.target.closest('[data-gm]');if(!b)return;
+    if(b.dataset.gm==='edit'){openGroupEditor(groupOf(r.dataset.gmid));return}
+    var g=groupOf(r.dataset.gmid);if(!g)return;
+    if(!confirm('Delete the group “'+(g.label||'')+'”? The tasks stay — they just lose the group.'))return;
+    groupAction('ungroup',g.id);renderGroupMgr();
+  });
+  $('#groupMgr').addEventListener('input',function(e){
+    var r=e.target.closest('.mgr-row');if(!r||e.target.tagName!=='INPUT')return;
+    var g=groupOf(r.dataset.gmid);if(g)g.label=e.target.value});
+  $('#groupMgr').addEventListener('change',function(){save();renderLedger()});
+
   $('#personAdd').addEventListener('click',function(){
     S.people.push({id:'p-'+Date.now().toString(36),label:'New person',email:''});
     save();renderPersonMgr();
@@ -2989,7 +3555,9 @@ function bindAll(){
     var f=e.target.files[0];if(!f)return;
     var r=new FileReader();
     r.onload=function(){try{var d=JSON.parse(r.result);if(!Array.isArray(d.tasks))throw 0;
-      delete d.sharedSnapshot;S=d;migrate();save();rollDay();applyTheme();render();toast('Imported')}
+      /* no resetShadow(): letting save() tombstone whatever the backup drops is
+         what stops another device merging the restored tasks straight back in */
+      delete d.sharedSnapshot;S=d;migrate();save();rollDay(true);applyTheme();render();toast('Imported')}
       catch(x){toast('Invalid backup')}};
     r.readAsText(f);e.target.value=''});
   $('#clearDone').addEventListener('click',function(){
@@ -3019,7 +3587,27 @@ function bindAll(){
   $('#bulkBar').addEventListener('click',function(e){
     var b=e.target.closest('[data-bulk]');if(b)applyBulk(b.dataset.bulk)});
   $('#bulkTray').addEventListener('click',function(e){
-    var b=e.target.closest('[data-bp]');if(b)bulkAssign(b.dataset.bp)});
+    var b=e.target.closest('[data-bp]');if(b){bulkAssign(b.dataset.bp);return}
+    var g=e.target.closest('[data-bg]');if(g)bulkGroup(g.dataset.bg)});
+
+  $('#beCancel').addEventListener('click',function(){closeOv('bulkOv')});
+  $('#beApply').addEventListener('click',applyBulkEdit);
+  $('#beDateMode').addEventListener('change',function(){
+    $('#beDateFld').classList.toggle('hidden',this.value!=='pick')});
+  $('#beTimeMode').addEventListener('change',function(){
+    $('#beTimeFld').classList.toggle('hidden',this.value!=='pick')});
+
+  $('#grpCancel').addEventListener('click',function(){closeOv('grpOv')});
+  $('#grpSave').addEventListener('click',saveGroupEditor);
+  $('#grpName').addEventListener('keydown',function(e){if(e.key==='Enter')saveGroupEditor()});
+  $('#grpSw').addEventListener('click',function(e){
+    var b=e.target.closest('[data-gc]');if(!b)return;grpColor=b.dataset.gc;renderGrpSw()});
+  $('#grpDelete').addEventListener('click',function(){
+    if(!grpEditing)return;
+    if(!confirm('Delete the group “'+(grpEditing.label||'')+'”? The tasks stay — they just lose the group.'))return;
+    var gid=grpEditing.id;grpEditing=null;grpPendingIds=null;
+    closeOv('grpOv');groupAction('ungroup',gid);
+  });
 
   $('#cmdIn').addEventListener('input',function(){cmdIdx=0;renderCmd()});
   $('#cmdIn').addEventListener('keydown',function(e){
@@ -3065,7 +3653,31 @@ function bindAll(){
       if(v&&(isAdmin||v[0]!=='requests')){view=v[0];selDate=null;render()}}
   });
 }
-function closeOv(id){$('#'+id).classList.remove('open');if(id==='editOv'){editing=null;editRO=false;editShared=false}}
+function closeOv(id){
+  $('#'+id).classList.remove('open');
+  if(id==='editOv'){editing=null;editRO=false;editShared=false}
+  if(id==='grpOv'){grpEditing=null;grpPendingIds=null}
+  if(id==='addOv')homeCapture();
+}
+
+/* ---------- QUICK ADD ----------
+   The page itself stays a paper page — nothing sticky but the button. Rather
+   than a second capture UI that can drift out of step, the modal borrows the
+   real one: the section is moved in, then moved home on close, so the parser,
+   pills and trays behave identically in both places.                          */
+function openQuickAdd(){
+  var sec=$('#capSection');
+  if(sec.parentNode!==$('#addHost'))$('#addHost').appendChild(sec);
+  $('#addOv').classList.add('open');
+  openTray=null;renderCapture();
+  setTimeout(function(){$('#capInput').focus()},window.innerWidth>640?60:260);
+}
+function homeCapture(){
+  var sec=$('#capSection'),home=$('#capHome');
+  if(sec&&home&&sec.parentNode!==home.parentNode)home.parentNode.insertBefore(sec,home.nextSibling);
+  openTray=null;renderCapture();
+}
+function quickAddOpen(){return $('#addOv').classList.contains('open')}
 
 /* ---------- TOAST ---------- */
 function toast(msg,undo){
@@ -3178,6 +3790,7 @@ async function onAuth(user){
     Store.set(LAST,null);
     mode='gate';me=null;isAdmin=false;
     $('#app').classList.add('hidden');$('#viewerApp').classList.add('hidden');$('#gate').classList.remove('hidden');
+    $('#fab').classList.add('hidden');
     if(Store.get('dailyops.gate',0))showGateStep2();
     return;
   }
@@ -3207,10 +3820,15 @@ async function bootApp(user,live){
   if(mode!=='app'){
     mode='app';
     $('#gate').classList.add('hidden');$('#viewerApp').classList.add('hidden');$('#app').classList.remove('hidden');
+    $('#fab').classList.remove('hidden');   /* owner board only — not the gate or the view link */
     var local=Store.get(KEY,null);if(local)S=local;
-    migrate();applyTheme();
+    migrate();resetShadow();applyTheme();
     rollDay();
     renderCapture();render();          /* board is on screen NOW, from cache */
+    /* if the server never answers, carry forward locally rather than freeze */
+    setTimeout(function(){
+      if(!carryDone&&mode==='app'){carryDone=true;rollDay();render()}
+    },9000);
   }
   if(!live){setSync('syncing','Connecting');return}
 
@@ -3224,7 +3842,20 @@ async function bootApp(user,live){
 }
 
 /* ---------- BOOT ---------- */
+resetShadow();
 bindAll();applyTheme();startClockAndQuotes();
+
+/* A 600ms debounce is long enough to be killed by a home-swipe on iOS or a
+   closed tab. Anything still queued goes out the moment we lose the foreground,
+   and again as soon as the network is back. */
+window.addEventListener('pagehide',flushPush);
+window.addEventListener('beforeunload',flushPush);
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden)flushPush();
+  else if(pendingPush){pushFails=0;queuePush()}
+});
+window.addEventListener('online',function(){if(pendingPush){pushFails=0;queuePush()}});
+window.addEventListener('offline',function(){if(pendingPush)setSync('offline','Offline')});
 if(!Store.ok)toast('Storage blocked here — data won’t persist in this preview.');
 if(location.protocol==='file:')setTimeout(function(){toast('Open via https:// (GitHub Pages) — Google sign-in is blocked on file://')},400);
 
