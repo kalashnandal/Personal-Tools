@@ -578,10 +578,10 @@ html.compact .group-h{margin:14px 0 8px}
 .tgrp.done-all .tgrp-chip{opacity:.6}
 .m-chip.grp{color:var(--gc,var(--mute));border-color:var(--gc-soft,var(--line));background:var(--gc-bg,transparent);font-weight:600}
 .m-chip.grp .dot{width:6px;height:6px;border-radius:50%;background:var(--gc,var(--mute))}
-.gsw{display:flex;flex-wrap:wrap;gap:9px;margin-top:2px}
-.gsw button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;transition:all .18s var(--ease-spring)}
-.gsw button:hover{transform:scale(1.12)}
-.gsw button.on{border-color:var(--text);box-shadow:0 0 0 3px var(--pane-hi)}
+.gswatch{display:flex;flex-wrap:wrap;gap:9px;margin-top:2px}
+.gswatch button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;transition:all .18s var(--ease-spring)}
+.gswatch button:hover{transform:scale(1.12)}
+.gswatch button.on{border-color:var(--text);box-shadow:0 0 0 3px var(--pane-hi)}
 
 /* ---- bulk select ---- */
 .bb.primary{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
@@ -652,6 +652,22 @@ html.compact .group-h{margin:14px 0 8px}
 .rulebox p{font-size:12.5px;color:var(--mute);line-height:1.6;margin-bottom:10px}
 .rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
+
+/* ============ v4.4 — per-person invites, password reset, install help ============ */
+.gate .gsw.sub{color:var(--mute);font-size:11.5px;margin-top:9px}
+.gate .gsw.sub:hover{color:var(--gold)}
+.mgr-row .sx.inv{color:var(--gold)}
+.mgr-row .sx.inv:hover{background:var(--gold-soft);color:var(--gold)}
+.mgr-row .sx.inv.off{color:var(--dim)}
+.mgr-row .sx.inv.off:hover{background:none;color:var(--dim);cursor:not-allowed}
+.pwa-p{border-top:1px solid var(--line);padding-top:14px;margin-top:14px;position:relative}
+.pwa-p:first-child{border-top:none;padding-top:0;margin-top:0}
+.pwa-p h5{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:4px}
+.pwa-p .pwa-note{font-size:11.5px;color:var(--dim);margin-bottom:8px;line-height:1.5}
+.pwa-p ol{margin:0;padding-left:19px}
+.pwa-p li{font-size:12.5px;color:var(--mute);line-height:1.7;padding-left:2px}
+.pwa-p li b{color:var(--text);font-weight:600}
+.pwa-p li::marker{color:var(--dim);font-size:11px}
 </style>
 </head>
 <body>
@@ -677,6 +693,7 @@ html.compact .group-h{margin:14px 0 8px}
       <div class="gfld"><input id="gPass" type="password" placeholder="Password" autocomplete="current-password"></div>
       <button class="gbtn alt" id="emailBtn">Sign in</button>
       <div class="gsw" id="toSignup">First time? Set up your account →</div>
+      <div class="gsw sub" id="toReset">Forgot your password?</div>
       <div class="err" id="gateErr2" style="margin-top:12px"></div>
       <div class="sep">ACCESS</div>
       <p style="margin:0;font-size:12.5px">Invite only. Kalash adds your email first — then you can set a password.</p>
@@ -852,8 +869,8 @@ html.compact .group-h{margin:14px 0 8px}
     <p>Add someone's email here and it becomes the <b>only</b> address that can register. They open your app link, tap "Set up your account", and choose their own password. Anyone not on this list is refused.</p>
     <div id="personMgr"></div>
     <button class="btn ghost sm" id="personAdd">+ Add person</button>
-    <div class="inv-box">Send them: <b id="inviteUrl">your app link</b><br>They tap <b>Set up your account</b> → enter that exact email → choose a password.
-      <div class="set-row" style="margin-top:9px"><button class="btn ghost sm" id="copyInvite">Copy invite message</button></div>
+    <div class="inv-box">Tap <b>✉</b> next to anyone to copy an invite written for them — their name, their exact email, the access phrase, how to reset a forgotten password, and how to install it on iPhone, Android, Mac and Windows. Paste it straight into WhatsApp or email.
+      <div class="set-row" style="margin-top:9px"><span style="font-size:11.5px;color:var(--dim)">Your link: <b id="inviteUrl"></b></span></div>
     </div>
   </div>
 
@@ -869,6 +886,7 @@ html.compact .group-h{margin:14px 0 8px}
     <p>Install Daily Ops on your device — home-screen icon, full screen, loads offline.</p>
     <div class="set-row">
       <button class="btn gold sm hidden" id="installBtn">📲 Install app</button>
+      <button class="btn ghost sm" id="pwaHelpBtn">How do I install it?</button>
       <span style="font-size:11.5px;color:var(--dim)" id="installHint"></span>
     </div>
     <div class="set-row" style="margin-top:10px">
@@ -995,12 +1013,22 @@ html.compact .group-h{margin:14px 0 8px}
   </div>
 </div></div>
 
+<!-- INSTALL HELP -->
+<div class="overlay" id="pwaOv"><div class="modal">
+  <div class="grab"></div>
+  <h3>Install <em>Daily Ops</em></h3>
+  <p style="font-size:12.5px;color:var(--mute);margin-bottom:16px;position:relative">
+    It’s a web app, so there’s no App Store — your browser installs it. Once it’s in, it opens full screen with its own icon and works offline.</p>
+  <div id="pwaBody"></div>
+  <div class="m-foot"><button class="btn ghost sm" id="pwaCopy">Copy these steps</button><button class="btn gold" id="pwaClose">Done</button></div>
+</div></div>
+
 <!-- GROUP EDITOR -->
 <div class="overlay" id="grpOv"><div class="modal">
   <div class="grab"></div>
   <h3 id="grpTitle">New <em>group</em></h3>
   <div class="fld"><label>Name</label><input id="grpName" type="text" placeholder="e.g. Summit launch" maxlength="60"></div>
-  <div class="fld"><label>Colour</label><div class="gsw" id="grpSw"></div></div>
+  <div class="fld"><label>Colour</label><div class="gswatch" id="grpSw"></div></div>
   <div class="m-foot">
     <button class="btn danger hidden" id="grpDelete">Ungroup &amp; delete</button>
     <div style="display:flex;gap:8px"><button class="btn ghost" id="grpCancel">Cancel</button><button class="btn gold" id="grpSave">Save</button></div>
@@ -3045,7 +3073,10 @@ function renderPersonMgr(){
       +'<span class="tdot" style="background:'+(p.email?'var(--ok)':'var(--pane-hi)')+';display:grid;place-items:center;font-size:11px;color:'+(p.email?'var(--ink)':'var(--mute)')+'">'+(p.email?'✓':'@')+'</span>'
       +'<input value="'+esc(p.label)+'" data-f="label" placeholder="Name">'
       +'<input value="'+esc(p.email||'')+'" data-f="email" placeholder="email (optional)" style="max-width:150px">'
-      +'<span class="cnt">'+n+'</span><button class="sx">✕</button></div>'}).join('');
+      +'<span class="cnt">'+n+'</span>'
+      +'<button class="sx inv'+(p.email?'':' off')+'" data-inv="1" title="'
+        +(p.email?'Copy a personal invite for '+esc(p.label):'Add an email first')+'">✉</button>'
+      +'<button class="sx" data-del="1" title="Remove">✕</button></div>'}).join('');
 }
 function renderGroupMgr(){
   $('#groupMgr').innerHTML=S.groups.length?S.groups.map(function(g){
@@ -3069,13 +3100,99 @@ function renderViewLink(){
   $('#viewUrl').textContent=S.view.key?(location.origin+location.pathname+'?view='+S.view.key):'— not published —';
 }
 
+/* ---------- INVITES ----------
+   One personal message per person rather than a generic block of text: their
+   name and their exact email are baked in, because the address they register
+   with has to match the allowlist entry exactly or Firebase turns them away. */
+function appUrl(){return location.origin+location.pathname}
+function copyText(str,okMsg){
+  function fallback(){
+    var ta=document.createElement('textarea');
+    ta.value=str;ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:-9999px';
+    document.body.appendChild(ta);ta.select();
+    var done=false;try{done=document.execCommand('copy')}catch(e){}
+    document.body.removeChild(ta);
+    toast(done?okMsg:'Could not copy — select the text manually');
+  }
+  if(navigator.clipboard&&window.isSecureContext)
+    navigator.clipboard.writeText(str).then(function(){toast(okMsg)},fallback);
+  else fallback();
+}
+/* [platform, caveat, steps] — rendered as HTML in Settings and flattened to
+   plain text inside the invite, so the two can never drift apart. */
+var INSTALL_HELP=[
+  ['iPhone &amp; iPad','Safari only — Chrome on iOS can’t install web apps.',
+    ['Open the link in <b>Safari</b>',
+     'Tap <b>Share</b> (the square with an arrow, at the bottom)',
+     'Scroll down and tap <b>Add to Home Screen</b>',
+     'Tap <b>Add</b> — the icon lands on your home screen']],
+  ['Android','Chrome, Edge or Samsung Internet.',
+    ['Open the link in <b>Chrome</b>',
+     'Tap the <b>⋮</b> menu, top right',
+     'Tap <b>Install app</b> (or <b>Add to Home screen</b>)',
+     'Tap <b>Install</b>']],
+  ['Mac — Chrome or Edge','',
+    ['Open the link',
+     'Click the <b>install icon</b> in the address bar — a monitor with a down arrow',
+     '…or <b>⋮</b> menu → <b>Cast, Save and Share</b> → <b>Install page as app…</b>',
+     'Click <b>Install</b> — it opens in its own window and sits in your Dock']],
+  ['Mac — Safari','Safari 17 or newer.',
+    ['Open the link in <b>Safari</b>',
+     'Menu bar → <b>File</b> → <b>Add to Dock…</b>',
+     'Click <b>Add</b>']],
+  ['Windows — Chrome or Edge','',
+    ['Open the link',
+     'Click the <b>install icon</b> in the address bar',
+     'Click <b>Install</b> — it pins to your taskbar and Start menu']]
+];
+function stripTags(s){return String(s).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&')}
+function installStepsText(){
+  return INSTALL_HELP.map(function(p){
+    return stripTags(p[0])+(p[1]?' ('+stripTags(p[1])+')':'')+'\n'
+      +p[2].map(function(s,i){return'  '+(i+1)+'. '+stripTags(s)}).join('\n');
+  }).join('\n\n');
+}
+function renderInstallHelp(){
+  var el=$('#pwaBody');if(!el)return;
+  el.innerHTML=INSTALL_HELP.map(function(p){
+    return'<div class="pwa-p"><h5>'+p[0]+'</h5>'
+      +(p[1]?'<p class="pwa-note">'+p[1]+'</p>':'')
+      +'<ol>'+p[2].map(function(s){return'<li>'+s+'</li>'}).join('')+'</ol></div>';
+  }).join('');
+}
+/* kind: 'person' (on the team, may also get work from you) | 'guest' (own board only) */
+function inviteText(name,email,kind){
+  var first=String(name||'').trim().split(/\s+/)[0]||'there';
+  var L=[];
+  L.push('Hi '+first+' —');
+  L.push('');
+  L.push('I’ve set up a Daily Ops board for you. It’s yours: plan your day, add your own tasks, group them, tick them off, keep your own notes. It’s private — I can’t see your day-to-day and nobody else can either.');
+  if(kind!=='guest')L.push('If I ever pass something specific your way it shows up in there too, but the board is yours to run.');
+  L.push('');
+  L.push('GETTING IN');
+  L.push('1. Open ' + appUrl());
+  L.push('2. Access phrase: ' + ACCESS_PHRASE);
+  L.push('3. Tap "First time? Set up your account"');
+  L.push('4. Use this exact email: ' + (email || '(the address I invited)'));
+  L.push('5. Pick your own password — I never see it');
+  L.push('');
+  L.push('Forgot the password later? Tap "Forgot your password?" on the sign-in screen and you’ll get a reset link by email.');
+  L.push('');
+  L.push('INSTALLING IT (so it opens like a real app, works offline, no browser bar)');
+  L.push('');
+  L.push(installStepsText());
+  return L.join('\n');
+}
+
 function renderGuestMgr(){
   var el=$('#guestMgr');if(!el)return;
   el.innerHTML=(S.guests&&S.guests.length)?S.guests.map(function(g,i){
     return'<div class="mgr-row" data-gi="'+i+'">'
       +'<span class="tdot" style="background:var(--pane-hi);display:grid;place-items:center;font-size:11px;color:var(--mute)">☺</span>'
       +'<input value="'+esc(g)+'" placeholder="friend@email.com" type="email">'
-      +'<button class="sx">✕</button></div>'}).join('')
+      +'<button class="sx inv'+(g?'':' off')+'" data-inv="1" title="Copy a personal invite">✉</button>'
+      +'<button class="sx" data-del="1" title="Remove">✕</button></div>'}).join('')
     :'<p style="margin:0 0 8px;font-size:12.5px;color:var(--dim)">No guests yet.</p>';
 }
 
@@ -3728,6 +3845,11 @@ function bindAll(){
   $('#personMgr').addEventListener('click',function(e){
     var r=e.target.closest('.mgr-row');if(!r||!e.target.closest('.sx'))return;
     var p=personOf(r.dataset.pid);if(!p)return;
+    if(e.target.closest('[data-inv]')){
+      if(!p.email){toast('Give '+p.label+' an email first — it’s the address they register with');return}
+      copyText(inviteText(p.label,p.email,'person'),'Invite for '+p.label+' copied');
+      return;
+    }
     if(!confirm('Remove "'+p.label+'"? Assigned tasks stay but lose their owner.'))return;
     S.tasks.forEach(function(k){if(k.person===p.id)k.person=null});
     S.people=S.people.filter(function(x){return x.id!==p.id});
@@ -3851,17 +3973,19 @@ function bindAll(){
     save();syncAllowlist();renderGuestMgr();toast('Guest list updated')});
   $('#guestMgr').addEventListener('click',function(e){
     var r=e.target.closest('.mgr-row');if(!r||!e.target.closest('.sx'))return;
+    var em=(S.guests||[])[+r.dataset.gi]||'';
+    if(e.target.closest('[data-inv]')){
+      if(!em){toast('Type their email first');return}
+      copyText(inviteText(em.split('@')[0],em,'guest'),'Invite for '+em+' copied');
+      return;
+    }
     if(!confirm('Remove this guest? They lose sign-in access; their board data stays until they are re-invited.'))return;
     S.guests.splice(+r.dataset.gi,1);save();syncAllowlist();renderGuestMgr()});
 
-  $('#copyInvite').addEventListener('click',function(){
-    var url=location.origin+location.pathname;
-    var msg='You\u2019ve been added to my Daily Ops board.\n\n1. Open: '+url
-      +'\n2. Enter the access phrase I sent you\n3. Tap \u201cSet up your account\u201d\n'
-      +'4. Use THIS email address and choose your own password\n\n'
-      +'You\u2019ll see the tasks I assign you, and you can mark them in progress or done.';
-    navigator.clipboard.writeText(msg).then(function(){toast('Invite message copied')});
-  });
+  $('#pwaHelpBtn').addEventListener('click',function(){renderInstallHelp();$('#pwaOv').classList.add('open')});
+  $('#pwaClose').addEventListener('click',function(){closeOv('pwaOv')});
+  $('#pwaCopy').addEventListener('click',function(){
+    copyText('Install Daily Ops ('+appUrl()+')\n\n'+installStepsText(),'Install steps copied')});
 
   document.addEventListener('keydown',function(e){
     if(mode!=='app')return;
@@ -3936,6 +4060,29 @@ $('#toSignup').addEventListener('click',function(){
   $('#sEmail').value=$('#gEmail').value;});
 $('#toSignin').addEventListener('click',function(){
   gateStep(2);$('#gateMsg').textContent='Sign in to load your board.';});
+
+/* Password reset — Firebase emails the link, so it works for team members and
+   guests alike without anyone having to come back through the admin. */
+$('#toReset').addEventListener('click',async function(){
+  var em=$('#gEmail').value.trim().toLowerCase();
+  var err=$('#gateErr2');
+  if(!em){err.textContent='Type your email above first, then tap this again.';$('#gEmail').focus();return}
+  if(!FB.ready){var ok=await initFirebase();if(!ok){err.textContent='Can’t reach Firebase — check your connection and retry.';return}}
+  err.textContent='Sending a reset link…';
+  try{
+    await FB.A.sendPasswordResetEmail(FB.auth,em);
+    err.textContent='Reset link sent to '+em+'. Check your inbox — and your spam folder.';
+  }catch(e){
+    console.error(e);
+    var c=e&&e.code;
+    err.textContent =
+      (c==='auth/user-not-found')?'No account with that email yet — tap “Set up your account” instead.'
+      :(c==='auth/invalid-email')?'That doesn’t look like a valid email address.'
+      :(c==='auth/too-many-requests')?'Too many attempts — wait a minute and try again.'
+      :(c==='auth/missing-email')?'Type your email above first.'
+      :'Could not send the reset email: '+(c||'unknown');
+  }
+});
 
 /* Best-effort invite pre-check. Anonymous users can't read the allowlist
    (by design — it keeps team emails private), so a failed read returns null
