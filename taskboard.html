@@ -173,8 +173,11 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .now-line{display:flex;align-items:center;gap:10px;margin:15px 0;font-size:10.5px;font-weight:600;letter-spacing:.16em;color:var(--gold)}
 .now-line::before,.now-line::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.5}
 .now-line .nd{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);animation:pulse 2s infinite}
-.t-wrap{position:relative;margin-bottom:9px;border-radius:var(--radius);transition:max-height .4s,margin .4s,opacity .35s;max-height:320px}
-.t-wrap.leaving{opacity:0;max-height:0;margin-bottom:0;overflow:hidden}
+/* No fixed max-height: a task with long notes used to overflow its 320px cap
+   and print on top of the card below it. The removal animation pins the real
+   height in JS instead (see fadeOut). */
+.t-wrap{position:relative;margin-bottom:9px;border-radius:var(--radius);transition:max-height .4s,margin .4s,opacity .35s}
+.t-wrap.leaving{opacity:0;margin-bottom:0;overflow:hidden}
 .hint{position:absolute;inset:0;border-radius:var(--radius);display:flex;align-items:center;font-size:12px;font-weight:600;opacity:0;pointer-events:none}
 .hint.l{justify-content:flex-start;padding-left:20px;color:var(--ok);background:rgba(143,191,155,.1)}
 .hint.r{justify-content:flex-end;padding-right:20px;color:var(--gold);background:var(--gold-soft)}
@@ -595,6 +598,60 @@ html.compact .group-h{margin:14px 0 8px}
 /* ---- sync chip states ---- */
 .sync-dot.pending{background:var(--amber);box-shadow:0 0 8px var(--amber)}
 .sync-dot.offline{background:var(--dim)}
+
+/* ============ v4.3 — admin team dashboards ============ */
+.tm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:11px;margin-top:14px}
+.tm-card{position:relative;border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;background:var(--pane);
+  display:flex;flex-direction:column;gap:12px;transition:border-color .2s,transform .2s var(--ease-spring)}
+.tm-card:hover{border-color:var(--line-hi)}
+.tm-card.live{border-color:rgba(143,191,155,.4)}
+.tm-card.stalled{border-color:rgba(201,123,110,.45)}
+.tm-top{display:flex;align-items:center;gap:11px}
+.tm-av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:13.5px;
+  color:var(--on-gold);background:linear-gradient(135deg,var(--gold),var(--gold-deep))}
+.tm-av.off{background:var(--pane-hi);color:var(--dim);border:1px solid var(--line)}
+.tm-id{flex:1;min-width:0;display:block}
+.tm-id .tn{display:block;font-size:14.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm-id .tn small{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-left:6px;vertical-align:1px}
+.tm-id .te{display:block;font-size:11.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.tm-seen{font-size:10.5px;font-weight:600;color:var(--dim);flex:none;white-space:nowrap}
+.tm-seen.on{color:var(--ok)}
+.tm-nums{display:flex;flex-wrap:wrap;gap:6px}
+.tm-nums .tnum{font-size:11px;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-variant-numeric:tabular-nums}
+.tm-nums .tnum b{color:var(--text);font-weight:600}
+.tm-nums .tnum.warn{color:var(--amber);border-color:rgba(217,160,91,.35)}
+.tm-nums .tnum.warn b{color:var(--amber)}
+.tm-nums .tnum.bad{color:var(--red);border-color:rgba(201,123,110,.4)}
+.tm-nums .tnum.bad b{color:var(--red)}
+.tm-nums .tnum.good b{color:var(--ok)}
+.tm-foot{display:flex;align-items:center;gap:8px;margin-top:auto}
+.tm-foot .btn{flex:1}
+.tm-note{font-size:11.5px;color:var(--dim);line-height:1.5}
+.tm-bar{height:3px;border-radius:3px;background:var(--pane-hi);overflow:hidden}
+.tm-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-deep));border-radius:3px;transition:width .5s var(--ease-spring)}
+
+/* peer board (admin viewing someone else's dashboard) */
+.peer-head{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--ink);border:1px solid var(--gold);border-radius:var(--radius);padding:13px 15px;margin-bottom:6px;
+  box-shadow:0 12px 30px -18px rgba(0,0,0,.9)}
+.peer-head::before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--gold-soft);pointer-events:none}
+.peer-head>*{position:relative}
+.peer-head .ph-av{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:12.5px;
+  color:var(--on-gold);background:linear-gradient(135deg,var(--gold),var(--gold-deep))}
+.peer-head .ph-id{flex:1;min-width:0}
+.peer-head .ph-id b{display:block;font-size:14.5px;font-weight:600}
+.peer-head .ph-id small{display:block;font-size:11.5px;color:var(--mute);margin-top:1px}
+.peer-ro{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
+  border:1px solid var(--gold);border-radius:99px;padding:4px 10px;flex:none}
+.task.peek{cursor:default}
+.task.peek .chk{opacity:.85}
+.task.peek:hover{border-color:var(--line)}
+.peer-empty{font-size:12.5px;color:var(--dim);padding:10px 2px}
+.rulebox{border:1px solid rgba(201,123,110,.35);background:rgba(201,123,110,.06);border-radius:12px;padding:14px 15px;margin-top:14px}
+.rulebox h5{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.rulebox p{font-size:12.5px;color:var(--mute);line-height:1.6;margin-bottom:10px}
+.rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
+  font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
 </style>
 </head>
 <body>
@@ -883,15 +940,6 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="m-foot"><button class="btn ghost" id="rqCancel">Cancel</button><button class="btn gold" id="rqSend">Send request</button></div>
 </div></div>
 
-<!-- ADMIN: VIEW A USER'S BOARD -->
-<div class="overlay" id="impOv"><div class="modal">
-  <div class="grab"></div>
-  <h3 id="impTitle">Board</h3>
-  <p style="font-size:12px;color:var(--dim);margin-bottom:12px;position:relative">Read-only — their private board, live from the server.</p>
-  <div id="impBody" style="max-height:56vh;overflow-y:auto;position:relative"></div>
-  <div class="m-foot"><button class="btn ghost sm" id="impRefresh">↻ Refresh</button><button class="btn gold" id="impClose">Close</button></div>
-</div></div>
-
 <!-- BULK ACTIONS -->
 <div class="bulkbar hidden" id="bulkBar">
   <span class="bb-count" id="bbCount">0 selected</span>
@@ -1078,7 +1126,7 @@ var bulkMode=false,bulkSel={},bulkGuard=false;
 var cmdIdx=0,cmdItems=[],_actx=null;
 var activity=[],unsubActivity=null,lastSeenAct=0,notifOpen=false;
 var actWho='all',actKind='all';
-var logActWarned=false,impUid=null;
+var logActWarned=false;
 var deferredPrompt=null;
 var APP_ICON='https://kalashnandal.co.in/Personal-Tools/DAA82F6B-029B-444F-B1AE-D50BDBD2D7B8.png';
 var notifWatermark=0;
@@ -1087,10 +1135,17 @@ var VK=null,vData=null,vWho=null;
 var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
 var openTray=null,qIdx=0;
 
-function tagOf(id){return S.tags.find(function(t){return t.id===id})}
-function personOf(id){return S.people.find(function(p){return p.id===id})||(allowCfg.people||[]).find(function(p){return p.id===id})}
+/* While the admin is looking at someone else's dashboard, peerCtx holds THEIR
+   tags/groups/people so the shared renderers resolve labels and colours from
+   their board rather than ours. */
+var peerCtx=null;
+function tagOf(id){return((peerCtx?peerCtx.tags:S.tags)||[]).find(function(t){return t.id===id})}
+function personOf(id){
+  if(peerCtx)return(peerCtx.people||[]).find(function(p){return p.id===id})||S.people.find(function(p){return p.id===id});
+  return S.people.find(function(p){return p.id===id})||(allowCfg.people||[]).find(function(p){return p.id===id});
+}
 function allTasks(){return S.tasks.concat(shared)}
-function groupOf(id){return S.groups.find(function(g){return g.id===id})}
+function groupOf(id){return((peerCtx?peerCtx.groups:S.groups)||[]).find(function(g){return g.id===id})}
 
 /* ---------- CHANGE STAMPS (hybrid logical clock) ----------
    Device clocks disagree — sometimes by minutes. A plain Date.now() stamp lets
@@ -1397,7 +1452,8 @@ async function createShared(o){
 }
 
 /* ---------- VIEWS / RENDER ---------- */
-var VIEWS=[['today','Today'],['upcoming','Upcoming'],['calendar','Calendar'],['history','History'],['analytics','Analytics'],['activity','Activity'],['requests','Requests']];
+var VIEWS=[['today','Today'],['upcoming','Upcoming'],['calendar','Calendar'],['history','History'],['analytics','Analytics'],['team','Team'],['activity','Activity'],['requests','Requests']];
+var ADMIN_VIEWS={requests:1,activity:1,team:1};
 var NAVICONS={
   today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
   upcoming:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
@@ -1405,7 +1461,8 @@ var NAVICONS={
   analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
   activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>',
   calendar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>',
-  requests:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="4"/><path d="M18 15.5v3M16.5 17h3"/></svg>'
+  requests:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 12h10M4 19h7"/><circle cx="18" cy="17" r="4"/><path d="M18 15.5v3M16.5 17h3"/></svg>',
+  team:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 5.2a3.5 3.5 0 010 5.6M18.5 20a6.6 6.6 0 00-2.3-5"/></svg>'
 };
 function counts(){
   var t=todayStr(),A=allTasks();
@@ -1413,6 +1470,7 @@ function counts(){
     upcoming:A.filter(function(k){return k.status!=='done'&&k.date&&k.date>t}).length,
     history:A.filter(function(k){return k.status==='done'}).length,
     analytics:0,activity:0,calendar:0,
+    team:isAdmin?teamRoster().length:0,
     requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
 function matches(k){
@@ -1453,7 +1511,7 @@ function calcStreak(){
 }
 function renderTabs(){
   var c=counts();
-  var tabs=VIEWS.filter(function(v){return isAdmin||(v[0]!=='requests'&&v[0]!=='activity')});
+  var tabs=VIEWS.filter(function(v){return isAdmin||!ADMIN_VIEWS[v[0]]});
   $('#tabs').innerHTML=tabs.map(function(v){
     return'<button class="tab '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]
       +(v[0]==='requests'?(c.requests?'<span class="alert"></span>':'')
@@ -1463,7 +1521,7 @@ function renderTabs(){
       +((v[0]!=='analytics'&&c[v[0]])?'<span class="bd '+(v[0]==='requests'?'alert':'')+'">'+(c[v[0]]>99?'99':c[v[0]])+'</span>':'')+'</button>'}).join('');
 }
 function renderFilters(){
-  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar';
+  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team';
   $('#filters').style.display=show?'flex':'none';
   if(!show)return;
   $('#filters').innerHTML='<button class="f-chip '+(activeTag==='all'?'on':'')+'" data-tag="all">All</button>'
@@ -1541,6 +1599,13 @@ function taskCard(k,o){
   acts.push('<button class="ta-btn sel" data-act="select" title="Select (⌘/Ctrl+click)">◻</button>');
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
   if(isAdmin||!isShared||k.selfCreated)acts.push('<button class="ta-btn del" data-act="del" title="Delete">✕</button>');
+  /* read-only: someone else's board — no swipe hints, no actions, inert tick */
+  if(o.readonly)return'<div class="t-wrap" data-id="'+k.id+'">'
+    +'<article class="task peek '+cls+'" data-id="'+k.id+'">'
+    +'<span class="chk '+chk+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span>'
+    +'<div class="t-body"><div class="t-title">'+esc(k.title)+'</div>'
+    +(k.notes?'<div class="t-notes">'+linkify(esc(k.notes))+'</div>':'')
+    +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div></article></div>';
   return'<div class="t-wrap" data-id="'+k.id+'">'
     +'<div class="hint l">'+(done?'↺ RESTORE':(rev&&isAdmin?'✓ APPROVE':'✓ DONE'))+'</div>'
     +'<div class="hint r'+(done?' danger':'')+'">'+(done?'✕ DELETE':'→ TOMORROW')+'</div>'
@@ -1649,8 +1714,195 @@ function saveGroupEditor(){
   if($('#setOv').classList.contains('open'))renderGroupMgr();
 }
 
+/* ---------- TEAM ----------
+   Every person the board knows about — the people roster, the published
+   allowlist, invited guests and anyone who has ever signed in — folded
+   together on email, so the admin sees one card each rather than only the
+   handful who happen to be in the presence collection.                       */
+function teamRoster(){
+  var byKey={},out=[];
+  function put(o){
+    var em=String(o.email||'').toLowerCase();
+    var key=em||('id:'+(o.id||o.uid||o.label||''));
+    var r=byKey[key];
+    if(!r){r={email:em,label:'',id:null,uid:null,admin:false,lastSeen:0,guest:false};byKey[key]=r;out.push(r)}
+    if(o.label&&!r.label)r.label=o.label;
+    if(o.id&&!r.id)r.id=o.id;
+    if(o.uid)r.uid=o.uid;
+    if(o.admin)r.admin=true;
+    if(o.guest)r.guest=true;
+    if((o.lastSeen||0)>r.lastSeen)r.lastSeen=o.lastSeen||0;
+    return r;
+  }
+  S.people.forEach(function(p){put({id:p.id,label:p.label,email:p.email})});
+  (allowCfg.people||[]).forEach(function(p){put({id:p.id,label:p.label,email:p.email})});
+  (S.guests||[]).forEach(function(g){if(g)put({email:g,label:String(g).split('@')[0],guest:true})});
+  (allowCfg.guests||[]).forEach(function(g){if(g)put({email:g,label:String(g).split('@')[0],guest:true})});
+  presence.forEach(function(p){put({uid:p.uid,email:p.email,label:p.name||'',admin:p.admin,lastSeen:p.lastSeen})});
+  out.forEach(function(r){
+    if(!r.label)r.label=r.email?r.email.split('@')[0]:'Unnamed';
+    if(r.email===ADMIN_EMAIL)r.admin=true;
+  });
+  return out.filter(function(r){return !r.admin})   /* your own board is the Today tab */
+    .sort(function(a,b){
+      return(b.uid?1:0)-(a.uid?1:0)||(b.lastSeen||0)-(a.lastSeen||0)||a.label.localeCompare(b.label);
+    });
+}
+/* Delegated tasks live in their own collection, and the admin already listens
+   to all of them — so these numbers are live even for someone who has never
+   signed in. */
+function peerTasks(r){
+  return shared.filter(function(k){
+    return(r.id&&k.person===r.id)
+      ||(r.email&&String(k.assigneeEmail||'').toLowerCase()===String(r.email).toLowerCase())});
+}
+function peerStats(r){
+  var t=todayStr();
+  var mine=peerTasks(r);
+  var open=mine.filter(function(k){return k.status!=='done'&&k.status!=='review'});
+  return{total:mine.length,open:open.length,
+    doneToday:mine.filter(function(k){return k.status==='done'&&dsOf(k.doneAt||0)===t}).length,
+    review:mine.filter(function(k){return k.status==='review'}).length,
+    overdue:open.filter(function(k){return k.date&&k.date<t}).length,
+    carried:open.filter(function(k){return(k.carried||0)>0}).length,
+    silent:open.filter(function(k){return(k.carried||0)>0&&!(k.tnotes&&k.tnotes.length)&&!k.vmark}).length};
+}
+function renderTeamScreen(){
+  var roster=teamRoster(),now=Date.now();
+  if(!roster.length)return emptyState('No one on the team yet.',
+    'Add people in <code>Settings → Team</code> with their email, then send them the invite.');
+  var signedIn=roster.filter(function(r){return r.uid}).length;
+  var h='<div class="stats" style="margin:16px 0 2px">'
+    +'<span class="stat"><b>'+roster.length+'</b> on the team</span>'
+    +'<span class="stat"><b>'+signedIn+'</b> with an account</span>'
+    +'<span class="stat"><b>'+roster.filter(function(r){return(now-(r.lastSeen||0))<3e5}).length+'</b> active now</span></div>';
+  h+='<div class="group-h gold">Everyone’s board</div>';
+  h+='<div class="tm-grid">'+roster.map(function(r){
+    var s=peerStats(r),live=(now-(r.lastSeen||0))<3e5;
+    var pct=s.total?Math.round((s.total-s.open)/s.total*100):0;
+    var nums=['<span class="tnum'+(s.open?'':' good')+'"><b>'+s.open+'</b> open</span>'];
+    if(s.review)nums.push('<span class="tnum warn"><b>'+s.review+'</b> to review</span>');
+    if(s.overdue)nums.push('<span class="tnum bad"><b>'+s.overdue+'</b> overdue</span>');
+    if(s.silent)nums.push('<span class="tnum bad"><b>'+s.silent+'</b> silent</span>');
+    if(s.doneToday)nums.push('<span class="tnum good"><b>'+s.doneToday+'</b> done today</span>');
+    return'<div class="tm-card'+(live?' live':'')+(s.silent?' stalled':'')+'" data-peer="'+esc(r.uid||'')+'">'
+      +'<div class="tm-top">'
+        +'<span class="tm-av'+(r.uid?'':' off')+'">'+esc(initials(r.label))+'</span>'
+        +'<span class="tm-id"><span class="tn">'+esc(r.label)+(r.guest?' <small style="color:var(--blue)">guest</small>':'')+'</span>'
+        +'<span class="te">'+esc(r.email||'no email on file')+'</span></span>'
+        +'<span class="tm-seen'+(live?' on':'')+'">'+(live?'● Live':(r.lastSeen?ago(r.lastSeen)+' ago':'—'))+'</span>'
+      +'</div>'
+      +(s.total?'<div class="tm-bar"><span style="width:'+pct+'%"></span></div>':'')
+      +'<div class="tm-nums">'+nums.join('')+'</div>'
+      +(r.uid?'':'<div class="tm-note">'+(r.email
+            ?'No account yet — their dashboard shows the work you’ve given them. Their private board joins it once they sign in.'
+            :'No email on file — add one in <b>Settings → Team</b> so they can sign in.')+'</div>')
+      +'<div class="tm-foot"><button class="btn ghost sm" data-peer-open="'+esc(r.uid||'')
+        +'" data-peer-name="'+esc(r.label)+'" data-peer-email="'+esc(r.email||'')
+        +'" data-peer-id="'+esc(r.id||'')+'">Open their dashboard</button></div>'
+    +'</div>';
+  }).join('')+'</div>';
+  return h;
+}
+
+/* ---------- PEER DASHBOARD (admin, read-only) ---------- */
+var peerView=null,unsubPeer=null;
+/* uid is optional. Someone you have invited but who has not signed in yet has
+   no private board to read — their dashboard is still real, built from the work
+   you have delegated to them, which is exactly what they see on the view link. */
+function openPeerBoard(uid,label,email,pid){
+  if(!isAdmin)return;
+  closePeerBoard(true);
+  peerView={uid:uid||'',id:pid||'',label:label||'Board',email:email||'',data:undefined,err:null};
+  view='team';selDate=null;
+  render();window.scrollTo({top:0,behavior:'smooth'});
+  if(!uid){peerView.data=null;renderLedger();return}
+  if(!FB.ready){peerView.err='offline';renderLedger();return}
+  /* live, not a one-shot read — it should behave like a dashboard */
+  unsubPeer=FB.F.onSnapshot(fdoc('boards',uid),function(snap){
+    if(!peerView)return;
+    peerView.data=snap.exists()?snap.data():null;peerView.err=null;renderLedger();
+  },function(e){
+    console.error('peer board',e);
+    if(!peerView)return;
+    peerView.err=(e&&e.code)||'error';renderLedger();
+  });
+}
+function closePeerBoard(quiet){
+  if(unsubPeer){try{unsubPeer()}catch(e){}unsubPeer=null}
+  peerView=null;peerCtx=null;
+  if(!quiet)render();
+}
+function peerRuleHelp(code){
+  return'<div class="rulebox"><h5>Can’t read that board ('+esc(code)+')</h5>'
+    +'<p>Firestore is refusing the read. Paste this into <b>Firebase → Firestore → Rules</b> so your admin account can see everyone’s board, then publish:</p>'
+    +'<pre>match /boards/{uid} {\n  allow read, write: if request.auth != null\n                     &amp;&amp; request.auth.uid == uid;\n  allow read: if request.auth != null\n              &amp;&amp; request.auth.token.email == "'+esc(ADMIN_EMAIL)+'";\n}</pre></div>';
+}
+function renderPeerBoard(){
+  var p=peerView,t=todayStr();
+  var head='<div class="peer-head">'
+    +'<span class="ph-av">'+esc(initials(p.label))+'</span>'
+    +'<span class="ph-id"><b>'+esc(p.label)+'</b><small>'+esc(p.email||'')
+      +(p.uid?'':' · no account yet')+'</small></span>'
+    +'<span class="peer-ro">Read only</span>'
+    +'<button class="btn ghost sm" data-peer-back="1">← Back to the team</button></div>';
+  if(p.err)return head+peerRuleHelp(p.err);
+  if(p.data===undefined)return head+'<p class="peer-empty">Loading their board…</p>';
+
+  /* delegated work never lives on their private board — it is in the shared
+     collection, so stitch both together for a true picture of their day */
+  var deleg=peerTasks(p);
+  var own=(p.data&&p.data.tasks)||[];
+  var pending=!p.uid
+    ?'<p class="peer-empty">They haven’t signed in yet, so this is the work you’ve given them — the same list they see on the view link. Their own tasks appear here the moment they create an account.</p>'
+    :'';
+  if(!own.length&&!deleg.length)
+    return head+(pending||'<p class="peer-empty">Nothing on this board yet — they haven’t added or been given any tasks.</p>');
+
+  peerCtx={tags:(p.data&&p.data.tags)||[],groups:(p.data&&p.data.groups)||[],people:(p.data&&p.data.people)||[]};
+  var all=own.concat(deleg);
+  var h=head+pending;
+  var todayList=all.filter(function(k){return k.date===t});
+  var doneToday=todayList.filter(function(k){return k.status==='done'||k.status==='review'}).length;
+  var pct=todayList.length?Math.round(doneToday/todayList.length*100):0;
+  var overdue=all.filter(function(k){return k.status!=='done'&&k.status!=='review'&&k.date&&k.date<t});
+  h+='<div class="dateline" style="margin:14px 0 2px"><div class="sub">'
+    +'<span>Their day</span><span class="pct">'+doneToday+'/'+todayList.length+' · '+pct+'%</span></div>'
+    +'<div class="ink-track"><div class="ink-fill" style="width:'+pct+'%"></div></div></div>';
+  h+='<div class="stats" style="margin:12px 0 2px">'
+    +'<span class="stat"><b>'+all.filter(function(k){return k.status!=='done'}).length+'</b> open</span>'
+    +(overdue.length?'<span class="stat danger"><b>'+overdue.length+'</b> overdue</span>':'')
+    +'<span class="stat"><b>'+deleg.length+'</b> from you</span>'
+    +'<span class="stat"><b>'+all.filter(function(k){return k.status==='done'}).length+'</b> done all-time</span></div>';
+
+  function sec(title,list,o,cls){
+    if(!list.length)return'';
+    return'<div class="group-h'+(cls?' '+cls:'')+'">'+title+' · '+list.length+'</div>'+cards(list,o);
+  }
+  var ro={readonly:true,showGroup:true};
+  h+=sec('Overdue',overdue.sort(function(a,b){return a.date<b.date?-1:1}),
+        Object.assign({showDate:true},ro),'rev');
+  var timed=todayList.filter(function(k){return k.time}).sort(function(a,b){return a.time<b.time?-1:1});
+  var untimed=todayList.filter(function(k){return!k.time&&k.status!=='done'}).sort(sortPri);
+  var doneT=todayList.filter(function(k){return!k.time&&k.status==='done'});
+  h+=sec('Today · scheduled',timed,ro,'gold');
+  h+=sec('Today · anytime',untimed,ro);
+  h+=sec('Today · completed',doneT,ro);
+  var ahead=all.filter(function(k){return k.date&&k.date>t}).sort(function(a,b){return a.date<b.date?-1:1});
+  h+=sec('Upcoming',ahead,Object.assign({showDate:true},ro));
+  var recent=all.filter(function(k){return k.status==='done'&&k.date!==t})
+    .sort(function(a,b){return(b.doneAt||0)-(a.doneAt||0)}).slice(0,15);
+  h+=sec('Recently completed',recent,Object.assign({showDate:true},ro));
+  peerCtx=null;
+  return h;
+}
+
 function renderLedger(){
   var L=$('#ledger'),t=todayStr(),A=allTasks(),html='';
+  if(view==='team'){
+    if(!isAdmin){view='today';renderTabs()}
+    else{L.innerHTML=peerView?renderPeerBoard():renderTeamScreen();return}
+  }
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
   if(view==='activity'){L.innerHTML=renderActivityScreen();bindActivityScreen();return}
   if(view==='calendar'){L.innerHTML=renderCalScreen();bindCalScreen();return}
@@ -1820,10 +2072,21 @@ function bumpDoneDate(ds,delta){
   if(!S.meta.doneDates)S.meta.doneDates={};
   S.meta.doneDates[ds]=Math.max(0,(S.meta.doneDates[ds]||0)+delta);
 }
-function fadeOut(w,cb){if(!w){cb();return}w.classList.add('leaving');setTimeout(cb,380)}
+function fadeOut(w,cb){
+  if(!w){cb();return}
+  w.style.maxHeight=w.scrollHeight+'px';   /* pin the card's real height… */
+  void w.offsetHeight;                     /* …flush it so the transition has a start */
+  w.classList.add('leaving');
+  w.style.maxHeight='0px';
+  setTimeout(cb,380);
+}
 function bindLedger(){
   var L=$('#ledger');
   L.addEventListener('click',function(e){
+    if(e.target.closest('[data-peer-back]')){closePeerBoard();return}
+    var po=e.target.closest('[data-peer-open]');
+    if(po){openPeerBoard(po.dataset.peerOpen,po.dataset.peerName,po.dataset.peerEmail,po.dataset.peerId);return}
+    if(peerView)return;                       /* someone else's board — look, don't touch */
     var ga=e.target.closest('[data-gact]'),gs=e.target.closest('[data-gid]');
     if(ga&&gs){e.preventDefault();groupAction(ga.dataset.gact,gs.dataset.gid);return}
     if(bulkMode){
@@ -1851,7 +2114,7 @@ function bindLedger(){
   var lp=null;
   function dropLift(){if(lp&&lp.el){lp.el.classList.remove('lifting')}}
   L.addEventListener('pointerdown',function(e){
-    var c=e.target.closest('.task');if(!c||bulkMode)return;
+    var c=e.target.closest('.task');if(!c||bulkMode||peerView)return;
     lp={x:e.clientX,y:e.clientY,id:c.dataset.id,el:c,
       lift:setTimeout(function(){if(lp&&lp.el)lp.el.classList.add('lifting')},250),
       t:setTimeout(function(){if(lp){dropLift();enterBulk(lp.id);lp=null}},500)};
@@ -1861,7 +2124,7 @@ function bindLedger(){
   ['pointerup','pointercancel'].forEach(function(ev){
     L.addEventListener(ev,function(){if(lp){dropLift();clearTimeout(lp.t);clearTimeout(lp.lift);lp=null}})});
 
-  L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c||bulkMode)return;
+  L.addEventListener('touchstart',function(e){var c=e.target.closest('.task');if(!c||bulkMode||peerView)return;
     sw={c:c,w:c.closest('.t-wrap'),x:e.touches[0].clientX,y:e.touches[0].clientY,dx:0,h:null}},{passive:true});
   L.addEventListener('touchmove',function(e){
     if(!sw)return;
@@ -2186,6 +2449,7 @@ function startPresence(){
     presence=snap.docs.map(function(d){return Object.assign({uid:d.id},d.data())})
       .sort(function(a,b){return(b.lastSeen||0)-(a.lastSeen||0)});
     renderPresence();
+    if(view==='team'&&!peerView){renderTabs();renderLedger()}
   },function(e){console.error('presence',e)});
 }
 function renderPresence(){
@@ -2198,7 +2462,8 @@ function renderPresence(){
       +'<span class="pav">'+esc(initials(p.name||p.email||'?'))+'</span>'
       +'<span class="pe">'+esc(p.email||'—')+(p.admin?' <b style="color:var(--gold)">· admin</b>':'')
       +'<small>'+(live?'active now':'last seen '+(p.lastSeen?ago(p.lastSeen):'—'))+'</small></span>'
-      +(p.admin?'':'<button class="btn ghost sm" data-imp="'+p.uid+'" data-impname="'+esc(p.email||p.name||'user')+'">View board</button>')
+      +(p.admin?'':'<button class="btn ghost sm" data-imp="'+p.uid+'" data-impname="'+esc(p.name||p.email||'user')
+        +'" data-impemail="'+esc(p.email||'')+'">View board</button>')
       +'<span class="pt">'+(live?'●':'')+'</span></div>';
   }).join('');
 }
@@ -3363,56 +3628,13 @@ function bindCalScreen(){
   })});
 }
 
-/* ---------- ADMIN: INSPECT A USER'S BOARD ---------- */
-async function openImp(uid,label){
-  impUid=uid;
-  $('#impTitle').innerHTML=esc(label)+' <em>· board</em>';
-  $('#impBody').innerHTML='<p style="font-size:12.5px;color:var(--dim)">Loading…</p>';
-  $('#impOv').classList.add('open');
-  loadImp();
-}
-async function loadImp(){
-  if(!FB.ready||!impUid)return;
-  try{
-    var snap=await FB.F.getDoc(fdoc('boards',impUid));
-    if(!snap.exists()){
-      $('#impBody').innerHTML='<p style="font-size:12.5px;color:var(--dim)">No board yet — they haven\u2019t created any tasks.</p>';return}
-    var d=snap.data(),tasks=d.tasks||[],tags=d.tags||[];
-    function tg(id){var t=tags.find(function(x){return x.id===id});return t?t.label:null}
-    var h='<div class="stats" style="margin:0 0 12px">'
-      +'<span class="stat"><b>'+tasks.filter(function(k){return k.status!=='done'}).length+'</b> open</span>'
-      +'<span class="stat"><b>'+tasks.filter(function(k){return k.status==='done'}).length+'</b> done</span>'
-      +'<span class="stat"><b>'+tasks.filter(function(k){return (k.carried||0)>0&&k.status!=='done'}).length+'</b> carried</span></div>';
-    [['open','Open'],['progress','In progress'],['review','In review'],['done','Done — latest 10']].forEach(function(g){
-      var list=tasks.filter(function(k){return (k.status||'open')===g[0]});
-      if(g[0]==='done')list=list.sort(function(a,b){return(b.doneAt||0)-(a.doneAt||0)}).slice(0,10);
-      if(!list.length)return;
-      h+='<div class="group-h'+(g[0]==='open'?' gold':'')+'">'+g[1]+' · '+list.length+'</div>';
-      h+=list.map(function(k){
-        var meta=[];
-        if(k.date)meta.push('<span class="m-chip">📅 '+esc(fmtDateShort(k.date))+'</span>');
-        if((k.carried||0)>0)meta.push('<span class="m-chip carried">↻ ×'+k.carried+'</span>');
-        var t2=tg(k.tag);if(t2)meta.push('<span class="m-chip tag">'+esc(t2)+'</span>');
-        if(k.pri)meta.push('<span class="m-chip p-'+k.pri+'">⚑ '+PRI_LABEL[k.pri]+'</span>');
-        return'<article class="task '+(k.status==='done'?'done-card':'')+'" style="margin-bottom:8px;transform:none">'
-          +'<div class="t-body" style="padding-left:2px"><div class="t-title">'+esc(k.title)+'</div>'
-          +(k.notes?'<div class="t-notes">'+esc(k.notes)+'</div>':'')
-          +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div></article>';
-      }).join('');
-    });
-    $('#impBody').innerHTML=h;
-  }catch(e){
-    console.error('loadImp',e);
-    $('#impBody').innerHTML='<p style="font-size:12.5px;color:var(--red)">Blocked ('+esc((e&&e.code)||'error')
-      +'). Publish the updated <b>boards</b> rule so admin can read boards.</p>';
-  }
-}
-
 /* ---------- BINDINGS ---------- */
 function bindAll(){
   bindCapture();bindLedger();bindViewer();
-  $('#tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;view=b.dataset.view;selDate=null;render()});
-  $('#bnav').addEventListener('click',function(e){var b=e.target.closest('.bn');if(!b)return;view=b.dataset.view;selDate=null;render();window.scrollTo({top:0,behavior:'smooth'})});
+  $('#tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;
+    closePeerBoard(true);view=b.dataset.view;selDate=null;render()});
+  $('#bnav').addEventListener('click',function(e){var b=e.target.closest('.bn');if(!b)return;
+    closePeerBoard(true);view=b.dataset.view;selDate=null;render();window.scrollTo({top:0,behavior:'smooth'})});
   $('#filters').addEventListener('click',function(e){var b=e.target.closest('.f-chip');if(!b)return;activeTag=b.dataset.tag;render()});
   $('#week').addEventListener('click',function(e){var b=e.target.closest('.wd');if(!b)return;
     selDate=b.dataset.day===todayStr()?null:b.dataset.day;renderWeek();renderLedger()});
@@ -3578,11 +3800,10 @@ function bindAll(){
     if(r&&r.outcome==='accepted')$('#installBtn').classList.add('hidden');
   });
 
-  $('#impClose').addEventListener('click',function(){closeOv('impOv')});
-  $('#impRefresh').addEventListener('click',loadImp);
   $('#presenceList').addEventListener('click',function(e){
     var b=e.target.closest('[data-imp]');if(!b)return;
-    openImp(b.dataset.imp,b.dataset.impname)});
+    closeOv('setOv');
+    openPeerBoard(b.dataset.imp,b.dataset.impname,b.dataset.impemail||'')});
 
   $('#bulkBar').addEventListener('click',function(e){
     var b=e.target.closest('[data-bulk]');if(b)applyBulk(b.dataset.bulk)});
@@ -3646,11 +3867,16 @@ function bindAll(){
     if(mode!=='app')return;
     var typing=/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');
     if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){e.preventDefault();openCmd();return}
-    if(e.key==='Escape'){$$('.overlay.open').forEach(function(o){closeOv(o.id)});exitBulk();openTray=null;renderCapture();return}
+    if(e.key==='Escape'){
+      var ovs=$$('.overlay.open');
+      ovs.forEach(function(o){closeOv(o.id)});
+      if(!ovs.length&&!bulkMode&&peerView){closePeerBoard();return}
+      exitBulk();openTray=null;renderCapture();return;
+    }
     if(typing)return;
     if(e.key==='n'||e.key==='/'){e.preventDefault();$('#capInput').focus()}
     if(e.key>='1'&&e.key<='5'){var v=VIEWS[+e.key-1];
-      if(v&&(isAdmin||v[0]!=='requests')){view=v[0];selDate=null;render()}}
+      if(v&&(isAdmin||!ADMIN_VIEWS[v[0]])){closePeerBoard(true);view=v[0];selDate=null;render()}}
   });
 }
 function closeOv(id){
