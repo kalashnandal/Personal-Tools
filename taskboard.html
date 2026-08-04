@@ -321,7 +321,11 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .fld select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238E8C86' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center}
 .fld input:focus,.fld textarea:focus,.fld select:focus{border-color:var(--gold)}
 .fld input:disabled,.fld textarea:disabled,.fld select:disabled{opacity:.55}
-.fld textarea{resize:vertical;min-height:64px}
+/* Notes grow with what you type, up to a cap, then scroll internally — a fixed
+   box meant everything already written scrolled out of sight. The cap is in
+   dvh so it shrinks when the phone keyboard is up. resize is off because the
+   height is driven by content. */
+.fld textarea{resize:none;min-height:64px;max-height:min(40dvh,320px);overflow-y:hidden;line-height:1.55}
 .fld-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .fld-row.cols-3{grid-template-columns:1fr 1fr 1fr}
 .sub-row{display:flex;align-items:center;gap:9px;margin-bottom:7px;position:relative}
@@ -398,6 +402,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
   .overlay.open .modal{transform:none}
   .grab{display:block}
   #capInput,.fld input,.fld textarea,.fld select,.gate input,.vnote input{font-size:16px}
+  .fld textarea{min-height:84px}
   .cap-hint{display:none}
   .stat{padding:5px 10px;font-size:11px}
   /* pairing these halves the scroll depth of the tallest sheets; the third
@@ -3780,6 +3785,9 @@ function bindCalScreen(){
 /* ---------- BINDINGS ---------- */
 function bindAll(){
   bindCapture();bindLedger();bindViewer();bindSheets();
+  /* delegated so every textarea gets it, including any added later */
+  document.addEventListener('input',function(e){
+    if(e.target&&e.target.tagName==='TEXTAREA')autoGrow(e.target)});
   $('#tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;
     closePeerBoard(true);view=b.dataset.view;selDate=null;render()});
   $('#bnav').addEventListener('click',function(e){var b=e.target.closest('.bn');if(!b)return;
@@ -4040,14 +4048,33 @@ function bindAll(){
    handle was decorative — it advertised a swipe-to-dismiss that no code
    implemented. This makes the gesture real, and locks the board behind it so
    the page doesn't scroll under your thumb while a sheet is open.            */
+/* Grow a textarea to fit its content, up to whatever max-height the stylesheet
+   gives it, then let it scroll. */
+function autoGrow(el){
+  if(!el||el.tagName!=='TEXTAREA')return;
+  var max=parseFloat(getComputedStyle(el).maxHeight);
+  if(!isFinite(max)||max<=0)max=320;
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,max)+'px';
+  el.style.overflowY=el.scrollHeight>max?'auto':'hidden';
+}
+
 function isSheet(){return window.matchMedia('(max-width:640px)').matches}
 function syncSheetLock(){
   document.documentElement.classList.toggle('sheet-open',!!$('.overlay.open'));
 }
 function bindSheets(){
   /* every open/close path just toggles .open, so watch for that rather than
-     wrapping a dozen call sites */
-  var mo=new MutationObserver(syncSheetLock);
+     wrapping a dozen call sites — this also sizes any textarea to the text
+     already in it the moment its sheet appears */
+  var mo=new MutationObserver(function(muts){
+    syncSheetLock();
+    muts.forEach(function(m){
+      var ov=m.target;
+      if(ov.classList&&ov.classList.contains('open'))
+        Array.prototype.forEach.call(ov.querySelectorAll('textarea'),autoGrow);
+    });
+  });
   $$('.overlay').forEach(function(ov){
     mo.observe(ov,{attributes:true,attributeFilter:['class']});
     var modal=ov.querySelector('.modal');if(!modal)return;
