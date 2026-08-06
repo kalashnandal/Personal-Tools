@@ -686,6 +686,36 @@ html.compact .group-h{margin:14px 0 8px}
 .rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
 
+/* ============ v4.5 — IMPORTANT! flag ============ */
+/* A true red, not the muted --red the rest of the palette uses — the whole
+   point is that it breaks out of the theme and catches your eye. */
+:root{--imp:#FF3B30;--imp-soft:rgba(255,59,48,.12)}
+.t-imp{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--imp);
+  text-transform:uppercase;line-height:1;margin-bottom:6px}
+/* border + tint only — ::after is already spoken for by the bulk-select tick
+   and the stalled-card bar, so the flag must not claim it */
+.task.imp-card{border-color:rgba(255,59,48,.55)}
+.task.imp-card::before{background:var(--imp-soft)}
+.task.imp-card.bulk-on{border-color:var(--gold)}   /* selection stays legible */
+/* completed work shouldn't keep shouting */
+.task.imp-card.done-card{border-color:var(--line)}
+.task.imp-card.done-card .t-imp{color:var(--dim)}
+.task.imp-card.done-card::before{background:var(--pane)}
+.ta-btn.imp{font-weight:800}
+.ta-btn.imp:hover{color:var(--imp);background:var(--imp-soft)}
+.ta-btn.imp.on{color:var(--imp);opacity:1}
+@media(hover:none){.t-acts .ta-btn.imp{display:grid}}
+.pk.imp-on{color:var(--imp);border-color:var(--imp);background:var(--imp-soft)}
+.p-chip.imp{color:var(--imp);border-color:var(--imp);background:var(--imp-soft);font-weight:700}
+.tr-chip.imp-on{color:var(--imp);border-color:var(--imp);background:var(--imp-soft)}
+.imp-toggle{display:flex;align-items:center;gap:10px;border:1px solid rgba(255,59,48,.4);
+  background:var(--imp-soft);border-radius:10px;padding:11px 13px;position:relative;cursor:pointer;width:100%;text-align:left}
+.imp-toggle .box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--imp);flex:none;
+  display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--imp)}
+.imp-toggle.on .box{background:var(--imp);color:#fff}
+.imp-toggle .lb{font-size:13.5px;font-weight:600;color:var(--imp)}
+.imp-toggle .sub{font-size:11.5px;color:var(--mute);display:block;font-weight:400;margin-top:2px}
+
 /* ============ v4.4 — per-person invites, password reset, install help ============ */
 .gate .gsw.sub{color:var(--mute);font-size:11.5px;margin-top:9px}
 .gate .gsw.sub:hover{color:var(--gold)}
@@ -858,7 +888,11 @@ html.compact .group-h{margin:14px 0 8px}
   <div id="roBanner" class="hidden" style="font-size:12.5px;color:var(--blue);border:1px solid rgba(127,163,201,.35);background:rgba(127,163,201,.06);border-radius:10px;padding:10px 12px;margin-bottom:16px;position:relative">
     Assigned to you by Kalash — tick it done and update the checklist, but the details are locked.
   </div>
-  <div class="fld"><label>Title</label><input id="eTitle" type="text"></div>
+  <button class="imp-toggle" id="eImp" type="button" aria-pressed="false">
+    <span class="box">!</span>
+    <span class="lb">Mark as important<span class="sub">Shows a red IMPORTANT! flag on the card</span></span>
+  </button>
+  <div class="fld" style="margin-top:14px"><label>Title</label><input id="eTitle" type="text"></div>
   <div class="fld"><label>Notes</label><textarea id="eNotes"></textarea></div>
   <div class="fld"><label>Checklist</label><div id="eSubs"></div><button class="btn ghost sm" id="eSubAdd">+ Add item</button></div>
   <div class="fld" id="eStatusFld"><label>Status</label><select id="eStatus">
@@ -1033,6 +1067,9 @@ html.compact .group-h{margin:14px 0 8px}
   <div class="fld-row cols-3">
     <div class="fld"><label>Tag</label><select id="beTag"></select></div>
     <div class="fld"><label>Group</label><select id="beGroup"></select></div>
+    <div class="fld"><label>Important</label><select id="beImp">
+      <option value="">Keep as-is</option><option value="1">Mark important</option><option value="0">Remove flag</option>
+    </select></div>
     <div class="fld"><label>Status</label><select id="beStatus">
       <option value="">Keep as-is</option><option value="open">Open</option><option value="progress">In progress</option>
       <option value="done">Done</option>
@@ -1178,6 +1215,7 @@ migrate();
 
 var mode='gate',isAdmin=false,me=null,myPersonId=null;
 var view='today',activeTag='all',query='',selDate=null,editing=null,editSubs=[],editShared=false,editRO=false;
+var editImp=false;
 var anRange=30;
 var suppressPush=false,unsubBoard=null,unsubShared=null,unsubReq=null,unsubNotes=null,pushTimer=null,pubTimer=null;
 var shared=[],requests=[],allowCfg={emails:[],people:[]};
@@ -1193,7 +1231,7 @@ var APP_ICON='https://kalashnandal.co.in/Personal-Tools/DAA82F6B-029B-444F-B1AE-
 var notifWatermark=0;
 var aCalMonth=null,aSelDay=null;
 var VK=null,vData=null,vWho=null;
-var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined};
+var pendingPick={date:undefined,time:undefined,tag:undefined,person:undefined,pri:undefined,recur:undefined,important:undefined};
 var openTray=null,qIdx=0;
 
 /* While the admin is looking at someone else's dashboard, peerCtx holds THEIR
@@ -1330,7 +1368,7 @@ function rollDay(force){
     if(!due)return;
     if(S.tasks.some(function(k){return k.recurId===r.id&&k.date===t}))return;
     S.tasks.push({id:uid(),title:r.title,notes:'',date:t,time:r.time||null,tag:r.tag||null,person:null,
-      pri:r.pri||'',status:'open',created:Date.now(),carried:0,recurId:r.id,subs:[],tnotes:[]});
+      pri:r.pri||'',important:!!r.important,status:'open',created:Date.now(),carried:0,recurId:r.id,subs:[],tnotes:[]});
     ch=true;
   });
   if(S.meta.lastCarry!==t){S.meta.lastCarry=t;ch=true}
@@ -1351,8 +1389,10 @@ var MONTHS={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,
 var DOWS={sun:0,mon:1,tue:2,tues:2,wed:3,thu:4,thur:4,thurs:4,fri:5,sat:6};
 function parseInput(raw){
   var s=' '+raw+' ';
-  var out={title:'',date:null,time:null,tag:null,person:null,pri:'',recur:''};
+  var out={title:'',date:null,time:null,tag:null,person:null,pri:'',recur:'',important:false};
   function eat(re,fn){s=s.replace(re,function(){if(fn)fn.apply(null,arguments);return' '})}
+  /* !! before the single ! rule, or "!!" would be eaten as "! high" + a stray ! */
+  eat(/(?:^|\s)(?:!!|!important)(?=\s|$)/i,function(){out.important=true});
   eat(/\severy\s?day\s|\sdaily\s/i,function(){out.recur='daily'});
   eat(/\s(?:every\s)?weekdays?\s/i,function(){out.recur='weekdays'});
   eat(/\severy\s(sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)[a-z]*\s/i,function(m,d){out.recur='weekly:'+DOWS[d.toLowerCase()]});
@@ -1390,7 +1430,8 @@ function parseInput(raw){
 function mergedPending(){
   var p=parseInput($('#capInput').value||'');
   function g(f){return pendingPick[f]===undefined?p[f]:pendingPick[f]}
-  var o={title:p.title,date:g('date'),time:g('time'),tag:g('tag'),person:isAdmin?g('person'):null,pri:g('pri')||'',recur:g('recur')||''};
+  var o={title:p.title,date:g('date'),time:g('time'),tag:g('tag'),person:isAdmin?g('person'):null,
+    pri:g('pri')||'',recur:g('recur')||'',important:!!g('important')};
   if(o.recur)o.date=null;
   return o;
 }
@@ -1400,10 +1441,13 @@ function bindCapture(){
   ci.addEventListener('input',function(){$('#capBox').classList.toggle('has-text',!!ci.value.trim());renderCapture()});
   ci.addEventListener('keydown',function(e){if(e.key==='Enter')commitCapture();if(e.key==='Escape')resetCapture()});
   $('#capAdd').addEventListener('click',commitCapture);
-  $('#pickRow').addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;
+  $('#pickRow').addEventListener('click',function(e){
+    var t=e.target.closest('[data-toggle]');
+    if(t){pendingPick.important=!mergedPending().important;openTray=null;renderCapture();return}
+    var b=e.target.closest('[data-pick]');if(!b)return;
     openTray=openTray===b.dataset.pick?null:b.dataset.pick;renderCapture()});
   $('#parseRow').addEventListener('click',function(e){var b=e.target.closest('[data-clear]');if(!b)return;
-    pendingPick[b.dataset.clear]=null;renderCapture()});
+    pendingPick[b.dataset.clear]=(b.dataset.clear==='important')?false:null;renderCapture()});
   $('#tray').addEventListener('click',function(e){var b=e.target.closest('[data-set]');if(!b)return;
     pendingPick[b.dataset.set]=b.dataset.val===''?null:b.dataset.val;openTray=null;renderCapture()});
 }
@@ -1414,10 +1458,12 @@ function renderCapture(){
   if(isAdmin)pills.push(['person','@',m.person?((personOf(m.person)||{}).label||m.person):'Assign']);
   pills.push(['pri','⚑',m.pri?PRI_LABEL[m.pri]:'Priority'],['recur','↻',m.recur?recurLabel(m.recur):'Repeat']);
   $('#pickRow').innerHTML=pills.map(function(pl){
-    return'<button class="pk '+(m[pl[0]]?'set':'')+' '+(openTray===pl[0]?'open':'')+'" data-pick="'+pl[0]+'"><span>'+pl[1]+'</span>'+esc(pl[2])+'</button>'}).join('');
+    return'<button class="pk '+(m[pl[0]]?'set':'')+' '+(openTray===pl[0]?'open':'')+'" data-pick="'+pl[0]+'"><span>'+pl[1]+'</span>'+esc(pl[2])+'</button>'}).join('')
+    /* binary, so it toggles in place instead of opening a tray */
+    +'<button class="pk'+(m.important?' imp-on':'')+'" data-toggle="important"><span>!</span>Important</button>';
   renderTray(m);
   var txt=$('#capInput').value.trim();
-  var any=txt||m.date||m.time||m.tag||m.person||m.pri||m.recur;
+  var any=txt||m.date||m.time||m.tag||m.person||m.pri||m.recur||m.important;
   var pr=$('#parseRow');
   if(!any){pr.innerHTML='';return}
   var c=[];
@@ -1429,6 +1475,7 @@ function renderCapture(){
   if(m.tag)c.push(pchip('tag','# '+esc((tagOf(m.tag)||{}).label||m.tag)));
   if(m.person)c.push(pchip('person','@ '+esc((personOf(m.person)||{}).label||m.person)));
   if(m.pri)c.push(pchip('pri','⚑ '+PRI_LABEL[m.pri]));
+  if(m.important)c.push('<button class="p-chip imp" data-clear="important">! IMPORTANT<span class="x">✕</span></button>');
   pr.innerHTML=c.join('');
 }
 function pchip(f,h){return'<button class="p-chip" data-clear="'+f+'">'+h+'<span class="x">✕</span></button>'}
@@ -1480,24 +1527,24 @@ async function commitCapture(){
   if(m.tag&&!tagOf(m.tag))S.tags.push({id:m.tag,label:m.tag[0].toUpperCase()+m.tag.slice(1),color:TAGCOLORS[S.tags.length%TAGCOLORS.length]});
   if(m.person&&!personOf(m.person)){S.people.push({id:m.person,label:m.person[0].toUpperCase()+m.person.slice(1),email:''});syncAllowlist()}
   if(m.recur){
-    S.recurring.push({id:uid(),title:m.title,time:m.time||null,tag:m.tag,pri:m.pri,freq:m.recur});
+    S.recurring.push({id:uid(),title:m.title,time:m.time||null,tag:m.tag,pri:m.pri,important:!!m.important,freq:m.recur});
     save();rollDay(true);toast('Repeating — '+recurLabel(m.recur));
     resetCapture();if(quickAddOpen())closeOv('addOv');render();return;
   }
   var d=m.date||todayStr();
   var pEmail=m.person?String((personOf(m.person)||{}).email||'').toLowerCase():'';
   if(isAdmin&&m.person&&pEmail&&FB.ready){
-    await createShared({title:m.title,date:d,time:m.time,tag:m.tag,pri:m.pri,person:m.person,assigneeEmail:pEmail,selfCreated:false});
+    await createShared({title:m.title,date:d,time:m.time,tag:m.tag,pri:m.pri,important:m.important,person:m.person,assigneeEmail:pEmail,selfCreated:false});
     toast('Assigned to '+((personOf(m.person)||{}).label||''));
   }else if(!isAdmin&&myPersonId&&FB.ready){
     /* team member: self-created work, visible to Kalash */
-    await createShared({title:m.title,date:d,time:m.time,tag:m.tag,pri:m.pri,
+    await createShared({title:m.title,date:d,time:m.time,tag:m.tag,pri:m.pri,important:m.important,
       person:myPersonId,assigneeEmail:(me.email||'').toLowerCase(),selfCreated:true});
     toast('Added — visible to Kalash');
   }else{
     /* admin without assignee, guests, and offline: private board */
     S.tasks.push({id:uid(),title:m.title,notes:'',date:d,time:m.time,tag:m.tag,person:m.person||null,pri:m.pri,
-      status:'open',created:Date.now(),carried:0,subs:[],tnotes:[]});
+      important:!!m.important,status:'open',created:Date.now(),carried:0,subs:[],tnotes:[]});
     save();toast(m.person?('Assigned to '+((personOf(m.person)||{}).label||'')+' (view-link only)'):'Added to '+dayLabel(d));
   }
   logAct('create',m.title);
@@ -1506,7 +1553,7 @@ async function commitCapture(){
 async function createShared(o){
   if(!FB.ready){toast('Sync offline — saved locally instead');return}
   var t={assigneeEmail:o.assigneeEmail,person:o.person,
-    title:o.title,notes:'',date:o.date||null,time:o.time||null,tag:o.tag||null,pri:o.pri||'',
+    title:o.title,notes:'',date:o.date||null,time:o.time||null,tag:o.tag||null,pri:o.pri||'',important:!!o.important,
     status:'open',created:Date.now(),carried:0,subs:[],selfCreated:!!o.selfCreated,doneAt:null};
   try{await FB.F.addDoc(fcol('tasks'),t)}
   catch(e){console.error(e);toast('Could not create — check Firestore rules')}
@@ -1661,14 +1708,19 @@ function taskCard(k,o){
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
   else if(!done&&!rev){acts.push('<button class="ta-btn always" data-act="startprog" title="Mark in progress">◐</button>');
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
+  acts.push('<button class="ta-btn imp'+(k.important?' on':'')+'" data-act="important" title="'
+    +(k.important?'Remove the important flag':'Flag as important')+'">!</button>');
   acts.push('<button class="ta-btn sel" data-act="select" title="Select (⌘/Ctrl+click)">◻</button>');
   acts.push('<button class="ta-btn" data-act="edit" title="Edit">✎</button>');
   if(isAdmin||!isShared||k.selfCreated)acts.push('<button class="ta-btn del" data-act="del" title="Delete">✕</button>');
+  /* Teams-style flag: a bright red word above the title, top-left of the card */
+  var impTag=k.important?'<div class="t-imp">IMPORTANT!</div>':'';
+  if(k.important)cls+=' imp-card';
   /* read-only: someone else's board — no swipe hints, no actions, inert tick */
   if(o.readonly)return'<div class="t-wrap" data-id="'+k.id+'">'
     +'<article class="task peek '+cls+'" data-id="'+k.id+'">'
     +'<span class="chk '+chk+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span>'
-    +'<div class="t-body"><div class="t-title">'+esc(k.title)+'</div>'
+    +'<div class="t-body">'+impTag+'<div class="t-title">'+esc(k.title)+'</div>'
     +(k.notes?'<div class="t-notes">'+linkify(esc(k.notes))+'</div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div></article></div>';
   return'<div class="t-wrap" data-id="'+k.id+'">'
@@ -1676,7 +1728,7 @@ function taskCard(k,o){
     +'<div class="hint r'+(done?' danger':'')+'">'+(done?'✕ DELETE':'→ TOMORROW')+'</div>'
     +'<article class="task '+cls+'" data-id="'+k.id+'">'
     +'<button class="chk '+chk+'" data-act="toggle" aria-label="Complete"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></button>'
-    +'<div class="t-body" data-act="edit"><div class="t-title">'+esc(k.title)+'</div>'
+    +'<div class="t-body" data-act="edit">'+impTag+'<div class="t-title">'+esc(k.title)+'</div>'
     +(k.notes?'<div class="t-notes">'+linkify(esc(k.notes))+'</div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div>'
     +'<div class="t-acts">'+acts.join('')+'</div></article></div>';
@@ -2229,6 +2281,20 @@ async function doAction(a,k,card){
     else{k.status='open';delete k.doneAt;save();render();toast('Back to open')}
     logAct('revert',k.title);return;
   }
+  if(a==='important'){
+    var nowImp=!k.important;
+    if(isShared){
+      if(!isAdmin&&!k.selfCreated){toast('Only Kalash can flag an assigned task');return}
+      if(!FB.ready){toast('Sync offline');return}
+      try{await FB.F.updateDoc(fdoc('tasks',k.id),{important:nowImp});
+        toast(nowImp?'Flagged important':'Important removed')}
+      catch(e){console.error(e);toast('Failed')}
+      return;
+    }
+    if(nowImp)k.important=true;else delete k.important;
+    save();render();toast(nowImp?'Flagged important':'Important removed');
+    return;
+  }
   if(a==='startprog'){
     if(isShared){if(FB.ready){try{await FB.F.updateDoc(fdoc('tasks',k.id),{status:'progress'});toast('In progress')}catch(e){toast('Failed')}}}
     else{k.status='progress';save();render();toast('In progress')}
@@ -2312,6 +2378,7 @@ function openEdit(k){
   $('#editTitle').innerHTML=editRO?'View <em>task</em>':'Edit <em>task</em>';
   $('#roBanner').classList.toggle('hidden',!editRO);
   $('#eTitle').value=k.title;$('#eNotes').value=k.notes||'';
+  editImp=!!k.important;renderImpToggle();
   $('#eDate').value=k.date||'';$('#eTime').value=k.time||'';
   $('#eTag').innerHTML='<option value="">No tag</option>'+S.tags.map(function(t){return'<option value="'+t.id+'" '+(k.tag===t.id?'selected':'')+'>'+esc(t.label)+'</option>'}).join('');
   $('#ePerson').innerHTML='<option value="">Just me</option>'+S.people.map(function(p){return'<option value="'+p.id+'" '+(k.person===p.id?'selected':'')+'>'+esc(p.label)+(p.email?' ✓':'')+'</option>'}).join('');
@@ -2325,12 +2392,19 @@ function openEdit(k){
   $('#ePerson').disabled=editShared;
   $('#eRecur').disabled=editShared;
   $('#eDelete').classList.toggle('hidden',editRO);
+  $('#eImp').classList.toggle('hidden',editRO);
   renderSubs();
   $('#eNoteFeed').innerHTML=(k.tnotes&&k.tnotes.length)
     ?'<div class="fld"><label>Team notes</label><div class="notefeed">'
       +k.tnotes.map(function(n){return'<div class="nf"><b>'+esc(n.by)+'</b><span>'+hlM(esc(n.text))+'</span><span class="ts">'+(n.ts?ago(n.ts):'')+'</span></div>'}).join('')+'</div></div>':'';
   $('#editOv').classList.add('open');
   if(window.innerWidth>640&&!editRO)setTimeout(function(){$('#eTitle').focus()},80);
+}
+function renderImpToggle(){
+  var b=$('#eImp');if(!b)return;
+  b.classList.toggle('on',!!editImp);
+  b.setAttribute('aria-pressed',editImp?'true':'false');
+  b.querySelector('.box').textContent=editImp?'✓':'!';
 }
 function renderSubs(){
   $('#eSubs').innerHTML=editSubs.map(function(s,i){
@@ -2352,6 +2426,7 @@ async function saveEdit(){
       patch.time=$('#eTime').value||null;
       patch.tag=$('#eTag').value||null;
       patch.pri=$('#ePri').value;
+      patch.important=editImp;
       var ns=$('#eStatus').value;
       if(ns!==k.status){
         patch.status=ns;
@@ -2376,6 +2451,7 @@ async function saveEdit(){
   k.time=$('#eTime').value||null;
   k.tag=$('#eTag').value||null;
   k.pri=$('#ePri').value;
+  if(editImp)k.important=true;else delete k.important;
   k.subs=editSubs.filter(function(s){return s.title.trim()});
   var ns2=$('#eStatus').value;
   if(ns2!==k.status){
@@ -2422,7 +2498,7 @@ function viewPayload(){
   return{owner:'Kalash',
     people:S.people.map(function(p){return{id:p.id,name:p.label}}),
     tasks:src.map(function(k){return{id:k.id,title:k.title,notes:k.notes||'',date:k.date||null,time:k.time||null,person:k.person,
-      pri:k.pri||'',status:k.status,carried:k.carried||0,
+      pri:k.pri||'',important:!!k.important,status:k.status,carried:k.carried||0,
       tag:k.tag?((tagOf(k.tag)||{}).label||k.tag):null,
       tagColor:k.tag?((tagOf(k.tag)||{}).color||'#9AA3B2'):null,
       subs:(k.subs||[]).map(function(s){return{title:s.title,done:!!s.done}})}}),
@@ -2942,8 +3018,10 @@ function vCard(x){
     if(st==='progress')acts+='<div class="v-mark"><b>In progress</b>'+(m&&m.ts?' · since '+ago(m.ts):'')+'</div>';
     if(st==='review')acts+='<div class="v-mark">Sent to <b>'+esc(vData.owner||'admin')+'</b> for review'+(m&&m.ts?' · '+ago(m.ts):'')+'</div>';
   }
-  return'<div class="t-wrap"><article class="task '+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':(vstall?'vstall':''))))+'">'
-    +'<div class="t-body" style="padding-left:2px"><div class="t-title">'+esc(x.title)+'</div>'
+  return'<div class="t-wrap"><article class="task '+(x.important?'imp-card ':'')+(st==='done'?'done-card':(st==='review'?'review-card':(st==='progress'?'prog-card':(vstall?'vstall':''))))+'">'
+    +'<div class="t-body" style="padding-left:2px">'
+    +(x.important?'<div class="t-imp">IMPORTANT!</div>':'')
+    +'<div class="t-title">'+esc(x.title)+'</div>'
     +(x.notes?'<div class="t-notes">'+linkify(esc(x.notes))+'</div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')
     +subsHtml+acts
@@ -3587,7 +3665,7 @@ function openBulkEdit(){
   var sh=t.filter(function(k){return k.assigneeEmail}).length;
   $('#beSum').innerHTML='Editing <b>'+t.length+'</b> task'+(t.length===1?'':'s')
     +(sh?(' · <b>'+sh+'</b> delegated (only Kalash can change those, and they can’t be grouped)'):'');
-  $('#beDateMode').value='';$('#beTimeMode').value='';$('#bePri').value='';$('#beStatus').value='';
+  $('#beDateMode').value='';$('#beTimeMode').value='';$('#bePri').value='';$('#beStatus').value='';$('#beImp').value='';
   $('#beDate').value=todayStr();$('#beTime').value='09:00';
   $('#beNotes').value='';
   $('#beDateFld').classList.add('hidden');$('#beTimeFld').classList.add('hidden');
@@ -3614,11 +3692,12 @@ async function applyBulkEdit(){
   var pri=$('#bePri').value;if(pri)patch.pri=(pri==='__none')?'':pri;
   var tag=$('#beTag').value;if(tag)patch.tag=(tag==='__none')?null:tag;
   var st=$('#beStatus').value;
+  var imp=$('#beImp').value;
   var grp=$('#beGroup').value;
   var person=isAdmin?$('#bePerson').value:'';
   var extra=$('#beNotes').value.trim();
 
-  if(!Object.keys(patch).length&&!st&&!grp&&!person&&!extra){closeOv('bulkOv');toast('Nothing to change');return}
+  if(!Object.keys(patch).length&&!st&&!imp&&!grp&&!person&&!extra){closeOv('bulkOv');toast('Nothing to change');return}
 
   var changed=0,skipped=0,groupSkipped=0;
   for(var i=0;i<t.length;i++){
@@ -3630,6 +3709,7 @@ async function applyBulkEdit(){
       else{p.doneAt=null;if(k.status==='done')bumpDoneDate(dsOf(k.doneAt||Date.now()),-1)}
     }
     if(extra)p.notes=(k.notes?k.notes+'\n':'')+extra;
+    if(imp)p.important=(imp==='1');
     if(shared_){
       if(grp||person)groupSkipped++;
       if(!isAdmin&&!k.selfCreated){skipped++;continue}
@@ -3639,7 +3719,7 @@ async function applyBulkEdit(){
       continue;
     }
     Object.keys(p).forEach(function(f){
-      if(p[f]===null||p[f]===undefined)delete k[f];else k[f]=p[f]});
+      if(p[f]===null||p[f]===undefined||p[f]===false)delete k[f];else k[f]=p[f]});
     if(grp){if(grp==='__none')delete k.group;else k.group=grp}
     if(person)k.person=(person==='__none')?null:person;
     changed++;
@@ -3824,6 +3904,8 @@ function bindAll(){
     if(r&&e.target.dataset.sub==='title')editSubs[+r.dataset.i].title=e.target.value});
   $('#eSubAdd').addEventListener('click',function(){editSubs.push({id:uid(),title:'',done:false});renderSubs();
     var a=$$('#eSubs .sub-row input');if(a.length)a[a.length-1].focus()});
+  $('#eImp').addEventListener('click',function(){
+    if(editRO)return;editImp=!editImp;renderImpToggle()});
   $('#eCancel').addEventListener('click',function(){closeOv('editOv')});
   $('#eSave').addEventListener('click',saveEdit);
   $('#eDelete').addEventListener('click',async function(){
