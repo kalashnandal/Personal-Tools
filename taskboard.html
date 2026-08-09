@@ -991,15 +991,10 @@ html.personal .sp.on .n{color:#B69AD9}
     </div>
     <div id="notifState"></div>
     <label class="rem-row" id="remRow"><input type="checkbox" id="remChk">
-      <span><b>Remind me when a task is due</b>
-      <small>Fires at the task's time, for both boards. Needs notifications on.</small></span></label>
+      <span><b>Remind me when a personal task is due</b>
+      <small>Fires at the task's time on your Personal board only — work tasks stay quiet. Needs notifications on.</small></span></label>
   </div>
 
-  <div class="set-sec" id="activitySec">
-    <h4>Activity — full history</h4>
-    <p>Everything that's happened across all tasks. Newest first.</p>
-    <div class="act-sec" id="activityFull"><p style="margin:0;font-size:12.5px;color:var(--dim)">Nothing yet.</p></div>
-  </div>
 
   <div class="set-sec" id="presenceSec">
     <h4>Signed in — who's using it</h4>
@@ -3235,7 +3230,7 @@ function bindViewer(){
 }
 /* ---------- SETTINGS ---------- */
 function openSettings(){
-  renderAppearance();renderTagMgr();renderGroupMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();renderActivityFull();
+  renderAppearance();renderTagMgr();renderGroupMgr();renderPersonMgr();renderRecurMgr();renderViewLink();renderPresence();renderGuestMgr();
   $('#inviteUrl').textContent=location.origin+location.pathname;
   var perm=('Notification' in window)?Notification.permission:'unsupported';
   $('#notifHint').textContent=perm==='granted'?'On — alerts fire while the app is open':
@@ -3247,7 +3242,7 @@ function openSettings(){
   $('#installHint').textContent=stand?'Installed ✓'
     :(deferredPrompt?'Ready to install':'iPhone: Share → Add to Home Screen · Android/desktop: browser menu → Install');
   if(deferredPrompt)$('#installBtn').classList.remove('hidden');
-  ['#viewSec','#teamSec','#presenceSec','#guestSec','#activitySec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
+  ['#viewSec','#teamSec','#presenceSec','#guestSec'].forEach(function(s){$(s).classList.toggle('hidden',!isAdmin)});
   $('#setOv').classList.add('open');
 }
 function renderAppearance(){
@@ -3490,7 +3485,7 @@ function listenActivity(){
         else osNotify('Daily Ops',fresh.length+' new updates \u2014 '+stripHtml(actText(fresh[0]))+' \u2026');
       }
     }
-    renderNotif();renderActivityFull();
+    renderNotif();
     if(mode==='app'&&view==='activity')renderLedger();
   },function(e){
     console.error('activity listener',e);
@@ -3518,23 +3513,6 @@ function renderNotif(){
     +(n?'<button data-actseen="1">Mark all read</button>':'')+'</span></div>'
     +(rows||'<div class="notif-empty">No activity yet.</div>');
 }
-function renderActivityFull(){
-  var el=$('#activityFull');if(!el||mode!=='app'||!isAdmin)return;
-  var list=visibleActivity();
-  el.innerHTML=list.length?list.slice(0,100).map(function(a){
-    return'<div class="act"><span class="aic '+actCls(a.kind)+'">'+actIcon(a.kind)+'</span>'
-      +'<span class="ab">'+actText(a)+'<span class="at">'+ago(a.ts)+' ago'+(a.email?' · '+esc(a.email):'')+'</span></span></div>'}).join('')
-    :'<p style="margin:0;font-size:12.5px;color:var(--dim)">Nothing yet.</p>';
-}
-async function osNotify(title,body){
-  if(!('Notification' in window)||Notification.permission!=='granted')return;
-  try{
-    var reg=('serviceWorker' in navigator)?await navigator.serviceWorker.getRegistration():null;
-    var opts={body:body,icon:APP_ICON,badge:APP_ICON,tag:'dailyops-'+Date.now()};
-    if(reg&&reg.showNotification)reg.showNotification(title,opts);
-    else new Notification(title,opts);
-  }catch(e){try{new Notification(title,{body:body})}catch(e2){}}
-}
 function stripHtml(h){var d=document.createElement('div');d.innerHTML=h;return d.textContent||''}
 /* ---------- REMINDERS ----------
    iOS only delivers web push to a PWA installed on the Home Screen (16.4+),
@@ -3558,9 +3536,11 @@ function checkReminders(){
   if(notifPerm()!=='granted')return;
   var t=todayStr(),n=new Date(),hhmm=pad(n.getHours())+':'+pad(n.getMinutes());
   var seen=Store.get(remKey(),{});
-  /* both spaces — a reminder shouldn't depend on which board you're looking at */
-  var due=S.tasks.concat(shared).filter(function(k){
-    return k.time&&k.date===t&&k.status!=='done'&&k.status!=='review'
+  /* personal only — work has its own rhythm and doesn't need to buzz your phone.
+     Still independent of which board is on screen. */
+  var due=S.tasks.filter(function(k){
+    return spaceOf(k)==='personal'
+      &&k.time&&k.date===t&&k.status!=='done'&&k.status!=='review'
       &&k.time<=hhmm&&!seen[k.id];
   }).sort(function(a,b){return a.time<b.time?-1:1});
   if(!due.length)return;
