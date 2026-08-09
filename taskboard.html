@@ -686,6 +686,34 @@ html.compact .group-h{margin:14px 0 8px}
 .rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
 
+/* ============ v4.7 — reminders ============ */
+.rem-row{display:flex;align-items:flex-start;gap:11px;margin-top:12px;cursor:pointer;position:relative}
+.rem-row input{width:19px;height:19px;flex:none;margin-top:1px;accent-color:var(--gold)}
+.rem-row b{font-size:13.5px;font-weight:600;display:block}
+.rem-row small{font-size:11.5px;color:var(--dim);display:block;margin-top:2px;line-height:1.5}
+.rem-row.off{opacity:.5;pointer-events:none}
+.nstate{font-size:12px;line-height:1.6;border-radius:10px;padding:11px 13px;margin-top:11px;position:relative}
+.nstate.ok{color:var(--ok);border:1px solid rgba(143,191,155,.35);background:rgba(143,191,155,.07)}
+.nstate.warn{color:var(--amber);border:1px solid rgba(217,160,91,.35);background:rgba(217,160,91,.07)}
+.nstate.bad{color:var(--red);border:1px solid rgba(201,123,110,.35);background:rgba(201,123,110,.07)}
+.nstate b{font-weight:700}
+.nstate ol{margin:7px 0 0 16px;padding:0}
+.nstate li{margin-bottom:3px}
+
+/* ============ v4.6 — Work / Personal spaces ============ */
+.space-seg{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.sp{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border-radius:11px;
+  border:1px solid var(--line);color:var(--mute);font-size:13px;font-weight:600;transition:all .2s;min-height:40px}
+.sp svg{width:15px;height:15px;flex:none}
+.sp:hover{border-color:var(--line-hi);color:var(--text)}
+.sp.on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.sp .n{font-size:11px;font-weight:700;color:var(--dim);font-variant-numeric:tabular-nums}
+.sp.on .n{color:var(--gold)}
+html.personal .sp.on{color:var(--violet-on,#B69AD9);border-color:#B69AD9;background:rgba(182,154,217,.14)}
+html.personal .sp.on .n{color:#B69AD9}
+.priv-note{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--dim);margin-top:10px;
+  border-left:2px solid rgba(182,154,217,.5);padding-left:10px;line-height:1.5}
+
 /* ============ v4.5 — IMPORTANT! flag ============ */
 /* A true red, not the muted --red the rest of the palette uses — the whole
    point is that it breaks out of the theme and catches your eye. */
@@ -848,6 +876,7 @@ html.compact .group-h{margin:14px 0 8px}
       <div class="ink-track"><div class="ink-fill" id="inkFill"></div></div>
     </div>
     <div class="stats" id="stats"></div>
+    <div class="space-seg" id="spaceSeg" role="tablist" aria-label="Board"></div>
   </header>
 
   <div id="capHome"></div>
@@ -960,6 +989,10 @@ html.compact .group-h{margin:14px 0 8px}
       <button class="btn ghost sm" id="notifPermBtn">🔔 Enable notifications</button>
       <span style="font-size:11.5px;color:var(--dim)" id="notifHint"></span>
     </div>
+    <div id="notifState"></div>
+    <label class="rem-row" id="remRow"><input type="checkbox" id="remChk">
+      <span><b>Remind me when a task is due</b>
+      <small>Fires at the task's time, for both boards. Needs notifications on.</small></span></label>
   </div>
 
   <div class="set-sec" id="activitySec">
@@ -1199,7 +1232,8 @@ function migrate(){
   S.people.forEach(function(p){if(p.email==null)p.email='';if(!p.label&&p.name)p.label=p.name});
   var map={'var(--t-summit)':'#E2C27A','var(--t-imark)':'#7FA3C9','var(--t-portfolio)':'#A88FC9','var(--t-personal)':'#8FBF9B'};
   S.tags.forEach(function(t){if(map[t.color])t.color=map[t.color];if(!/^#/.test(t.color||''))t.color='#9AA3B2'});
-  S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy'},S.prefs||{});
+  S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy',space:'work',remind:true},S.prefs||{});
+  if(S.prefs.space!=='personal')S.prefs.space='work';
   var t=todayStr();
   var gids={};S.groups.forEach(function(g){gids[g.id]=1});
   S.tasks.forEach(function(k){
@@ -1243,7 +1277,23 @@ function personOf(id){
   if(peerCtx)return(peerCtx.people||[]).find(function(p){return p.id===id})||S.people.find(function(p){return p.id===id});
   return S.people.find(function(p){return p.id===id})||(allowCfg.people||[]).find(function(p){return p.id===id});
 }
-function allTasks(){return S.tasks.concat(shared)}
+/* ---------- SPACES ----------
+   Work and Personal are two boards inside the same private document. Personal
+   tasks never mix with delegated work, never reach the public view link, and
+   can't be assigned to anyone — they're yours only. allTasks() is the single
+   place every view reads from, so filtering here does the whole job. */
+function curSpace(){return S.prefs.space==='personal'?'personal':'work'}
+function spaceOf(k){return k&&k.space==='personal'?'personal':'work'}
+function allTasks(){
+  var sp=curSpace();
+  var mine=S.tasks.filter(function(k){return spaceOf(k)===sp});
+  /* delegated tasks are work by definition — they came from or go to someone else */
+  return sp==='personal'?mine:mine.concat(shared);
+}
+/* Explicitly work-only, for things that must ignore whichever space you're
+   looking at right now — publishing the view link, above all. */
+function workTasks(){return S.tasks.filter(function(k){return spaceOf(k)==='work'}).concat(shared)}
+function isPersonal(){return curSpace()==='personal'}
 function groupOf(id){return((peerCtx?peerCtx.groups:S.groups)||[]).find(function(g){return g.id===id})}
 
 /* ---------- CHANGE STAMPS (hybrid logical clock) ----------
@@ -1368,7 +1418,7 @@ function rollDay(force){
     if(!due)return;
     if(S.tasks.some(function(k){return k.recurId===r.id&&k.date===t}))return;
     S.tasks.push({id:uid(),title:r.title,notes:'',date:t,time:r.time||null,tag:r.tag||null,person:null,
-      pri:r.pri||'',important:!!r.important,status:'open',created:Date.now(),carried:0,recurId:r.id,subs:[],tnotes:[]});
+      pri:r.pri||'',important:!!r.important,space:r.space||'work',status:'open',created:Date.now(),carried:0,recurId:r.id,subs:[],tnotes:[]});
     ch=true;
   });
   if(S.meta.lastCarry!==t){S.meta.lastCarry=t;ch=true}
@@ -1430,7 +1480,7 @@ function parseInput(raw){
 function mergedPending(){
   var p=parseInput($('#capInput').value||'');
   function g(f){return pendingPick[f]===undefined?p[f]:pendingPick[f]}
-  var o={title:p.title,date:g('date'),time:g('time'),tag:g('tag'),person:isAdmin?g('person'):null,
+  var o={title:p.title,date:g('date'),time:g('time'),tag:g('tag'),person:(isAdmin&&!isPersonal())?g('person'):null,
     pri:g('pri')||'',recur:g('recur')||'',important:!!g('important')};
   if(o.recur)o.date=null;
   return o;
@@ -1455,7 +1505,7 @@ function renderCapture(){
   var m=mergedPending();
   var pills=[['date','📅',m.date?dayLabel(m.date):'Date'],['time','⏰',m.time?fmtTime12(m.time):'Time'],
     ['tag','#',m.tag?((tagOf(m.tag)||{}).label||m.tag):'Tag']];
-  if(isAdmin)pills.push(['person','@',m.person?((personOf(m.person)||{}).label||m.person):'Assign']);
+  if(isAdmin&&!isPersonal())pills.push(['person','@',m.person?((personOf(m.person)||{}).label||m.person):'Assign']);
   pills.push(['pri','⚑',m.pri?PRI_LABEL[m.pri]:'Priority'],['recur','↻',m.recur?recurLabel(m.recur):'Repeat']);
   $('#pickRow').innerHTML=pills.map(function(pl){
     return'<button class="pk '+(m[pl[0]]?'set':'')+' '+(openTray===pl[0]?'open':'')+'" data-pick="'+pl[0]+'"><span>'+pl[1]+'</span>'+esc(pl[2])+'</button>'}).join('')
@@ -1527,7 +1577,7 @@ async function commitCapture(){
   if(m.tag&&!tagOf(m.tag))S.tags.push({id:m.tag,label:m.tag[0].toUpperCase()+m.tag.slice(1),color:TAGCOLORS[S.tags.length%TAGCOLORS.length]});
   if(m.person&&!personOf(m.person)){S.people.push({id:m.person,label:m.person[0].toUpperCase()+m.person.slice(1),email:''});syncAllowlist()}
   if(m.recur){
-    S.recurring.push({id:uid(),title:m.title,time:m.time||null,tag:m.tag,pri:m.pri,important:!!m.important,freq:m.recur});
+    S.recurring.push({id:uid(),title:m.title,time:m.time||null,tag:m.tag,pri:m.pri,important:!!m.important,space:curSpace(),freq:m.recur});
     save();rollDay(true);toast('Repeating — '+recurLabel(m.recur));
     resetCapture();if(quickAddOpen())closeOv('addOv');render();return;
   }
@@ -1544,7 +1594,7 @@ async function commitCapture(){
   }else{
     /* admin without assignee, guests, and offline: private board */
     S.tasks.push({id:uid(),title:m.title,notes:'',date:d,time:m.time,tag:m.tag,person:m.person||null,pri:m.pri,
-      important:!!m.important,status:'open',created:Date.now(),carried:0,subs:[],tnotes:[]});
+      important:!!m.important,space:curSpace(),status:'open',created:Date.now(),carried:0,subs:[],tnotes:[]});
     save();toast(m.person?('Assigned to '+((personOf(m.person)||{}).label||'')+' (view-link only)'):'Added to '+dayLabel(d));
   }
   logAct('create',m.title);
@@ -1591,7 +1641,35 @@ function matches(k){
   var g=k.group?groupOf(k.group):null;
   return(k.title+' '+(k.notes||'')+' '+((g&&g.label)||'')).toLowerCase().indexOf(query)>=0;
 }
-function render(){renderMast();renderTabs();renderFilters();renderWeek();renderLedger()}
+function render(){renderMast();renderSpaceSeg();renderTabs();renderFilters();renderWeek();renderLedger()}
+function renderSpaceSeg(){
+  var el=$('#spaceSeg');if(!el)return;
+  var sp=curSpace();
+  var t=todayStr();
+  function openIn(x){return S.tasks.filter(function(k){
+    return spaceOf(k)===x&&k.status!=='done'&&k.date===t}).length
+    +(x==='work'?shared.filter(function(k){return k.status!=='done'&&k.date===t}).length:0)}
+  document.documentElement.classList.toggle('personal',sp==='personal');
+  el.innerHTML=
+     '<button class="sp '+(sp==='work'?'on':'')+'" data-space="work" role="tab" aria-selected="'+(sp==='work')+'">'
+       +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8.5 7V5.5A1.5 1.5 0 0110 4h4a1.5 1.5 0 011.5 1.5V7"/></svg>'
+       +'Work'+(openIn('work')?'<span class="n">'+openIn('work')+'</span>':'')+'</button>'
+    +'<button class="sp '+(sp==='personal'?'on':'')+'" data-space="personal" role="tab" aria-selected="'+(sp==='personal')+'">'
+       +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 018 0v3"/></svg>'
+       +'Personal'+(openIn('personal')?'<span class="n">'+openIn('personal')+'</span>':'')+'</button>'
+    +(sp==='personal'?'<div class="priv-note" style="flex-basis:100%">🔒 Private to you. Nothing here is assigned, published to your view link, or visible to anyone on the team.</div>':'');
+}
+function setSpace(sp){
+  if(curSpace()===sp)return;
+  S.prefs.space=sp;
+  selDate=null;aSelDay=null;exitBulk();closePeerBoard(true);
+  /* the work-only views make no sense in a private board */
+  if(sp==='personal'&&ADMIN_VIEWS[view])view='today';
+  /* the Assign pill is work-only, and render() doesn't touch the capture row */
+  pendingPick.person=undefined;
+  save();renderCapture();render();
+  toast(sp==='personal'?'Personal board — private to you':'Work board');
+}
 function renderMast(){
   var now=new Date(),wk=now.toLocaleDateString('en-IN',{weekday:'long'});
   $('#dayName').innerHTML=esc(wk.slice(0,-3))+'<em>'+esc(wk.slice(-3))+'</em>';
@@ -1623,7 +1701,7 @@ function calcStreak(){
 }
 function renderTabs(){
   var c=counts();
-  var tabs=VIEWS.filter(function(v){return isAdmin||!ADMIN_VIEWS[v[0]]});
+  var tabs=VIEWS.filter(function(v){return(isAdmin&&!isPersonal())||!ADMIN_VIEWS[v[0]]});
   $('#tabs').innerHTML=tabs.map(function(v){
     return'<button class="tab '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]
       +(v[0]==='requests'?(c.requests?'<span class="alert"></span>':'')
@@ -1636,8 +1714,12 @@ function renderFilters(){
   var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team';
   $('#filters').style.display=show?'flex':'none';
   if(!show)return;
+  /* only tags this board actually uses — Summit and iMark are noise on the
+     personal board, and vice versa */
+  var used={};allTasks().forEach(function(k){if(k.tag)used[k.tag]=1});
+  var shown=S.tags.filter(function(t){return used[t.id]||activeTag===t.id});
   $('#filters').innerHTML='<button class="f-chip '+(activeTag==='all'?'on':'')+'" data-tag="all">All</button>'
-    +S.tags.map(function(t){return'<button class="f-chip '+(activeTag===t.id?'on':'')+'" data-tag="'+t.id+'"><span class="dot" style="background:'+t.color+'"></span>'+esc(t.label)+'</button>'}).join('')
+    +shown.map(function(t){return'<button class="f-chip '+(activeTag===t.id?'on':'')+'" data-tag="'+t.id+'"><span class="dot" style="background:'+t.color+'"></span>'+esc(t.label)+'</button>'}).join('')
     +'<div class="f-search"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><input id="searchIn" placeholder="Search" value="'+esc(query)+'"></div>';
   $('#searchIn').addEventListener('input',function(e){query=e.target.value.toLowerCase();renderLedger()});
 }
@@ -2388,7 +2470,7 @@ function openEdit(k){
   $('#eRecur').value=r?r.freq:'';
   ['eTitle','eNotes','eDate','eTime','eTag','ePri','eRecur','eStatus'].forEach(function(id){$('#'+id).disabled=editRO});
   $('#eStatusFld').classList.toggle('hidden',editRO);
-  $('#eWhoFld').classList.toggle('hidden',!isAdmin);
+  $('#eWhoFld').classList.toggle('hidden',!isAdmin||isPersonal());
   $('#ePerson').disabled=editShared;
   $('#eRecur').disabled=editShared;
   $('#eDelete').classList.toggle('hidden',editRO);
@@ -2494,7 +2576,7 @@ async function handleRequest(id,act){
 /* ---------- PUBLIC VIEW KEY ---------- */
 function schedulePublish(){clearTimeout(pubTimer);pubTimer=setTimeout(publishView,1500)}
 function viewPayload(){
-  var src=allTasks().filter(function(k){return k.person});
+  var src=workTasks().filter(function(k){return k.person});   /* never personal */
   return{owner:'Kalash',
     people:S.people.map(function(p){return{id:p.id,name:p.label}}),
     tasks:src.map(function(k){return{id:k.id,title:k.title,notes:k.notes||'',date:k.date||null,time:k.time||null,person:k.person,
@@ -3160,6 +3242,7 @@ function openSettings(){
     perm==='denied'?'Blocked in browser settings':
     perm==='unsupported'?'Not supported here (iPhone needs true push)':'Alerts for team activity';
   $('#notifPermBtn').style.display=perm==='granted'?'none':'';
+  renderNotifState();
   var stand=(matchMedia('(display-mode: standalone)').matches||navigator.standalone);
   $('#installHint').textContent=stand?'Installed ✓'
     :(deferredPrompt?'Ready to install':'iPhone: Share → Add to Home Screen · Android/desktop: browser menu → Install');
@@ -3453,12 +3536,69 @@ async function osNotify(title,body){
   }catch(e){try{new Notification(title,{body:body})}catch(e2){}}
 }
 function stripHtml(h){var d=document.createElement('div');d.innerHTML=h;return d.textContent||''}
+/* ---------- REMINDERS ----------
+   iOS only delivers web push to a PWA installed on the Home Screen (16.4+),
+   and it has no Background Sync, so nothing can wake this page once it is
+   fully closed. These reminders therefore fire while the app is running —
+   which covers the common case of having it open or recently backgrounded.
+   Anything stronger needs a real push server; see notifStateHtml(). */
+function isIOS(){
+  return /iP(hone|ad|od)/.test(navigator.platform||'')
+    ||(/Mac/.test(navigator.userAgent||'')&&typeof document.ontouchend!=='undefined');
+}
+function isInstalled(){
+  try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}
+  catch(e){return !!navigator.standalone}
+}
+function notifPerm(){return('Notification' in window)?Notification.permission:'unsupported'}
+
+function remKey(){return 'dailyops.rem.'+todayStr()}
+function checkReminders(){
+  if(mode!=='app'||!S.prefs.remind)return;
+  if(notifPerm()!=='granted')return;
+  var t=todayStr(),n=new Date(),hhmm=pad(n.getHours())+':'+pad(n.getMinutes());
+  var seen=Store.get(remKey(),{});
+  /* both spaces — a reminder shouldn't depend on which board you're looking at */
+  var due=S.tasks.concat(shared).filter(function(k){
+    return k.time&&k.date===t&&k.status!=='done'&&k.status!=='review'
+      &&k.time<=hhmm&&!seen[k.id];
+  }).sort(function(a,b){return a.time<b.time?-1:1});
+  if(!due.length)return;
+  due.forEach(function(k){seen[k.id]=1});
+  Store.set(remKey(),seen);
+  if(due.length===1)osNotify((due[0].important?'IMPORTANT · ':'')+fmtTime12(due[0].time),due[0].title);
+  else osNotify(due.length+' tasks due',
+    due.slice(0,3).map(function(k){return fmtTime12(k.time)+' · '+k.title}).join('\n')
+    +(due.length>3?'\n…and '+(due.length-3)+' more':''));
+}
+function notifStateHtml(){
+  var p=notifPerm(),ios=isIOS(),inst=isInstalled();
+  if(p==='unsupported'||(ios&&!inst))
+    return'<div class="nstate warn"><b>Install it first.</b> On iPhone and iPad, notifications only work once the app is on your Home Screen — Safari tabs can never show them.'
+      +'<ol><li>Open this page in <b>Safari</b></li><li>Tap <b>Share</b> → <b>Add to Home Screen</b></li>'
+      +'<li>Open it from the Home Screen icon, then come back here and turn notifications on</li></ol></div>';
+  if(p==='denied')
+    return'<div class="nstate bad"><b>Blocked.</b> '+(ios
+      ?'Turn them back on in <b>iOS Settings → Notifications → Daily Ops</b>.'
+      :'Turn them back on in your browser\u2019s site settings for this page.')+'</div>';
+  if(p==='default')
+    return'<div class="nstate warn">Not enabled yet — tap the button above.</div>';
+  return'<div class="nstate ok"><b>On.</b> Reminders and team alerts arrive while the app is open or recently used.'
+    +(ios?' iOS cannot wake a closed web app, so anything missed shows the next time you open it.':'')+'</div>';
+}
+function renderNotifState(){
+  var el=$('#notifState');if(!el)return;
+  el.innerHTML=notifStateHtml();
+  var row=$('#remRow'),chk=$('#remChk');
+  if(chk){chk.checked=S.prefs.remind!==false;
+    row.classList.toggle('off',notifPerm()!=='granted')}
+}
 async function reqNotifPerm(){
   if(!('Notification' in window)){toast('Notifications aren\u2019t supported in this browser');return}
   var r=await Notification.requestPermission();
   if(r==='granted'){toast('Notifications on');osNotify('Daily Ops','You\u2019ll be notified of team activity while the app is open.')}
   else toast('Notifications blocked \u2014 enable them in browser site settings');
-  renderNotif();
+  renderNotif();renderNotifState();
 }
 function markActSeen(){
   lastSeenAct=Date.now();Store.set('dailyops.seenAct',lastSeenAct);renderNotif();
@@ -3578,7 +3718,7 @@ function renderBulkUI(){
   if(bulkMode&&!n){exitBulk();return}
   $('#bulkBar').classList.toggle('hidden',!bulkMode);
   $('#bbCount').textContent=n+' selected';
-  $('#bbAssign').style.display=isAdmin?'':'none';
+  $('#bbAssign').style.display=(isAdmin&&!isPersonal())?'':'none';
   var vis=visibleIds();
   $('#bbAll').textContent=(n>=vis.length&&vis.length)?'Select none':'Select all';
   $$('#ledger .task').forEach(function(el){el.classList.toggle('bulk-on',!!bulkSel[el.dataset.id])});
@@ -3675,7 +3815,7 @@ function openBulkEdit(){
     +S.groups.map(function(g){return'<option value="'+g.id+'">'+esc(g.label||'Group')+'</option>'}).join('');
   $('#bePerson').innerHTML='<option value="">Keep as-is</option><option value="__none">Just me</option>'
     +S.people.map(function(p){return'<option value="'+p.id+'">'+esc(p.label)+(p.email?' ✓':'')+'</option>'}).join('');
-  $('#beWhoFld').classList.toggle('hidden',!isAdmin);
+  $('#beWhoFld').classList.toggle('hidden',!isAdmin||isPersonal());
   $('#bulkOv').classList.add('open');
 }
 async function applyBulkEdit(){
@@ -3868,6 +4008,8 @@ function bindAll(){
   /* delegated so every textarea gets it, including any added later */
   document.addEventListener('input',function(e){
     if(e.target&&e.target.tagName==='TEXTAREA')autoGrow(e.target)});
+  $('#spaceSeg').addEventListener('click',function(e){
+    var b=e.target.closest('[data-space]');if(b)setSpace(b.dataset.space)});
   $('#tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;
     closePeerBoard(true);view=b.dataset.view;selDate=null;render()});
   $('#bnav').addEventListener('click',function(e){var b=e.target.closest('.bn');if(!b)return;
@@ -4037,6 +4179,11 @@ function bindAll(){
     migrate();save();render();toast('Wiped')});
 
   $('#notifPermBtn').addEventListener('click',reqNotifPerm);
+  $('#remChk').addEventListener('change',function(){
+    S.prefs.remind=this.checked;save();
+    toast(this.checked?'Due reminders on':'Due reminders off');
+    if(this.checked)checkReminders();
+  });
   $('#installBtn').addEventListener('click',async function(){
     if(!deferredPrompt){toast('Use your browser menu → Install / Add to Home Screen');return}
     deferredPrompt.prompt();
@@ -4482,7 +4629,10 @@ setInterval(function(){
   var t=todayStr();
   if(t!==lastDay){lastDay=t;selDate=null;if(mode==='app'){rollDay();rollShared();render()}}
   else if(mode==='app'&&view==='today'&&!selDate)renderLedger();
+  checkReminders();
 },60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkReminders()});
+setTimeout(checkReminders,4000);
 </script>
 </body>
 </html>
