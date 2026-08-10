@@ -1005,6 +1005,7 @@ html.personal .sp.on .n{color:#B69AD9}
   <div class="set-sec" id="viewSec">
     <h4>Public view link</h4>
     <p>No login needed. Recipients pick their name, see their tasks, add notes, request work. Read-only.</p>
+    <p style="color:var(--mute)">Publishes <b>only tasks assigned to someone else</b>, plus anything they finished in the last 14 days. Your own tasks, anything unassigned, and your whole Personal board never go near it.</p>
     <div class="linkbox"><code id="viewUrl">— not published —</code><button class="btn ghost sm" id="copyView">Copy</button></div>
     <div class="set-row">
       <button class="btn gold sm" id="publishView">Publish / update</button>
@@ -1029,6 +1030,7 @@ html.personal .sp.on .n{color:#B69AD9}
   <div class="set-sec">
     <h4>Backup &amp; housekeeping</h4>
     <div class="set-row" style="margin-bottom:8px">
+      <button class="btn gold sm" id="reportBtn">📄 Export a report</button>
       <button class="btn ghost sm" id="exportBtn">Export JSON</button>
       <button class="btn ghost sm" id="importBtn">Import JSON</button>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -1111,6 +1113,43 @@ html.personal .sp.on .n{color:#B69AD9}
   </div>
 </div></div>
 
+<!-- EXPORT A REPORT -->
+<div class="overlay" id="repOv"><div class="modal">
+  <div class="grab"></div>
+  <h3>Export a <em>report</em></h3>
+  <p style="font-size:12.5px;color:var(--mute);margin-bottom:16px;position:relative">
+    Word opens as a formatted document; Excel opens as a spreadsheet you can filter and pivot.</p>
+  <div class="fld"><label>Period</label><select id="repRange">
+    <option value="7">Last 7 days</option>
+    <option value="30" selected>Last 30 days</option>
+    <option value="90">Last 90 days</option>
+    <option value="tm">This month</option>
+    <option value="lm">Last month</option>
+    <option value="custom">Custom…</option>
+  </select></div>
+  <div class="fld-row" id="repCustom" style="display:none">
+    <div class="fld"><label>From</label><input id="repFrom" type="date"></div>
+    <div class="fld"><label>To</label><input id="repTo" type="date"></div>
+  </div>
+  <div class="fld"><label>Board</label><select id="repSpace">
+    <option value="work">Work</option><option value="personal">Personal</option><option value="both">Both</option>
+  </select></div>
+  <div class="fld" id="repWhoFld"><label>Whose tasks</label><select id="repWho"></select></div>
+  <div class="fld"><label>Include</label><select id="repStatus">
+    <option value="all">Everything in the period</option>
+    <option value="done">Completed only</option>
+    <option value="open">Still open only</option>
+  </select></div>
+  <div class="bulk-sum" id="repSum"></div>
+  <div class="m-foot">
+    <button class="btn ghost" id="repCancel">Cancel</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn ghost" id="repWord">📄 Word</button>
+      <button class="btn gold" id="repExcel">📊 Excel</button>
+    </div>
+  </div>
+</div></div>
+
 <!-- INSTALL HELP -->
 <div class="overlay" id="pwaOv"><div class="modal">
   <div class="grab"></div>
@@ -1158,6 +1197,7 @@ var firebaseConfig={
   appId:"1:818884869738:web:a42a6088c9b76dc66cd413"
 };
 var ADMIN_EMAIL='kalashnandal@gmail.com';
+var VIEW_DONE_DAYS=14;   /* how much finished work the view link keeps */
 var ACCESS_PHRASE='soul';            /* <<< CHANGE THIS */
 
 /* ---------- STORAGE ---------- */
@@ -2571,7 +2611,23 @@ async function handleRequest(id,act){
 /* ---------- PUBLIC VIEW KEY ---------- */
 function schedulePublish(){clearTimeout(pubTimer);pubTimer=setTimeout(publishView,1500)}
 function viewPayload(){
-  var src=workTasks().filter(function(k){return k.person});   /* never personal */
+  /* Only work that is genuinely delegated, and only the recent slice of it.
+     Anything unassigned is mine and must never be published; nor is my own
+     row on the roster; nor is a year of finished work — the link is a
+     "what's on your plate" board, not an archive. */
+  var cut=todayStr(-VIEW_DONE_DAYS);
+  var mine={};
+  S.people.forEach(function(p){
+    if(String(p.email||'').toLowerCase()===ADMIN_EMAIL)mine[p.id]=1});
+  var src=workTasks().filter(function(k){          /* never personal */
+    if(!k.person)return false;                     /* unassigned = mine */
+    if(mine[k.person])return false;                /* assigned to myself */
+    if(k.status==='done'){
+      var ds=k.doneAt?dsOf(k.doneAt):(k.date||'');
+      if(ds<cut)return false;                      /* stale history */
+    }
+    return true;
+  });
   return{owner:'Kalash',
     people:S.people.map(function(p){return{id:p.id,name:p.label}}),
     tasks:src.map(function(k){return{id:k.id,title:k.title,notes:k.notes||'',date:k.date||null,time:k.time||null,person:k.person,
@@ -3291,6 +3347,155 @@ function renderRecurMgr(){
 }
 function renderViewLink(){
   $('#viewUrl').textContent=S.view.key?(location.origin+location.pathname+'?view='+S.view.key):'— not published —';
+}
+
+/* ---------- REPORT EXPORT ----------
+   Word and Excel without a library: both apps open an HTML document when it
+   carries their MIME type and namespace, so a Blob is all that's needed —
+   which keeps this working offline and on the phone.                        */
+function repRangeDates(){
+  var v=$('#repRange').value,now=new Date(),from,to=todayStr();
+  if(v==='custom')return{from:$('#repFrom').value||todayStr(-30),to:$('#repTo').value||todayStr()};
+  if(v==='tm'){from=now.getFullYear()+'-'+pad(now.getMonth()+1)+'-01';return{from:from,to:to}}
+  if(v==='lm'){
+    var lm=new Date(now.getFullYear(),now.getMonth()-1,1);
+    var last=new Date(now.getFullYear(),now.getMonth(),0);
+    return{from:lm.getFullYear()+'-'+pad(lm.getMonth()+1)+'-01',
+           to:last.getFullYear()+'-'+pad(last.getMonth()+1)+'-'+pad(last.getDate())};
+  }
+  return{from:todayStr(-(+v)),to:to};
+}
+/* a task counts for the day it was finished, or the day it was scheduled */
+function repDateOf(k){return(k.status==='done'&&k.doneAt)?dsOf(k.doneAt):(k.date||dsOf(k.created||Date.now()))}
+function repRows(){
+  var r=repRangeDates(),sp=$('#repSpace').value,who=$('#repWho').value,st=$('#repStatus').value;
+  var pool=S.tasks.filter(function(k){
+    return sp==='both'||spaceOf(k)===sp;
+  });
+  if(sp!=='personal')pool=pool.concat(shared);
+  return pool.filter(function(k){
+    var d=repDateOf(k);
+    if(d<r.from||d>r.to)return false;
+    if(st==='done'&&k.status!=='done')return false;
+    if(st==='open'&&k.status==='done')return false;
+    if(who==='__all')return true;
+    if(who==='__mine')return !k.person&&!k.assigneeEmail;
+    return k.person===who;
+  }).sort(function(a,b){var x=repDateOf(a),y=repDateOf(b);
+    return x<y?-1:x>y?1:String(a.time||'99')<String(b.time||'99')?-1:1});
+}
+var REP_COLS=[
+  ['Date',function(k){return repDateOf(k)}],
+  ['Time',function(k){return k.time?fmtTime12(k.time):''}],
+  ['Task',function(k){return k.title||''}],
+  ['Status',function(k){return{done:'Done',review:'In review',progress:'In progress'}[k.status]||'Open'}],
+  ['Important',function(k){return k.important?'YES':''}],
+  ['Priority',function(k){return k.pri?PRI_LABEL[k.pri]:''}],
+  ['Board',function(k){return k.assigneeEmail?'Work':(spaceOf(k)==='personal'?'Personal':'Work')}],
+  ['Tag',function(k){var t=k.tag?tagOf(k.tag):null;return t?t.label:(k.tag||'')}],
+  ['Group',function(k){var g=k.group?groupOf(k.group):null;return g?(g.label||''):''}],
+  ['Assignee',function(k){var p=k.person?personOf(k.person):null;return p?p.label:(k.person||'')}],
+  ['Carried',function(k){return(k.carried||0)?String(k.carried):''}],
+  ['Checklist',function(k){var su=k.subs||[];return su.length?(su.filter(function(x){return x.done}).length+'/'+su.length):''}],
+  ['Completed',function(k){return k.doneAt?dsOf(k.doneAt):''}],
+  ['Notes',function(k){return(k.notes||'').replace(/\s+/g,' ').trim()}]
+];
+function repTitle(){
+  var r=repRangeDates(),who=$('#repWho'),w=who.options[who.selectedIndex];
+  return'Daily Ops — '+(w?w.textContent:'Report')+' — '+fmtDateShort(r.from)+' to '+fmtDateShort(r.to);
+}
+function download(name,mime,html){
+  var blob=new Blob(['\ufeff'+html],{type:mime});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+function repFileStem(){
+  var r=repRangeDates();
+  return'daily-ops-'+r.from+'_to_'+r.to;
+}
+function exportExcel(){
+  var rows=repRows();
+  if(!rows.length){toast('Nothing in that period');return}
+  var head='<tr>'+REP_COLS.map(function(c){
+    return'<th style="background:#1f2430;color:#fff;border:1px solid #444;padding:6px;text-align:left">'+esc(c[0])+'</th>'}).join('')+'</tr>';
+  var body=rows.map(function(k){
+    return'<tr>'+REP_COLS.map(function(c){
+      var v=c[1](k);
+      /* keep dates and counts as text so Excel doesn't reformat them oddly */
+      return'<td style="border:1px solid #ccc;padding:5px;mso-number-format:\\@">'+esc(v)+'</td>';
+    }).join('')+'</tr>';
+  }).join('');
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
+    +'<head><meta charset="utf-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'
+    +'<x:Name>Tasks</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'
+    +'</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'
+    +'<table>'+head+body+'</table></body></html>';
+  download(repFileStem()+'.xls','application/vnd.ms-excel',html);
+  toast('Excel report — '+rows.length+' task'+(rows.length===1?'':'s'));
+}
+function exportWord(){
+  var rows=repRows();
+  if(!rows.length){toast('Nothing in that period');return}
+  var r=repRangeDates();
+  var done=rows.filter(function(k){return k.status==='done'}).length;
+  var carried=rows.filter(function(k){return(k.carried||0)>0&&k.status!=='done'}).length;
+  var imp=rows.filter(function(k){return k.important}).length;
+  /* grouped by day so it reads like a report rather than a dump */
+  var byDay={};rows.forEach(function(k){(byDay[repDateOf(k)]=byDay[repDateOf(k)]||[]).push(k)});
+  var sections=Object.keys(byDay).sort().map(function(d){
+    return'<h2 style="font-size:13pt;color:#7a5c1e;border-bottom:1px solid #ddd;padding-bottom:4px;margin:18pt 0 6pt">'
+      +esc(dayLabel(d))+'</h2>'
+      +byDay[d].map(function(k){
+        var bits=[];
+        var p=k.person?personOf(k.person):null;if(p)bits.push('Assigned to '+esc(p.label));
+        var tg=k.tag?tagOf(k.tag):null;if(tg)bits.push(esc(tg.label));
+        if(k.time)bits.push(esc(fmtTime12(k.time)));
+        if(k.pri)bits.push(PRI_LABEL[k.pri]+' priority');
+        if((k.carried||0)>0)bits.push('carried &times;'+k.carried);
+        var st={done:'Done',review:'In review',progress:'In progress'}[k.status]||'Open';
+        return'<p style="margin:0 0 9pt 0">'
+          +(k.important?'<span style="color:#c00;font-weight:bold">IMPORTANT! </span>':'')
+          +'<b>'+esc(k.title)+'</b> '
+          +'<span style="color:#666">['+st+']</span>'
+          +(bits.length?'<br><span style="font-size:9pt;color:#666">'+bits.join(' &middot; ')+'</span>':'')
+          +(k.notes?'<br><span style="font-size:9.5pt">'+esc(k.notes).replace(/\n/g,'<br>')+'</span>':'')
+          +'</p>';
+      }).join('');
+  }).join('');
+  var html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">'
+    +'<head><meta charset="utf-8"><title>'+esc(repTitle())+'</title></head>'
+    +'<body style="font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#222">'
+    +'<h1 style="font-size:19pt;margin:0 0 2pt">Daily Ops</h1>'
+    +'<p style="margin:0 0 2pt;color:#666">'+esc(repTitle().replace('Daily Ops — ',''))+'</p>'
+    +'<p style="margin:0 0 16pt;color:#888;font-size:9.5pt">Generated '+esc(new Date().toLocaleString('en-IN'))+'</p>'
+    +'<table style="border-collapse:collapse;margin-bottom:8pt"><tr>'
+    +'<td style="border:1px solid #ddd;padding:8pt 14pt"><b style="font-size:16pt">'+rows.length+'</b><br><span style="font-size:9pt;color:#666">tasks</span></td>'
+    +'<td style="border:1px solid #ddd;padding:8pt 14pt"><b style="font-size:16pt">'+done+'</b><br><span style="font-size:9pt;color:#666">completed</span></td>'
+    +'<td style="border:1px solid #ddd;padding:8pt 14pt"><b style="font-size:16pt">'+carried+'</b><br><span style="font-size:9pt;color:#666">still carried</span></td>'
+    +'<td style="border:1px solid #ddd;padding:8pt 14pt"><b style="font-size:16pt">'+imp+'</b><br><span style="font-size:9pt;color:#666">important</span></td>'
+    +'</tr></table>'
+    +sections+'</body></html>';
+  download(repFileStem()+'.doc','application/msword',html);
+  toast('Word report — '+rows.length+' task'+(rows.length===1?'':'s'));
+}
+function renderRepSum(){
+  var el=$('#repSum');if(!el)return;
+  var r=repRangeDates(),n=repRows().length;
+  el.innerHTML='<b>'+n+'</b> task'+(n===1?'':'s')+' between <b>'+esc(fmtDateShort(r.from))+'</b> and <b>'+esc(fmtDateShort(r.to))+'</b>';
+}
+function openReport(){
+  var r=repRangeDates();
+  $('#repFrom').value=r.from;$('#repTo').value=r.to;
+  /* an admin can report on anyone; everyone else only ever sees their own */
+  $('#repWho').innerHTML=isAdmin
+    ?'<option value="__all">Everyone</option><option value="__mine">Only mine (unassigned)</option>'
+      +S.people.map(function(p){return'<option value="'+p.id+'">'+esc(p.label)+'</option>'}).join('')
+    :'<option value="__all">My tasks</option>';
+  $('#repWhoFld').classList.toggle('hidden',!isAdmin);
+  renderRepSum();
+  $('#repOv').classList.add('open');
 }
 
 /* ---------- INVITES ----------
@@ -4231,6 +4436,17 @@ function bindAll(){
     if(!confirm('Remove this guest? They lose sign-in access; their board data stays until they are re-invited.'))return;
     S.guests.splice(+r.dataset.gi,1);save();syncAllowlist();renderGuestMgr()});
 
+  $('#reportBtn').addEventListener('click',openReport);
+  $('#repCancel').addEventListener('click',function(){closeOv('repOv')});
+  $('#repWord').addEventListener('click',exportWord);
+  $('#repExcel').addEventListener('click',exportExcel);
+  $('#repRange').addEventListener('change',function(){
+    $('#repCustom').style.display=this.value==='custom'?'':'none';
+    var r=repRangeDates();$('#repFrom').value=r.from;$('#repTo').value=r.to;
+    renderRepSum();
+  });
+  ['#repFrom','#repTo','#repSpace','#repWho','#repStatus'].forEach(function(sel){
+    $(sel).addEventListener('change',renderRepSum)});
   $('#pwaHelpBtn').addEventListener('click',function(){renderInstallHelp();$('#pwaOv').classList.add('open')});
   $('#pwaClose').addEventListener('click',function(){closeOv('pwaOv')});
   $('#pwaCopy').addEventListener('click',function(){
