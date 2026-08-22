@@ -391,12 +391,28 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
   .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;background:color-mix(in srgb,var(--ink) 82%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
   /* min-width:0 matters: flex items default to min-width:auto, so with the
      admin's eight tabs the last one was pushed off the edge of the screen. */
-  .bn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 1px;color:var(--dim);border-radius:12px;position:relative}
-  .bn svg{width:19px;height:19px;flex:none}
-  .bn span{font-size:9.5px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px;color:var(--dim);border-radius:12px;position:relative}
+  .bn svg{width:21px;height:21px;flex:none}
+  .bn span{font-size:10.5px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bn.on{color:var(--gold)}
   .bn .bd{position:absolute;top:2px;right:calc(50% - 15px);min-width:14px;height:14px;border-radius:99px;background:var(--gold);color:var(--on-gold);font-size:8.5px;font-weight:700;display:grid;place-items:center;padding:0 4px}
   .bn .bd.alert{background:var(--red);color:#fff}
+  /* the More sheet — full names and room to breathe, which is the whole point
+     of moving these out of a 39px-wide tab */
+  .more-list{display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
+  .more-row{display:flex;align-items:center;gap:13px;width:100%;padding:14px 12px;border-radius:14px;
+    background:transparent;border:1px solid transparent;color:var(--fg);text-align:left}
+  .more-row:active{background:var(--pane)}
+  .more-row.on{background:color-mix(in srgb,var(--gold) 12%,transparent);border-color:var(--gold);color:var(--gold)}
+  .more-row .mi{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:11px;
+    background:var(--pane);color:var(--dim)}
+  .more-row.on .mi{background:transparent;color:var(--gold)}
+  .more-row .mi svg{width:19px;height:19px}
+  .more-row .ml{flex:1;min-width:0;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .more-row .mn{flex:none;min-width:22px;height:22px;padding:0 7px;border-radius:99px;background:var(--pane);
+    color:var(--mute);font-size:11.5px;font-weight:700;display:grid;place-items:center}
+  .more-row .mn.alert{background:var(--red);color:#fff}
+  .more-row .mc{width:16px;height:16px;flex:none;color:var(--dim);opacity:.55}
   .overlay{align-items:flex-end;padding:0}
   .modal{max-width:none;border-radius:22px 22px 0 0;max-height:92dvh;padding:14px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(100%)}
   .overlay.open .modal{transform:none}
@@ -417,7 +433,10 @@ html.compact .t-title{font-size:13.5px}
 html.compact .t-wrap{margin-bottom:7px}
 html.compact .group-h{margin:14px 0 8px}
 .toasts{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(92vw,420px)}
-@media(max-width:640px){.toasts{bottom:calc(84px + env(safe-area-inset-bottom))}}
+/* the phone stacks three fixed things: nav (0–72), then the + button or the
+   bulk bar (78–132), then toasts on top of both. 84px put toasts straight
+   through the middle of the + button. */
+@media(max-width:640px){.toasts{bottom:calc(142px + env(safe-area-inset-bottom))}}
 .toast{display:flex;align-items:center;gap:10px;background:var(--ink);border:1px solid var(--line-hi);font-size:13px;padding:11px 16px;border-radius:12px;box-shadow:0 18px 44px -14px rgba(0,0,0,.7);animation:toastIn .35s var(--ease-spring)}
 .toast .undo{color:var(--gold);font-weight:600;flex:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.96)}}
@@ -498,7 +517,20 @@ html.compact .group-h{margin:14px 0 8px}
 .task.bulk-on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
 .task.bulk-on::after{content:"✓";position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:700;display:grid;place-items:center;z-index:2}
 .bulkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:70;display:flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line-hi);border-radius:14px;padding:8px 10px;box-shadow:0 20px 50px -16px rgba(0,0,0,.8);max-width:94vw;flex-wrap:wrap;justify-content:center}
-@media(max-width:640px){.bulkbar{bottom:calc(84px + env(safe-area-inset-bottom))}}
+/* the bulk bar takes the + button's slot rather than sitting on top of it —
+   nobody captures a new task in the middle of selecting existing ones.
+   Ten controls wrapped into a 276px-tall block on a 360px screen, covering a
+   third of the board you were selecting from; on a phone it's one row that
+   scrolls sideways instead, with the count pinned so you never lose it. */
+@media(max-width:640px){
+  .bulkbar{bottom:calc(80px + env(safe-area-inset-bottom));left:8px;right:8px;transform:none;
+    max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .bulkbar::-webkit-scrollbar{display:none}
+  .bulkbar .bb{flex:none}
+  .bulkbar .bb-count{position:sticky;left:0;flex:none;background:var(--ink);padding:4px 8px 4px 2px}
+}
+html.bulking .fab{display:none}
 .bulkbar .bb-count{font-size:12px;color:var(--gold);font-weight:600;padding:0 6px;white-space:nowrap}
 .bb{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:7px 11px;color:var(--mute);transition:all .15s;min-height:32px}
 .bb:hover{color:var(--text);border-color:var(--line-hi)}
@@ -1207,6 +1239,13 @@ html.personal .sp.on .n{color:#B69AD9}
 </div></div>
 
 <!-- INSTALL HELP -->
+<div class="overlay" id="moreOv"><div class="modal">
+  <div class="grab"></div>
+  <h3>More</h3>
+  <div id="moreBody" class="more-list"></div>
+  <div class="m-foot"><button class="btn ghost sm" id="moreClose">Close</button></div>
+</div></div>
+
 <div class="overlay" id="pwaOv"><div class="modal">
   <div class="grab"></div>
   <h3>Install <em>Daily Ops</em></h3>
@@ -1711,12 +1750,18 @@ async function createShared(o){
 }
 
 /* ---------- VIEWS / RENDER ---------- */
-/* [key, tab label, bottom-nav label] — eight tabs across a phone leaves ~45px
-   each, so the nav gets its own short names instead of ellipsised ones. */
+/* [key, tab label, bottom-nav label] */
 var VIEWS=[['today','Today','Today'],['board','Board','Board'],['upcoming','Upcoming','Soon'],['calendar','Calendar','Cal'],
   ['history','History','Past'],['analytics','Analytics','Stats'],['team','Team','Team'],
   ['activity','Activity','Feed'],['requests','Requests','Inbox']];
 var ADMIN_VIEWS={requests:1,activity:1,team:1};
+/* Every view used to get its own tab in the phone nav. At nine that left about
+   39px each — icons, labels and badges all fighting for the same strip. Only
+   these four stay in the bar; the rest live in a sheet behind More, which
+   borrows the name and icon of whichever one you're in so the bar still tells
+   you where you are. */
+var NAV_PRIMARY=['today','board','upcoming','calendar'];
+var MOREICON='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
 var NAVICONS={
   today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
   board:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="5.5" height="16" rx="1.6"/><rect x="9.5" y="4" width="5.5" height="11" rx="1.6"/><rect x="16" y="4" width="5" height="14" rx="1.6"/></svg>',
@@ -1808,9 +1853,48 @@ function renderTabs(){
     return'<button class="tab '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]
       +(v[0]==='requests'?(c.requests?'<span class="alert"></span>':'')
         :((v[0]==='analytics'||v[0]==='activity'||v[0]==='calendar')?'':'<span class="n">'+(c[v[0]]||0)+'</span>'))+'</button>'}).join('');
-  $('#bnav').innerHTML=tabs.map(function(v){
-    return'<button class="bn '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+NAVICONS[v[0]]+'<span>'+(v[2]||v[1])+'</span>'
-      +((v[0]!=='analytics'&&c[v[0]])?'<span class="bd '+(v[0]==='requests'?'alert':'')+'">'+(c[v[0]]>99?'99':c[v[0]])+'</span>':'')+'</button>'}).join('');
+  var prim=tabs.filter(function(v){return NAV_PRIMARY.indexOf(v[0])>=0});
+  var rest=tabs.filter(function(v){return NAV_PRIMARY.indexOf(v[0])<0});
+  /* History's badge is every task ever finished — a number that only grows and
+     never asks anything of you. It belongs in the sheet, not the bar. */
+  function bnBadge(id){
+    var n=c[id]||0;
+    if(!n||id==='analytics'||id==='history')return'';
+    return'<span class="bd '+(id==='requests'?'alert':'')+'">'+(n>99?'99':n)+'</span>';
+  }
+  var h=prim.map(function(v){
+    return'<button class="bn '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+NAVICONS[v[0]]
+      +'<span>'+esc(v[2]||v[1])+'</span>'+bnBadge(v[0])+'</button>'}).join('');
+  if(rest.length){
+    var here=rest.filter(function(v){return v[0]===view})[0];
+    /* Requests is the only thing back there that needs answering, so its count
+       surfaces on More rather than staying hidden until you look. */
+    var pend=rest.filter(function(v){return v[0]==='requests'}).length?(c.requests||0):0;
+    h+='<button class="bn '+(here?'on':'')+'" data-more="1">'
+      +(here?NAVICONS[here[0]]:MOREICON)
+      +'<span>'+esc(here?(here[2]||here[1]):'More')+'</span>'
+      +(pend?'<span class="bd alert">'+(pend>99?'99':pend)+'</span>':'')+'</button>';
+  }
+  $('#bnav').innerHTML=h;
+  if($('#moreOv').classList.contains('open'))renderMore();
+}
+function renderMore(){
+  var c=counts();
+  var rest=VIEWS.filter(function(v){
+    return((isAdmin&&!isPersonal())||!ADMIN_VIEWS[v[0]])&&NAV_PRIMARY.indexOf(v[0])<0});
+  $('#moreBody').innerHTML=rest.map(function(v){
+    var n=v[0]==='analytics'?0:(c[v[0]]||0);
+    return'<button class="more-row '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'
+      +'<span class="mi">'+NAVICONS[v[0]]+'</span>'
+      +'<span class="ml">'+esc(v[1])+'</span>'
+      +(n?'<span class="mn '+(v[0]==='requests'?'alert':'')+'">'+(n>999?'999+':n)+'</span>':'')
+      +'<svg class="mc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'
+      +'</button>'}).join('');
+}
+function openMore(){renderMore();$('#moreOv').classList.add('open')}
+function goView(v){
+  closePeerBoard(true);view=v;selDate=null;render();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function renderFilters(){
   var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team'&&view!=='board';
@@ -4242,6 +4326,7 @@ function renderBulkUI(){
   var n=Object.keys(bulkSel).length;
   if(bulkMode&&!n){exitBulk();return}
   $('#bulkBar').classList.toggle('hidden',!bulkMode);
+  document.documentElement.classList.toggle('bulking',bulkMode);
   $('#bbCount').textContent=n+' selected';
   $('#bbAssign').style.display=(isAdmin&&!isPersonal())?'':'none';
   var vis=visibleIds();
@@ -4250,6 +4335,7 @@ function renderBulkUI(){
 }
 function exitBulk(){
   bulkMode=false;bulkSel={};bulkAnchor=null;
+  document.documentElement.classList.remove('bulking');
   $('#bulkBar').classList.add('hidden');$('#bulkTray').classList.add('hidden');
   $$('#ledger .task.bulk-on').forEach(function(el){el.classList.remove('bulk-on')});
 }
@@ -4539,7 +4625,10 @@ function bindAll(){
   $('#tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;
     closePeerBoard(true);view=b.dataset.view;selDate=null;render()});
   $('#bnav').addEventListener('click',function(e){var b=e.target.closest('.bn');if(!b)return;
-    closePeerBoard(true);view=b.dataset.view;selDate=null;render();window.scrollTo({top:0,behavior:'smooth'})});
+    if(b.dataset.more)openMore();else goView(b.dataset.view)});
+  $('#moreBody').addEventListener('click',function(e){var b=e.target.closest('.more-row');if(!b)return;
+    closeOv('moreOv');goView(b.dataset.view)});
+  $('#moreClose').addEventListener('click',function(){closeOv('moreOv')});
   $('#filters').addEventListener('click',function(e){var b=e.target.closest('.f-chip');if(!b)return;activeTag=b.dataset.tag;render()});
   $('#week').addEventListener('click',function(e){var b=e.target.closest('.wd');if(!b)return;
     selDate=b.dataset.day===todayStr()?null:b.dataset.day;renderWeek();renderLedger()});
