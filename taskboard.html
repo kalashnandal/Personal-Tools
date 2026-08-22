@@ -686,6 +686,19 @@ html.compact .group-h{margin:14px 0 8px}
 .rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
 
+/* ============ v4.8 — pins and archived groups ============ */
+.group-h.pin{color:var(--gold)}
+.ta-btn.pin{font-size:12px}
+.ta-btn.pin:hover{color:var(--gold);background:var(--gold-soft)}
+.ta-btn.pin.on{opacity:1;color:var(--gold);background:var(--gold-soft)}
+@media(hover:none){.t-acts .ta-btn.pin{display:grid}}
+.m-chip.pinned{color:var(--gold);border-color:var(--gold);background:var(--gold-soft);font-weight:600}
+.mgr-row.arc{opacity:.62}
+.mgr-row.arc input{background:none;border-color:transparent}
+.arc-h{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);
+  margin:16px 0 8px;padding-top:12px;border-top:1px dashed var(--line)}
+.arc-note{font-size:11.5px;color:var(--dim);line-height:1.55;margin-top:8px}
+
 /* ============ v4.7 — reminders ============ */
 .rem-row{display:flex;align-items:flex-start;gap:11px;margin-top:12px;cursor:pointer;position:relative}
 .rem-row input{width:19px;height:19px;flex:none;margin-top:1px;accent-color:var(--gold)}
@@ -1198,6 +1211,7 @@ var firebaseConfig={
 };
 var ADMIN_EMAIL='kalashnandal@gmail.com';
 var VIEW_DONE_DAYS=14;   /* how much finished work the view link keeps */
+var PIN_MAX=3;           /* a pin board only works while it stays short */
 var ACCESS_PHRASE='soul';            /* <<< CHANGE THIS */
 
 /* ---------- STORAGE ---------- */
@@ -1319,15 +1333,24 @@ function personOf(id){
    place every view reads from, so filtering here does the whole job. */
 function curSpace(){return S.prefs.space==='personal'?'personal':'work'}
 function spaceOf(k){return k&&k.space==='personal'?'personal':'work'}
+function archivedGroups(){
+  var m={};S.groups.forEach(function(g){if(g.archived)m[g.id]=1});return m;
+}
+/* a task inside an archived group is put away with it — hidden from every
+   view, every count and every reminder, but never destroyed */
+function isArchived(k){return !!(k&&k.group&&archivedGroups()[k.group])}
 function allTasks(){
-  var sp=curSpace();
-  var mine=S.tasks.filter(function(k){return spaceOf(k)===sp});
+  var sp=curSpace(),arc=archivedGroups();
+  var mine=S.tasks.filter(function(k){return spaceOf(k)===sp&&!(k.group&&arc[k.group])});
   /* delegated tasks are work by definition — they came from or go to someone else */
   return sp==='personal'?mine:mine.concat(shared);
 }
 /* Explicitly work-only, for things that must ignore whichever space you're
    looking at right now — publishing the view link, above all. */
-function workTasks(){return S.tasks.filter(function(k){return spaceOf(k)==='work'}).concat(shared)}
+function workTasks(){
+  var arc=archivedGroups();
+  return S.tasks.filter(function(k){return spaceOf(k)==='work'&&!(k.group&&arc[k.group])}).concat(shared);
+}
 function isPersonal(){return curSpace()==='personal'}
 function groupOf(id){return((peerCtx?peerCtx.groups:S.groups)||[]).find(function(g){return g.id===id})}
 
@@ -1811,6 +1834,7 @@ function taskCard(k,o){
   if(stalled)meta.push('<span class="m-chip stall">⚠ '+esc((pp&&pp.label)||k.person)+' — no response, carried ×'+k.carried+'</span>');
   else if(k.carried>0)meta.push('<span class="m-chip carried">↻ carried ×'+k.carried+'</span>');
   if(k.recurId)meta.push('<span class="m-chip">↻ repeats</span>');
+  if(k.pinned&&k.status!=='done')meta.push('<span class="m-chip pinned">📌 Pinned</span>');
   if(o.showGroup&&k.group){var gg=groupOf(k.group);
     if(gg)meta.push('<span class="m-chip grp" style="'+grpVars(gg)+'"><span class="dot"></span>'+esc(gg.label||'Group')+'</span>')}
   var done=k.status==='done',rev=k.status==='review';
@@ -1825,6 +1849,8 @@ function taskCard(k,o){
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
   else if(!done&&!rev){acts.push('<button class="ta-btn always" data-act="startprog" title="Mark in progress">◐</button>');
     acts.push('<button class="ta-btn" data-act="tmrw" title="Push to tomorrow">→</button>')}
+  if(!done)acts.push('<button class="ta-btn pin'+(k.pinned?' on':'')+'" data-act="pin" title="'
+    +(k.pinned?'Unpin from Today':'Pin to the top of Today')+'">📌</button>');
   acts.push('<button class="ta-btn imp'+(k.important?' on':'')+'" data-act="important" title="'
     +(k.important?'Remove the important flag':'Flag as important')+'">!</button>');
   acts.push('<button class="ta-btn sel" data-act="select" title="Select (⌘/Ctrl+click)">◻</button>');
@@ -1870,6 +1896,7 @@ function groupWrap(g,mem,o){
       +'<span class="gact">'
         +'<button class="ta-btn sel" data-gact="select" title="Select every task in this group">◻</button>'
         +'<button class="ta-btn" data-gact="edit" title="Rename or recolour">✎</button>'
+        +'<button class="ta-btn" data-gact="archive" title="Archive the group and its tasks">🗄</button>'
         +'<button class="ta-btn del" data-gact="ungroup" title="Ungroup — the tasks stay">⤫</button>'
       +'</span>'
     +'</header>'
@@ -1905,6 +1932,30 @@ function groupAction(a,gid){
     if(!bulkMode){bulkMode=true;bulkSel={}}
     ids.forEach(function(id){bulkSel[id]=1});
     renderBulkUI();return;
+  }
+  if(a==='archive'){
+    var n=S.tasks.filter(function(k){return k.group===gid}).length;
+    if(!confirm('Archive “'+(g.label||'group')+'” and its '+n+' task'+(n===1?'':'s')+'?\n\nThey disappear from the board and every count. You can restore the whole group from Settings → Groups.'))return;
+    g.archived=Date.now();g.collapsed=false;
+    exitBulk();save();render();
+    toast('Archived “'+(g.label||'group')+'” · '+n+' task'+(n===1?'':'s'),function(){
+      g.archived=null;delete g.archived;save();render()});
+    if($('#setOv').classList.contains('open'))renderGroupMgr();
+    return;
+  }
+  if(a==='restore'){
+    delete g.archived;save();render();toast('Restored “'+(g.label||'group')+'”');
+    if($('#setOv').classList.contains('open'))renderGroupMgr();
+    return;
+  }
+  if(a==='purge'){
+    var m=S.tasks.filter(function(k){return k.group===gid}).length;
+    if(!confirm('Delete “'+(g.label||'group')+'” and its '+m+' task'+(m===1?'':'s')+' for good?\n\nThis cannot be undone.'))return;
+    S.tasks=S.tasks.filter(function(k){return k.group!==gid});
+    S.groups=S.groups.filter(function(x){return x.id!==gid});
+    save();render();toast('Deleted '+m+' task'+(m===1?'':'s'));
+    if($('#setOv').classList.contains('open'))renderGroupMgr();
+    return;
   }
   if(a==='ungroup'){
     var n=0;S.tasks.forEach(function(k){if(k.group===gid){delete k.group;n++}});
@@ -2163,11 +2214,19 @@ function renderLedger(){
   }
   if(view==='today'){
     var day=selDate||t;
-    var list=A.filter(function(k){return k.date===day&&matches(k)});
+    /* Pinned rides above everything, whatever its date — that's the point of
+       pinning. Only on today, so browsing another day stays a true record. */
+    var pinIds={},pins=[];
+    if(day===t){
+      pins=A.filter(function(k){return k.pinned&&k.status!=='done'&&matches(k)}).sort(sortPri);
+      pins.forEach(function(k){pinIds[k.id]=1});
+    }
+    var list=A.filter(function(k){return k.date===day&&matches(k)&&!pinIds[k.id]});
     var timed=list.filter(function(k){return k.time}).sort(function(a,b){return a.time<b.time?-1:1});
     var uo=list.filter(function(k){return!k.time&&k.status!=='done'}).sort(sortPri);
     var ud=list.filter(function(k){return!k.time&&k.status==='done'}).sort(function(a,b){return(a.doneAt||0)-(b.doneAt||0)});
     if(day!==t)html+='<div class="group-h gold">'+esc(dayLabel(day))+(day<t?' · history':'')+'</div>';
+    if(pins.length)html+='<div class="group-h pin">📌 Pinned</div>'+cards(pins,{showDate:true,flat:true});
     if(timed.length){
       if(day===t){
         var nt=pad(new Date().getHours())+':'+pad(new Date().getMinutes());
@@ -2176,7 +2235,7 @@ function renderLedger(){
     }
     if(uo.length)html+='<div class="group-h">'+(day<t?'Unfinished':'Anytime')+'</div>'+cards(uo);
     if(ud.length)html+='<div class="group-h">Completed</div>'+cards(ud);
-    if(!list.length)html+=emptyState(day<t?'Nothing logged that day.':(day===t?'Clear runway.':'Nothing scheduled.'),
+    if(!list.length&&!pins.length)html+=emptyState(day<t?'Nothing logged that day.':(day===t?'Clear runway.':'Nothing scheduled.'),
       'Scroll the strip to review any past day. <code>swipe →</code> completes · <code>swipe ←</code> pushes a day.');
   }
   if(view==='upcoming'){
@@ -2398,6 +2457,16 @@ async function doAction(a,k,card){
     else{k.status='open';delete k.doneAt;save();render();toast('Back to open')}
     logAct('revert',k.title);return;
   }
+  if(a==='pin'){
+    if(isShared){toast('Only your own tasks can be pinned');return}
+    if(!k.pinned){
+      var n=S.tasks.filter(function(x){return x.pinned&&x.status!=='done'}).length;
+      if(n>=PIN_MAX){toast('Pin board is full — '+PIN_MAX+' at a time keeps it meaningful');return}
+      k.pinned=true;
+    }else delete k.pinned;
+    save();render();toast(k.pinned?'Pinned to Today':'Unpinned');
+    return;
+  }
   if(a==='important'){
     var nowImp=!k.important;
     if(isShared){
@@ -2450,7 +2519,8 @@ async function doAction(a,k,card){
       return;
     }
     if(k.status!=='done'){
-      k.status='done';k.doneAt=Date.now();bumpDoneDate(todayStr(),1);save();ding();logAct('done',k.title);
+      k.status='done';k.doneAt=Date.now();delete k.pinned;   /* done releases the pin */
+      bumpDoneDate(todayStr(),1);save();ding();logAct('done',k.title);
       card.querySelector('.chk').classList.add('checked');card.classList.add('done-card');card.style.transform='';
       renderMast();renderTabs();setTimeout(function(){render()},450);
     }else{
@@ -3328,16 +3398,30 @@ function renderPersonMgr(){
       +'<button class="sx" data-del="1" title="Remove">✕</button></div>'}).join('');
 }
 function renderGroupMgr(){
-  $('#groupMgr').innerHTML=S.groups.length?S.groups.map(function(g){
+  function row(g,arc){
     var n=S.tasks.filter(function(k){return k.group===g.id}).length;
     var open=S.tasks.filter(function(k){return k.group===g.id&&k.status!=='done'}).length;
-    return'<div class="mgr-row" data-gmid="'+g.id+'">'
+    return'<div class="mgr-row'+(arc?' arc':'')+'" data-gmid="'+g.id+'">'
       +'<span class="tdot" style="background:'+(g.color||GROUPCOLORS[0])+'"></span>'
-      +'<input value="'+esc(g.label||'')+'" placeholder="Group name">'
-      +'<span class="cnt">'+open+'/'+n+'</span>'
-      +'<button class="sx" data-gm="edit" title="Colour">🎨</button>'
-      +'<button class="sx" data-gm="del" title="Ungroup &amp; delete">✕</button></div>'}).join('')
-    :'<p style="margin:0;font-size:12.5px;color:var(--dim)">No groups yet.</p>';
+      +'<input value="'+esc(g.label||'')+'" placeholder="Group name"'+(arc?' disabled':'')+'>'
+      +'<span class="cnt">'+(arc?n+' task'+(n===1?'':'s'):open+'/'+n)+'</span>'
+      +(arc
+        ?'<button class="sx" data-gm="restore" title="Bring it back">↩</button>'
+         +'<button class="sx" data-gm="purge" title="Delete the group and its tasks for good">✕</button>'
+        :'<button class="sx" data-gm="edit" title="Colour">🎨</button>'
+         +'<button class="sx" data-gm="arc" title="Archive the group and its tasks">🗄</button>'
+         +'<button class="sx" data-gm="del" title="Ungroup — the tasks stay">✕</button>')
+      +'</div>';
+  }
+  var live=S.groups.filter(function(g){return !g.archived});
+  var arc=S.groups.filter(function(g){return g.archived})
+    .sort(function(a,b){return(b.archived||0)-(a.archived||0)});
+  $('#groupMgr').innerHTML=(live.length?live.map(function(g){return row(g,false)}).join('')
+      :'<p style="margin:0 0 6px;font-size:12.5px;color:var(--dim)">No groups yet.</p>')
+    +(arc.length?'<div class="arc-h">Archived · '+arc.length+'</div>'
+        +arc.map(function(g){return row(g,true)}).join('')
+        +'<p class="arc-note">Archived groups and their tasks are hidden from the board and every count. Restore brings the whole group back exactly as it was.</p>'
+      :'');
 }
 function renderRecurMgr(){
   $('#recurMgr').innerHTML=S.recurring.length?S.recurring.map(function(r){
@@ -3744,7 +3828,7 @@ function checkReminders(){
   /* personal only — work has its own rhythm and doesn't need to buzz your phone.
      Still independent of which board is on screen. */
   var due=S.tasks.filter(function(k){
-    return spaceOf(k)==='personal'
+    return spaceOf(k)==='personal'&&!isArchived(k)
       &&k.time&&k.date===t&&k.status!=='done'&&k.status!=='review'
       &&k.time<=hhmm&&!seen[k.id];
   }).sort(function(a,b){return a.time<b.time?-1:1});
@@ -3957,7 +4041,7 @@ function renderBulkTray(){
 }
 function renderGroupTray(){
   var el=$('#bulkTray');
-  el.innerHTML=S.groups.map(function(g){
+  el.innerHTML=S.groups.filter(function(g){return !g.archived}).map(function(g){
     return'<button class="tr-chip" data-bg="'+g.id+'"><span class="dot" style="background:'+(g.color||GROUPCOLORS[0])+'"></span>'+esc(g.label||'Group')+'</button>'}).join('')
     +'<button class="tr-chip" data-bg="__new">＋ New group…</button>'
     +'<button class="tr-chip clear" data-bg="">Remove from group</button>';
@@ -3997,7 +4081,8 @@ function openBulkEdit(){
   $('#beTag').innerHTML='<option value="">Keep as-is</option><option value="__none">No tag</option>'
     +S.tags.map(function(x){return'<option value="'+x.id+'">'+esc(x.label)+'</option>'}).join('');
   $('#beGroup').innerHTML='<option value="">Keep as-is</option><option value="__none">No group</option>'
-    +S.groups.map(function(g){return'<option value="'+g.id+'">'+esc(g.label||'Group')+'</option>'}).join('');
+    +S.groups.filter(function(g){return !g.archived})
+      .map(function(g){return'<option value="'+g.id+'">'+esc(g.label||'Group')+'</option>'}).join('');
   $('#bePerson').innerHTML='<option value="">Keep as-is</option><option value="__none">Just me</option>'
     +S.people.map(function(p){return'<option value="'+p.id+'">'+esc(p.label)+(p.email?' ✓':'')+'</option>'}).join('');
   $('#beWhoFld').classList.toggle('hidden',!isAdmin||isPersonal());
@@ -4277,7 +4362,11 @@ function bindAll(){
   $('#groupMgr').addEventListener('click',function(e){
     var r=e.target.closest('.mgr-row');if(!r)return;
     var b=e.target.closest('[data-gm]');if(!b)return;
-    if(b.dataset.gm==='edit'){openGroupEditor(groupOf(r.dataset.gmid));return}
+    var act=b.dataset.gm;
+    if(act==='edit'){openGroupEditor(groupOf(r.dataset.gmid));return}
+    if(act==='arc'){groupAction('archive',r.dataset.gmid);return}
+    if(act==='restore'){groupAction('restore',r.dataset.gmid);return}
+    if(act==='purge'){groupAction('purge',r.dataset.gmid);return}
     var g=groupOf(r.dataset.gmid);if(!g)return;
     if(!confirm('Delete the group “'+(g.label||'')+'”? The tasks stay — they just lose the group.'))return;
     groupAction('ungroup',g.id);renderGroupMgr();
