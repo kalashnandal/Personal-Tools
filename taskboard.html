@@ -29,7 +29,10 @@
   --ink:#07080B;--pane:rgba(255,255,255,.032);--pane-hi:rgba(255,255,255,.055);
   --line:rgba(233,222,196,.09);--line-hi:rgba(233,222,196,.18);
   --gold:#E2C27A;--gold-deep:#A47F35;--gold-soft:rgba(226,194,122,.14);--on-gold:#07080B;
-  --text:#EDEBE4;--mute:#8E8C86;--dim:#5C5B57;
+  /* --dim was #5C5B57 — 2.9:1 on this ink, below the 4.5 AA floor. applyTheme
+     recomputes it per theme; this is the same value for the default one, so
+     nothing renders weak in the moment before the script runs. */
+  --text:#EDEBE4;--mute:#8E8C86;--dim:#81817E;
   --red:#C97B6E;--amber:#D9A05B;--ok:#8FBF9B;--blue:#7FA3C9;
   --radius:14px;--ease-spring:cubic-bezier(.34,1.4,.5,1);
   --font-ui:'Inter',system-ui,-apple-system,sans-serif;
@@ -354,7 +357,11 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .sw:hover{transform:scale(1.1)}
 .sw.on{border-color:var(--text)}
 .sw.on::after{content:"";position:absolute;inset:3px;border-radius:50%;border:2px solid var(--ink)}
-.sw.custom{background:conic-gradient(#e66,#ea3,#8c6,#6ac,#a7d,#e66);display:grid;place-items:center;font-size:14px;color:#fff;overflow:hidden}
+/* white on the pastel wheel is about 2.8:1 wherever the glyph lands, and the
+   wheel is the whole point of the control — so the glyph carries its own
+   shadow rather than the swatch losing its colours */
+.sw.custom{background:conic-gradient(#e66,#ea3,#8c6,#6ac,#a7d,#e66);display:grid;place-items:center;font-size:14px;color:#fff;overflow:hidden;
+  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 3px rgba(0,0,0,.8);font-weight:700}
 .sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{padding:8px 14px;font-size:12.5px;font-weight:500;color:var(--mute);transition:all .15s}
@@ -1347,6 +1354,34 @@ function hexRGB(h){var n=h.replace('#','');return[parseInt(n.slice(0,2),16),pars
 function rgba(h,a){var c=hexRGB(h);return'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'}
 function shade(h,p){var c=hexRGB(h);function f(x){return Math.round(Math.min(255,Math.max(0,p<0?x*(1+p):x+(255-x)*p)))}
   return'#'+[f(c[0]),f(c[1]),f(c[2])].map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
+/* ---------- LEGIBILITY ----------
+   Every text colour used to be a fixed hex per theme, which meant each one was
+   really only checked against the theme it was designed for. The accent is the
+   clearest case: a pale gold chosen to glow on near-black sits at about 1.6:1
+   on the two light themes, so a popup title's italic word, the arrow in the
+   command bar and the invite URL were all but invisible there. Rather than
+   hand-tune five themes by six accents, each text colour is now pulled toward
+   the far end of the scale until it actually reads on the page it lands on. */
+function relLum(c){
+  function f(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}
+  return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]);
+}
+function contrastOn(a,b){var x=relLum(a),y=relLum(b);
+  return(Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)}
+function rgbHex(c){return'#'+c.map(function(v){
+  return Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')}).join('')}
+/* Keeps the hue, changes only the distance from the background. */
+function legible(hex,inkHex,target){
+  var c=hexRGB(hex),ink=hexRGB(inkHex);
+  if(contrastOn(c,ink)>=target)return hex;
+  var lighten=relLum(ink)<0.35;
+  for(var i=1;i<=48;i++){
+    var t=i/48;
+    var m=[0,1,2].map(function(k){return lighten?c[k]+(255-c[k])*t:c[k]*(1-t)});
+    if(contrastOn(m,ink)>=target)return rgbHex(m);
+  }
+  return lighten?'#FFFFFF':'#000000';
+}
 function initials(n){return String(n).trim().split(/\s+/).map(function(w){return w[0]}).slice(0,2).join('').toUpperCase()}
 function ago(ms){var s=(Date.now()-ms)/1000;if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
 
@@ -1513,14 +1548,39 @@ async function initFirebase(){
 /* ---------- THEME ---------- */
 function applyTheme(){
   var p=S.prefs,R=document.documentElement.style;
-  var acc=(p.accent==='custom'&&p.custom)?[p.custom,shade(p.custom,-0.34)]:(ACCENTS[p.accent]||ACCENTS.gold);
-  R.setProperty('--gold',acc[0]);R.setProperty('--gold-deep',acc[1]);R.setProperty('--gold-soft',rgba(acc[0],0.14));
-  var c=hexRGB(acc[0]);
-  R.setProperty('--on-gold',((0.299*c[0]+0.587*c[1]+0.114*c[2])/255>0.55)?'#07080B':'#FFFFFF');
+  /* the background has to be resolved first — every text colour below is
+     measured against it rather than assumed to work */
   var bg=BGS[p.bg]||BGS.midnight;
+  /* 5.0 rather than the bare 4.5: most of this text sits on --pane, a
+     translucent tile a little lighter or darker than the page, which eats
+     some of the margin before it reaches the reader */
+  var T=5.0;
+  var acc=(p.accent==='custom'&&p.custom)?[p.custom,shade(p.custom,-0.34)]:(ACCENTS[p.accent]||ACCENTS.gold);
+  /* the accent needs a touch more headroom than the greys: it is the colour
+     most often painted on its own soft tint (chips, command rows, pills) */
+  var accent=legible(acc[0],bg.ink,5.5);
+  /* the gradient's far end follows the adjusted accent, not the original */
+  var deep=(accent===acc[0])?acc[1]:shade(accent,relLum(hexRGB(bg.ink))<0.35?-0.34:-0.22);
+  R.setProperty('--gold',accent);R.setProperty('--gold-deep',deep);
+  R.setProperty('--gold-soft',rgba(accent,0.14));
+  var c=hexRGB(accent);
+  R.setProperty('--on-gold',((0.299*c[0]+0.587*c[1]+0.114*c[2])/255>0.55)?'#07080B':'#FFFFFF');
   R.setProperty('--ink',bg.ink);R.setProperty('--line',bg.line);R.setProperty('--line-hi',bg.lineHi);
   R.setProperty('--pane',bg.pane);R.setProperty('--pane-hi',bg.paneHi);
-  R.setProperty('--text',bg.text);R.setProperty('--mute',bg.mute);R.setProperty('--dim',bg.dim);
+  R.setProperty('--text',bg.text);
+  /* --dim carries placeholders, hints and footnotes — the text most likely to
+     be squinted at, and it was the weakest in every one of the five themes */
+  R.setProperty('--mute',legible(bg.mute,bg.ink,T));
+  R.setProperty('--dim',legible(bg.dim,bg.ink,T));
+  /* the semantic colours were fixed hexes tuned for a dark page, so Delete,
+     Revoke and Wipe data all faded out on the two light themes */
+  R.setProperty('--red',legible('#C97B6E',bg.ink,T));
+  R.setProperty('--amber',legible('#D9A05B',bg.ink,T));
+  R.setProperty('--ok',legible('#8FBF9B',bg.ink,T));
+  R.setProperty('--blue',legible('#7FA3C9',bg.ink,T));
+  /* the IMPORTANT flag stays loud — it is only pulled far enough to be read,
+     and it is usually sitting on its own red tint, hence the extra headroom */
+  R.setProperty('--imp',legible('#FF3B30',bg.ink,5.2));
   R.setProperty('color-scheme',bg.scheme);
   document.documentElement.classList.toggle('compact',p.density==='compact');
   var mt=$('#metaTheme');if(mt)mt.content=bg.ink;
@@ -5226,6 +5286,9 @@ window.addEventListener('beforeinstallprompt',function(e){
 window.addEventListener('appinstalled',function(){deferredPrompt=null;toast('Daily Ops installed')});
 
 (function boot(){
+  /* the sign-in gate paints before either bootApp or bootViewer runs, so
+     without this it was the one screen still using the raw defaults */
+  applyTheme();
   var vk=new URLSearchParams(location.search).get('view');
 
   /* ---- PUBLIC VIEWER ---- */
