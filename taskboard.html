@@ -686,6 +686,49 @@ html.compact .group-h{margin:14px 0 8px}
 .rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
 
+/* ============ v4.9 — Kanban board ============ */
+.kb-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 6px}
+.kb-lb{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.kb-seg{display:flex;gap:5px;flex-wrap:wrap}
+.kb-by{font-size:12px;font-weight:600;color:var(--mute);border:1px solid var(--line);border-radius:9px;padding:6px 11px;min-height:32px}
+.kb-by:hover{border-color:var(--line-hi);color:var(--text)}
+.kb-by.on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
+.kb-hint{font-size:11.5px;color:var(--dim);margin-bottom:10px}
+.kb-wrap{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin;
+  scroll-snap-type:x proximity;align-items:flex-start}
+.kb-wrap::-webkit-scrollbar{height:8px}
+.kb-wrap::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:99px}
+.kb-col{flex:0 0 clamp(230px,78vw,290px);scroll-snap-align:start;border:1px solid var(--line);
+  border-radius:14px;background:var(--pane);padding:10px;min-height:120px;transition:border-color .15s,background .15s}
+.kb-col.over{border-color:var(--gold);background:var(--gold-soft)}
+.kb-h{display:flex;align-items:center;gap:8px;padding:2px 4px 10px}
+.kb-h .kb-n{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kb-col[style*="--kc"] .kb-h .kb-n{color:var(--kc)}
+.kb-h .kb-c{margin-left:auto;font-size:11px;font-weight:700;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
+.kb-list{display:flex;flex-direction:column;gap:8px;min-height:60px}
+.kb-card{position:relative;border:1px solid var(--line);border-radius:11px;background:var(--ink);padding:11px 12px;
+  cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:border-color .15s,transform .15s}
+.kb-card:hover{border-color:var(--line-hi)}
+.kb-card.kb-lifting{opacity:.34}
+.kb-card.done{opacity:.55}
+.kb-card.done .kb-t{text-decoration:line-through;color:var(--mute)}
+.kb-card.imp{border-color:rgba(255,59,48,.5);background:var(--imp-soft)}
+.kb-card.pin .kb-t::before{content:"📌 ";font-size:11px}
+.kb-imp{font-size:9.5px;font-weight:800;letter-spacing:.09em;color:var(--imp);margin-bottom:4px}
+.kb-t{font-size:13.5px;font-weight:500;line-height:1.4;word-break:break-word}
+.kb-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.kb-m{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--dim);
+  border:1px solid var(--line);border-radius:5px;padding:2px 6px}
+.kb-m i{width:5px;height:5px;border-radius:50%;display:inline-block}
+.kb-m.late{color:var(--red);border-color:rgba(201,123,110,.4)}
+.kb-m.warn{color:var(--amber);border-color:rgba(217,160,91,.35)}
+.kb-empty{font-size:11.5px;color:var(--dim);text-align:center;padding:18px 8px;
+  border:1px dashed var(--line);border-radius:10px}
+.kb-ghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;opacity:.95;
+  box-shadow:0 18px 40px -12px rgba(0,0,0,.8);transform:translate(-9999px,-9999px);cursor:grabbing}
+@media(min-width:900px){.kb-col{flex:1 1 0;min-width:0}}
+
 /* ============ v4.8 — pins and archived groups ============ */
 .group-h.pin{color:var(--gold)}
 .ta-btn.pin{font-size:12px}
@@ -1281,7 +1324,7 @@ function migrate(){
   S.people.forEach(function(p){if(p.email==null)p.email='';if(!p.label&&p.name)p.label=p.name});
   var map={'var(--t-summit)':'#E2C27A','var(--t-imark)':'#7FA3C9','var(--t-portfolio)':'#A88FC9','var(--t-personal)':'#8FBF9B'};
   S.tags.forEach(function(t){if(map[t.color])t.color=map[t.color];if(!/^#/.test(t.color||''))t.color='#9AA3B2'});
-  S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy',space:'work',remind:true},S.prefs||{});
+  S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy',space:'work',remind:true,kanbanBy:'status'},S.prefs||{});
   if(S.prefs.space!=='personal')S.prefs.space='work';
   var t=todayStr();
   var gids={};S.groups.forEach(function(g){gids[g.id]=1});
@@ -1670,12 +1713,13 @@ async function createShared(o){
 /* ---------- VIEWS / RENDER ---------- */
 /* [key, tab label, bottom-nav label] — eight tabs across a phone leaves ~45px
    each, so the nav gets its own short names instead of ellipsised ones. */
-var VIEWS=[['today','Today','Today'],['upcoming','Upcoming','Soon'],['calendar','Calendar','Cal'],
+var VIEWS=[['today','Today','Today'],['board','Board','Board'],['upcoming','Upcoming','Soon'],['calendar','Calendar','Cal'],
   ['history','History','Past'],['analytics','Analytics','Stats'],['team','Team','Team'],
   ['activity','Activity','Feed'],['requests','Requests','Inbox']];
 var ADMIN_VIEWS={requests:1,activity:1,team:1};
 var NAVICONS={
   today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
+  board:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="5.5" height="16" rx="1.6"/><rect x="9.5" y="4" width="5.5" height="11" rx="1.6"/><rect x="16" y="4" width="5" height="14" rx="1.6"/></svg>',
   upcoming:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
   history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 7v5l3 2"/><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.5 8.5 0 005 7"/><path d="M3.5 4v3.5H7"/></svg>',
   analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
@@ -1689,7 +1733,7 @@ function counts(){
   return{today:A.filter(function(k){return k.status!=='done'&&k.date===t}).length,
     upcoming:A.filter(function(k){return k.status!=='done'&&k.date&&k.date>t}).length,
     history:A.filter(function(k){return k.status==='done'}).length,
-    analytics:0,activity:0,calendar:0,
+    analytics:0,activity:0,calendar:0,board:0,
     team:isAdmin?teamRoster().length:0,
     requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
@@ -1769,7 +1813,7 @@ function renderTabs(){
       +((v[0]!=='analytics'&&c[v[0]])?'<span class="bd '+(v[0]==='requests'?'alert':'')+'">'+(c[v[0]]>99?'99':c[v[0]])+'</span>':'')+'</button>'}).join('');
 }
 function renderFilters(){
-  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team';
+  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team'&&view!=='board';
   $('#filters').style.display=show?'flex':'none';
   if(!show)return;
   /* only tags this board actually uses — Summit and iMark are noise on the
@@ -1999,6 +2043,217 @@ function saveGroupEditor(){
   if($('#setOv').classList.contains('open'))renderGroupMgr();
 }
 
+/* ---------- KANBAN ----------
+   Columns are just a grouping key, so the same board reads four ways: by
+   status (the classic), by person (who is carrying what), by group, or by
+   tag. Dragging writes the same field the column represents.               */
+var KB_DONE_DAYS=7;      /* Done would grow forever otherwise */
+function kanbanBy(){
+  var b=S.prefs.kanbanBy;
+  return(b==='person'||b==='group'||b==='tag')?b:'status';
+}
+function kanbanCols(){
+  var by=kanbanBy();
+  if(by==='status')return[{k:'open',label:'Open'},{k:'progress',label:'In progress'},
+    {k:'review',label:'In review'},{k:'done',label:'Done'}];
+  if(by==='person'){
+    var c=[{k:'',label:'Unassigned'}];
+    S.people.forEach(function(p){c.push({k:p.id,label:p.label})});
+    return c;
+  }
+  if(by==='group'){
+    var g=[{k:'',label:'No group'}];
+    S.groups.filter(function(x){return !x.archived})
+      .forEach(function(x){g.push({k:x.id,label:x.label||'Group',color:x.color})});
+    return g;
+  }
+  var t=[{k:'',label:'No tag'}];
+  S.tags.forEach(function(x){t.push({k:x.id,label:x.label,color:x.color})});
+  return t;
+}
+function kanbanKey(k){
+  var by=kanbanBy();
+  if(by==='status')return(k.status==='done'||k.status==='review'||k.status==='progress')?k.status:'open';
+  if(by==='person')return k.person||'';
+  if(by==='group')return k.group||'';
+  return k.tag||'';
+}
+function kanbanPool(){
+  var cut=todayStr(-KB_DONE_DAYS);
+  return allTasks().filter(function(k){
+    if(!matches(k))return false;
+    if(k.status==='done'){
+      var d=k.doneAt?dsOf(k.doneAt):(k.date||'');
+      return d>=cut;                       /* recent finishes only */
+    }
+    return true;
+  });
+}
+function kbCard(k){
+  var t=todayStr(),bits=[];
+  if(k.date)bits.push('<span class="kb-m'+(k.date<t&&k.status!=='done'?' late':'')+'">'
+    +(k.date===t?'Today':esc(fmtDateShort(k.date)))+(k.time?' · '+esc(fmtTime12(k.time)):'')+'</span>');
+  var p=k.person?personOf(k.person):null;
+  if(p&&kanbanBy()!=='person')bits.push('<span class="kb-m">@'+esc(p.label)+'</span>');
+  var tg=k.tag?tagOf(k.tag):null;
+  if(tg&&kanbanBy()!=='tag')bits.push('<span class="kb-m"><i style="background:'+tg.color+'"></i>'+esc(tg.label)+'</span>');
+  if((k.carried||0)>0&&k.status!=='done')bits.push('<span class="kb-m warn">↻'+k.carried+'</span>');
+  if(k.subs&&k.subs.length)bits.push('<span class="kb-m">☑'+k.subs.filter(function(x){return x.done}).length+'/'+k.subs.length+'</span>');
+  return'<article class="kb-card'+(k.important?' imp':'')+(k.status==='done'?' done':'')
+    +(k.pinned?' pin':'')+'" data-kb="'+k.id+'" draggable="false">'
+    +(k.important?'<div class="kb-imp">IMPORTANT!</div>':'')
+    +'<div class="kb-t">'+esc(k.title)+'</div>'
+    +(bits.length?'<div class="kb-meta">'+bits.join('')+'</div>':'')
+    +'</article>';
+}
+function renderKanban(){
+  var cols=kanbanCols(),by=kanbanBy(),pool=kanbanPool();
+  var buckets={};cols.forEach(function(c){buckets[c.k]=[]});
+  var stray=[];
+  pool.forEach(function(k){
+    var key=kanbanKey(k);
+    if(buckets[key])buckets[key].push(k);else stray.push(k);
+  });
+  /* a task pointing at a person or tag that no longer exists still has to land
+     somewhere, or it would silently vanish from the board */
+  if(stray.length)buckets[cols[0].k]=buckets[cols[0].k].concat(stray);
+  cols.forEach(function(c){
+    buckets[c.k].sort(function(a,b){
+      if(by==='status'&&c.k==='done')return(b.doneAt||0)-(a.doneAt||0);
+      return(b.important?1:0)-(a.important?1:0)||sortPri(a,b);
+    });
+  });
+  var seg=[['status','Status'],['person','Person'],['group','Group'],['tag','Tag']]
+    .map(function(x){return'<button class="kb-by'+(by===x[0]?' on':'')+'" data-kbby="'+x[0]+'">'+x[1]+'</button>'}).join('');
+  var h='<div class="kb-head"><span class="kb-lb">Columns by</span><div class="kb-seg">'+seg+'</div></div>'
+    +'<div class="kb-hint">Drag a card to another column'+(by==='status'?' to change its status.':' to move it.')
+    +' Tap to open it.</div>';
+  h+='<div class="kb-wrap" id="kbWrap">'+cols.map(function(c){
+    var list=buckets[c.k];
+    return'<section class="kb-col" data-kbcol="'+esc(c.k)+'"'
+      +(c.color?' style="--kc:'+c.color+'"':'')+'>'
+      +'<header class="kb-h"><span class="kb-n">'+esc(c.label)+'</span>'
+        +'<span class="kb-c">'+list.length+'</span></header>'
+      +'<div class="kb-list">'+(list.length?list.map(kbCard).join('')
+        :'<div class="kb-empty">Drop here</div>')+'</div></section>';
+  }).join('')+'</div>';
+  return h;
+}
+/* Writes whichever field the column axis represents, honouring the same
+   permission rules the rest of the board uses. */
+async function kanbanMove(id,col){
+  var k=findTask(id);if(!k)return;
+  var by=kanbanBy(),isShared=!!k.assigneeEmail;
+  if(kanbanKey(k)===col)return;
+  if(by==='status'){
+    var ns=col;
+    if(isShared){
+      if(!FB.ready){toast('Sync offline');return}
+      if(!isAdmin&&!k.selfCreated&&ns==='done')ns='review';   /* members send for review */
+      try{
+        await FB.F.updateDoc(fdoc('tasks',k.id),
+          {status:ns,doneAt:(ns==='done'||ns==='review')?(k.doneAt||Date.now()):null});
+        if(ns==='done')bumpDoneDate(todayStr(),1);
+        save();render();
+        toast(ns==='review'?'Sent for review':'Moved to '+ns);
+      }catch(e){console.error(e);toast('Update blocked — check permissions')}
+      return;
+    }
+    if(ns==='done'){k.status='done';k.doneAt=Date.now();delete k.pinned;bumpDoneDate(todayStr(),1);ding()}
+    else{
+      if(k.status==='done')bumpDoneDate(dsOf(k.doneAt||Date.now()),-1);
+      k.status=ns;delete k.doneAt;
+      if(k.date&&k.date<todayStr())k.date=todayStr();
+    }
+    save();render();return;
+  }
+  if(by==='person'){
+    if(!isAdmin){toast('Only Kalash can reassign');return}
+    if(isShared){
+      var np=col?personOf(col):null,em=String((np&&np.email)||'').toLowerCase();
+      if(!col||!em){toast('A delegated task needs a person with an account');return}
+      if(!FB.ready){toast('Sync offline');return}
+      try{await FB.F.updateDoc(fdoc('tasks',k.id),{person:col,assigneeEmail:em});render();toast('Reassigned')}
+      catch(e){toast('Failed')}
+      return;
+    }
+    if(col)k.person=col;else k.person=null;
+  }else if(by==='group'){
+    if(isShared){toast('Delegated tasks can’t be grouped');return}
+    if(col)k.group=col;else delete k.group;
+  }else{
+    if(isShared){
+      if(!isAdmin&&!k.selfCreated){toast('Only Kalash can retag this');return}
+      if(!FB.ready){toast('Sync offline');return}
+      try{await FB.F.updateDoc(fdoc('tasks',k.id),{tag:col||null});render();toast('Retagged')}
+      catch(e){toast('Failed')}
+      return;
+    }
+    if(col)k.tag=col;else k.tag=null;
+  }
+  save();render();
+}
+function bindKanban(){
+  $$('#ledger [data-kbby]').forEach(function(b){b.addEventListener('click',function(){
+    S.prefs.kanbanBy=b.dataset.kbby;save();renderLedger();
+  })});
+  var wrap=$('#kbWrap');if(!wrap)return;
+  var drag=null;
+  function colUnder(x,y){
+    var el=document.elementFromPoint(x,y);
+    return el?el.closest('[data-kbcol]'):null;
+  }
+  wrap.addEventListener('pointerdown',function(e){
+    var card=e.target.closest('.kb-card');if(!card)return;
+    if(e.button!==undefined&&e.button!==0)return;
+    drag={id:card.dataset.kb,el:card,x:e.clientX,y:e.clientY,on:false,ghost:null,pid:e.pointerId};
+  });
+  wrap.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    var dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    if(!drag.on){
+      if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+      drag.on=true;
+      try{drag.el.setPointerCapture(drag.pid)}catch(err){}
+      var r=drag.el.getBoundingClientRect();
+      drag.ox=drag.x-r.left;drag.oy=drag.y-r.top;
+      var g=drag.el.cloneNode(true);
+      g.className+=' kb-ghost';
+      g.style.width=r.width+'px';
+      document.body.appendChild(g);
+      drag.ghost=g;drag.el.classList.add('kb-lifting');
+    }
+    e.preventDefault();
+    drag.ghost.style.transform='translate('+(e.clientX-drag.ox)+'px,'+(e.clientY-drag.oy)+'px)';
+    var c=colUnder(e.clientX,e.clientY);
+    $$('#ledger .kb-col.over').forEach(function(x){x.classList.remove('over')});
+    if(c)c.classList.add('over');
+  });
+  function end(e){
+    if(!drag)return;
+    var d=drag;drag=null;
+    if(!d.on)return;                       /* a tap, not a drag — let click run */
+    if(d.ghost)d.ghost.remove();
+    d.el.classList.remove('kb-lifting');
+    var c=colUnder(e.clientX,e.clientY);
+    $$('#ledger .kb-col.over').forEach(function(x){x.classList.remove('over')});
+    d.el.dataset.dragged='1';
+    if(c)kanbanMove(d.id,c.dataset.kbcol);
+  }
+  wrap.addEventListener('pointerup',end);
+  wrap.addEventListener('pointercancel',function(){
+    if(drag&&drag.ghost)drag.ghost.remove();
+    if(drag&&drag.el)drag.el.classList.remove('kb-lifting');
+    $$('#ledger .kb-col.over').forEach(function(x){x.classList.remove('over')});
+    drag=null;
+  });
+  wrap.addEventListener('click',function(e){
+    var card=e.target.closest('.kb-card');if(!card)return;
+    if(card.dataset.dragged){delete card.dataset.dragged;return}
+    var k=findTask(card.dataset.kb);if(k)openEdit(k);
+  });
+}
+
 /* ---------- TEAM ----------
    Every person the board knows about — the people roster, the published
    allowlist, invited guests and anyone who has ever signed in — folded
@@ -2191,6 +2446,7 @@ function renderLedger(){
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
   if(view==='activity'){L.innerHTML=renderActivityScreen();bindActivityScreen();return}
   if(view==='calendar'){L.innerHTML=renderCalScreen();bindCalScreen();return}
+  if(view==='board'){L.innerHTML=renderKanban();bindKanban();return}
   if(view==='requests'){
     var vm=allTasks().filter(function(k){return k.vmark==='review'});
     if(vm.length){
