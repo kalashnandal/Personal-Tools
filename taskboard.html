@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -143,6 +144,9 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 @keyframes chipIn{from{opacity:0;transform:scale(.85)}}
 .cap-hint{font-size:11.5px;color:var(--dim);margin-top:9px;line-height:1.7}
 .cap-hint code{color:var(--mute);background:var(--pane);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
+.capture .pick-row,.capture .parse-row,.capture .cap-hint{display:none}
+.capture:focus-within .pick-row,.capture:focus-within .parse-row,.capture:focus-within .cap-hint,.capture.is-open .pick-row,.capture.is-open .parse-row,.capture.is-open .cap-hint{display:flex}
+.capture:focus-within .cap-hint,.capture.is-open .cap-hint{display:block}
 .tabs{display:flex;gap:2px;margin:18px 0 0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{position:relative;padding:11px 14px;font-size:13.5px;font-weight:500;color:var(--mute);white-space:nowrap;flex:none;transition:color .2s}
@@ -215,8 +219,12 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .t-title{font-size:14.5px;font-weight:500;word-break:break-word;line-height:1.45}
 .t-notes{font-size:12.5px;color:var(--mute);margin-top:3px;white-space:pre-wrap;word-break:break-word}
 .t-notes a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-soft)}
-.t-meta{display:flex;align-items:center;gap:7px;margin-top:8px;flex-wrap:wrap}
-.m-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:2.5px 8px;font-variant-numeric:tabular-nums}
+.t-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.t-link{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:5px 9px;border-radius:8px;background:var(--gold-soft);color:var(--gold);font-size:11.5px;font-weight:600;text-decoration:none}
+.t-link:hover{background:var(--gold);color:var(--on-gold)}
+.t-link span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-meta{display:flex;align-items:center;gap:5px;margin-top:7px;flex-wrap:wrap}
+.m-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:500;color:var(--mute);border:0;border-radius:6px;padding:2px 5px;background:var(--pane);font-variant-numeric:tabular-nums}
 .m-chip.time{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
 .m-chip.tag .dot{width:6px;height:6px;border-radius:50%}
 .m-chip.person{color:var(--gold);border-color:var(--line-hi);background:var(--pane)}
@@ -228,12 +236,9 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .m-chip.rev{color:var(--blue);border-color:var(--blue);background:rgba(127,163,201,.08);font-weight:600}
 .m-chip.self{color:var(--blue);border-color:rgba(127,163,201,.3)}
 .m-chip.shared{color:var(--ok);border-color:rgba(143,191,155,.3)}
-.t-acts{flex:none;display:flex;gap:2px;opacity:0;transition:opacity .2s;margin-top:-2px}
-.task:hover .t-acts{opacity:1}
-/* status-change buttons stay visible — they're not discoverable on hover-only */
-.t-acts .ta-btn.always{opacity:1}
-.t-acts:has(.always){opacity:1}
-@media(hover:none){.t-acts{display:flex;opacity:1}.t-acts .ta-btn:not(.always){display:none}.t-acts .ta-btn.always{display:grid}}
+.t-acts{flex:none;display:flex;gap:2px;opacity:0;pointer-events:none;transition:opacity .2s;margin-top:-2px}
+.task:hover .t-acts,.task:focus-within .t-acts{opacity:1;pointer-events:auto}
+@media(hover:none){.t-acts{display:none}}
 .ta-btn{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--dim);transition:all .15s;font-size:14px}
 .ta-btn:hover{color:var(--gold);background:var(--gold-soft)}
 .ta-btn.del:hover{color:var(--red);background:rgba(201,123,110,.1)}
@@ -936,6 +941,7 @@ html.personal .sp.on .n{color:#B69AD9}
   </button>
   <div class="fld" style="margin-top:14px"><label>Title</label><input id="eTitle" type="text"></div>
   <div class="fld"><label>Notes</label><textarea id="eNotes"></textarea></div>
+  <div class="fld"><label>URL <span style="font-weight:400;color:var(--dim)">(optional)</span></label><input id="eUrl" type="url" inputmode="url" placeholder="https://example.com"></div>
   <div class="fld"><label>Checklist</label><div id="eSubs"></div><button class="btn ghost sm" id="eSubAdd">+ Add item</button></div>
   <div class="fld" id="eStatusFld"><label>Status</label><select id="eStatus">
     <option value="open">Open</option><option value="progress">In progress</option>
@@ -1255,6 +1261,8 @@ function todayStr(o){var d=new Date();d.setDate(d.getDate()+(o||0));return d.get
 function dsOf(ms){var d=new Date(ms);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function linkify(s){return s.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>')}
+function cleanUrl(s){s=String(s||'').trim();if(!s)return'';if(!/^https?:\/\//i.test(s))s='https://'+s;try{var u=new URL(s);return /^https?:$/.test(u.protocol)?u.href:''}catch(e){return''}}
+function urlLabel(s){try{var u=new URL(s);return u.hostname.replace(/^www\./,'')}catch(e){return'Open link'}}
 function fmtTime12(t){if(!t)return'';var p=t.split(':'),h=+p[0],m=+p[1];var ap=h>=12?'pm':'am';var hh=h%12||12;return m?hh+':'+pad(m)+ap:hh+ap}
 function fmtDateShort(ds){var p=ds.split('-');return new Date(+p[0],+p[1]-1,+p[2]).toLocaleDateString('en-IN',{day:'numeric',month:'short'})}
 function dayLabel(ds){
@@ -1661,7 +1669,7 @@ async function commitCapture(){
 async function createShared(o){
   if(!FB.ready){toast('Sync offline — saved locally instead');return}
   var t={assigneeEmail:o.assigneeEmail,person:o.person,
-    title:o.title,notes:'',date:o.date||null,time:o.time||null,tag:o.tag||null,pri:o.pri||'',important:!!o.important,
+    title:o.title,notes:'',url:o.url||null,date:o.date||null,time:o.time||null,tag:o.tag||null,pri:o.pri||'',important:!!o.important,
     status:'open',created:Date.now(),carried:0,subs:[],selfCreated:!!o.selfCreated,doneAt:null};
   try{await FB.F.addDoc(fcol('tasks'),t)}
   catch(e){console.error(e);toast('Could not create — check Firestore rules')}
@@ -1865,6 +1873,7 @@ function taskCard(k,o){
     +'<span class="chk '+chk+'" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span>'
     +'<div class="t-body">'+impTag+'<div class="t-title">'+esc(k.title)+'</div>'
     +(k.notes?'<div class="t-notes">'+linkify(esc(k.notes))+'</div>':'')
+    +(k.url?'<div class="t-links"><a class="t-link" href="'+esc(k.url)+'" target="_blank" rel="noopener"><span>'+esc(urlLabel(k.url))+'</span> ↗</a></div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div></article></div>';
   return'<div class="t-wrap" data-id="'+k.id+'">'
     +'<div class="hint l">'+(done?'↺ RESTORE':(rev&&isAdmin?'✓ APPROVE':'✓ DONE'))+'</div>'
@@ -1873,6 +1882,7 @@ function taskCard(k,o){
     +'<button class="chk '+chk+'" data-act="toggle" aria-label="Complete"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></button>'
     +'<div class="t-body" data-act="edit">'+impTag+'<div class="t-title">'+esc(k.title)+'</div>'
     +(k.notes?'<div class="t-notes">'+linkify(esc(k.notes))+'</div>':'')
+    +(k.url?'<div class="t-links"><a class="t-link" href="'+esc(k.url)+'" target="_blank" rel="noopener"><span>'+esc(urlLabel(k.url))+'</span> ↗</a></div>':'')
     +(meta.length?'<div class="t-meta">'+meta.join('')+'</div>':'')+'</div>'
     +'<div class="t-acts">'+acts.join('')+'</div></article></div>';
 }
@@ -2389,6 +2399,7 @@ function bindLedger(){
         if(e.shiftKey)rangeBulk(bc.dataset.id);else toggleBulk(bc.dataset.id)}
       return;
     }
+    if(e.target.closest('.t-link'))return;
     var card0=e.target.closest('.task');
     /* desktop: ⌘/Ctrl+click or shift+click starts a multi-select, same as a
        long-press does on touch */
@@ -2564,7 +2575,7 @@ function openEdit(k){
   editSubs=(k.subs||[]).map(function(s){return Object.assign({},s)});
   $('#editTitle').innerHTML=editRO?'View <em>task</em>':'Edit <em>task</em>';
   $('#roBanner').classList.toggle('hidden',!editRO);
-  $('#eTitle').value=k.title;$('#eNotes').value=k.notes||'';
+  $('#eTitle').value=k.title;$('#eNotes').value=k.notes||'';$('#eUrl').value=k.url||'';
   editImp=!!k.important;renderImpToggle();
   $('#eDate').value=k.date||'';$('#eTime').value=k.time||'';
   $('#eTag').innerHTML='<option value="">No tag</option>'+S.tags.map(function(t){return'<option value="'+t.id+'" '+(k.tag===t.id?'selected':'')+'>'+esc(t.label)+'</option>'}).join('');
@@ -2573,7 +2584,7 @@ function openEdit(k){
   $('#eStatus').value=(k.status==='progress'||k.status==='review'||k.status==='done')?k.status:'open';
   var r=k.recurId?S.recurring.find(function(x){return x.id===k.recurId}):null;
   $('#eRecur').value=r?r.freq:'';
-  ['eTitle','eNotes','eDate','eTime','eTag','ePri','eRecur','eStatus'].forEach(function(id){$('#'+id).disabled=editRO});
+  ['eTitle','eNotes','eUrl','eDate','eTime','eTag','ePri','eRecur','eStatus'].forEach(function(id){$('#'+id).disabled=editRO});
   $('#eStatusFld').classList.toggle('hidden',editRO);
   $('#eWhoFld').classList.toggle('hidden',!isAdmin||isPersonal());
   $('#ePerson').disabled=editShared;
@@ -2609,6 +2620,7 @@ async function saveEdit(){
     if(isAdmin||k.selfCreated){
       patch.title=$('#eTitle').value.trim()||k.title;
       patch.notes=$('#eNotes').value.trim();
+      patch.url=cleanUrl($('#eUrl').value)||null;
       patch.date=$('#eDate').value||null;
       patch.time=$('#eTime').value||null;
       patch.tag=$('#eTag').value||null;
@@ -2634,6 +2646,7 @@ async function saveEdit(){
   }
   k.title=$('#eTitle').value.trim()||k.title;
   k.notes=$('#eNotes').value.trim();
+  k.url=cleanUrl($('#eUrl').value)||null;
   k.date=$('#eDate').value||null;
   k.time=$('#eTime').value||null;
   k.tag=$('#eTag').value||null;
@@ -2659,7 +2672,7 @@ async function saveEdit(){
   if(!k.date&&!k.recurId)k.date=todayStr();
   var pEmail=newPerson?String((personOf(newPerson)||{}).email||'').toLowerCase():'';
   if(isAdmin&&newPerson&&pEmail&&!k.recurId&&FB.ready){
-    await createShared({title:k.title,date:k.date,time:k.time,tag:k.tag,pri:k.pri,person:newPerson,assigneeEmail:pEmail,selfCreated:false});
+    await createShared({title:k.title,url:k.url||null,date:k.date,time:k.time,tag:k.tag,pri:k.pri,person:newPerson,assigneeEmail:pEmail,selfCreated:false});
     S.tasks=S.tasks.filter(function(x){return x.id!==k.id});
     save();closeOv('editOv');render();toast('Delegated to '+((personOf(newPerson)||{}).label||''));
     return;
