@@ -29,10 +29,7 @@
   --ink:#07080B;--pane:rgba(255,255,255,.032);--pane-hi:rgba(255,255,255,.055);
   --line:rgba(233,222,196,.09);--line-hi:rgba(233,222,196,.18);
   --gold:#E2C27A;--gold-deep:#A47F35;--gold-soft:rgba(226,194,122,.14);--on-gold:#07080B;
-  /* --dim was #5C5B57 — 2.9:1 on this ink, below the 4.5 AA floor. applyTheme
-     recomputes it per theme; this is the same value for the default one, so
-     nothing renders weak in the moment before the script runs. */
-  --text:#EDEBE4;--mute:#8E8C86;--dim:#81817E;
+  --text:#EDEBE4;--mute:#8E8C86;--dim:#5C5B57;
   --red:#C97B6E;--amber:#D9A05B;--ok:#8FBF9B;--blue:#7FA3C9;
   --radius:14px;--ease-spring:cubic-bezier(.34,1.4,.5,1);
   --font-ui:'Inter',system-ui,-apple-system,sans-serif;
@@ -357,11 +354,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
 .sw:hover{transform:scale(1.1)}
 .sw.on{border-color:var(--text)}
 .sw.on::after{content:"";position:absolute;inset:3px;border-radius:50%;border:2px solid var(--ink)}
-/* white on the pastel wheel is about 2.8:1 wherever the glyph lands, and the
-   wheel is the whole point of the control — so the glyph carries its own
-   shadow rather than the swatch losing its colours */
-.sw.custom{background:conic-gradient(#e66,#ea3,#8c6,#6ac,#a7d,#e66);display:grid;place-items:center;font-size:14px;color:#fff;overflow:hidden;
-  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 3px rgba(0,0,0,.8);font-weight:700}
+.sw.custom{background:conic-gradient(#e66,#ea3,#8c6,#6ac,#a7d,#e66);display:grid;place-items:center;font-size:14px;color:#fff;overflow:hidden}
 .sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .seg button{padding:8px 14px;font-size:12.5px;font-weight:500;color:var(--mute);transition:all .15s}
@@ -398,28 +391,12 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,select:focus-vis
   .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;background:color-mix(in srgb,var(--ink) 82%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
   /* min-width:0 matters: flex items default to min-width:auto, so with the
      admin's eight tabs the last one was pushed off the edge of the screen. */
-  .bn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 2px;color:var(--dim);border-radius:12px;position:relative}
-  .bn svg{width:21px;height:21px;flex:none}
-  .bn span{font-size:10.5px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 1px;color:var(--dim);border-radius:12px;position:relative}
+  .bn svg{width:19px;height:19px;flex:none}
+  .bn span{font-size:9.5px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bn.on{color:var(--gold)}
   .bn .bd{position:absolute;top:2px;right:calc(50% - 15px);min-width:14px;height:14px;border-radius:99px;background:var(--gold);color:var(--on-gold);font-size:8.5px;font-weight:700;display:grid;place-items:center;padding:0 4px}
   .bn .bd.alert{background:var(--red);color:#fff}
-  /* the More sheet — full names and room to breathe, which is the whole point
-     of moving these out of a 39px-wide tab */
-  .more-list{display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
-  .more-row{display:flex;align-items:center;gap:13px;width:100%;padding:14px 12px;border-radius:14px;
-    background:transparent;border:1px solid transparent;color:var(--fg);text-align:left}
-  .more-row:active{background:var(--pane)}
-  .more-row.on{background:color-mix(in srgb,var(--gold) 12%,transparent);border-color:var(--gold);color:var(--gold)}
-  .more-row .mi{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:11px;
-    background:var(--pane);color:var(--dim)}
-  .more-row.on .mi{background:transparent;color:var(--gold)}
-  .more-row .mi svg{width:19px;height:19px}
-  .more-row .ml{flex:1;min-width:0;font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .more-row .mn{flex:none;min-width:22px;height:22px;padding:0 7px;border-radius:99px;background:var(--pane);
-    color:var(--mute);font-size:11.5px;font-weight:700;display:grid;place-items:center}
-  .more-row .mn.alert{background:var(--red);color:#fff}
-  .more-row .mc{width:16px;height:16px;flex:none;color:var(--dim);opacity:.55}
   .overlay{align-items:flex-end;padding:0}
   .modal{max-width:none;border-radius:22px 22px 0 0;max-height:92dvh;padding:14px 20px calc(22px + env(safe-area-inset-bottom));transform:translateY(100%)}
   .overlay.open .modal{transform:none}
@@ -440,10 +417,7 @@ html.compact .t-title{font-size:13.5px}
 html.compact .t-wrap{margin-bottom:7px}
 html.compact .group-h{margin:14px 0 8px}
 .toasts{position:fixed;bottom:calc(22px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:90;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(92vw,420px)}
-/* the phone stacks three fixed things: nav (0–72), then the + button or the
-   bulk bar (78–132), then toasts on top of both. 84px put toasts straight
-   through the middle of the + button. */
-@media(max-width:640px){.toasts{bottom:calc(142px + env(safe-area-inset-bottom))}}
+@media(max-width:640px){.toasts{bottom:calc(84px + env(safe-area-inset-bottom))}}
 .toast{display:flex;align-items:center;gap:10px;background:var(--ink);border:1px solid var(--line-hi);font-size:13px;padding:11px 16px;border-radius:12px;box-shadow:0 18px 44px -14px rgba(0,0,0,.7);animation:toastIn .35s var(--ease-spring)}
 .toast .undo{color:var(--gold);font-weight:600;flex:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.96)}}
@@ -524,20 +498,7 @@ html.compact .group-h{margin:14px 0 8px}
 .task.bulk-on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold-soft)}
 .task.bulk-on::after{content:"✓";position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:700;display:grid;place-items:center;z-index:2}
 .bulkbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));z-index:70;display:flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--line-hi);border-radius:14px;padding:8px 10px;box-shadow:0 20px 50px -16px rgba(0,0,0,.8);max-width:94vw;flex-wrap:wrap;justify-content:center}
-/* the bulk bar takes the + button's slot rather than sitting on top of it —
-   nobody captures a new task in the middle of selecting existing ones.
-   Ten controls wrapped into a 276px-tall block on a 360px screen, covering a
-   third of the board you were selecting from; on a phone it's one row that
-   scrolls sideways instead, with the count pinned so you never lose it. */
-@media(max-width:640px){
-  .bulkbar{bottom:calc(80px + env(safe-area-inset-bottom));left:8px;right:8px;transform:none;
-    max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch}
-  .bulkbar::-webkit-scrollbar{display:none}
-  .bulkbar .bb{flex:none}
-  .bulkbar .bb-count{position:sticky;left:0;flex:none;background:var(--ink);padding:4px 8px 4px 2px}
-}
-html.bulking .fab{display:none}
+@media(max-width:640px){.bulkbar{bottom:calc(84px + env(safe-area-inset-bottom))}}
 .bulkbar .bb-count{font-size:12px;color:var(--gold);font-weight:600;padding:0 6px;white-space:nowrap}
 .bb{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:9px;padding:7px 11px;color:var(--mute);transition:all .15s;min-height:32px}
 .bb:hover{color:var(--text);border-color:var(--line-hi)}
@@ -724,49 +685,6 @@ html.bulking .fab{display:none}
 .rulebox p{font-size:12.5px;color:var(--mute);line-height:1.6;margin-bottom:10px}
 .rulebox pre{background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;font-size:11.5px;
   font-family:ui-monospace,Menlo,monospace;color:var(--gold);overflow-x:auto;white-space:pre;line-height:1.6}
-
-/* ============ v4.9 — Kanban board ============ */
-.kb-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0 6px}
-.kb-lb{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
-.kb-seg{display:flex;gap:5px;flex-wrap:wrap}
-.kb-by{font-size:12px;font-weight:600;color:var(--mute);border:1px solid var(--line);border-radius:9px;padding:6px 11px;min-height:32px}
-.kb-by:hover{border-color:var(--line-hi);color:var(--text)}
-.kb-by.on{color:var(--gold);border-color:var(--gold);background:var(--gold-soft)}
-.kb-hint{font-size:11.5px;color:var(--dim);margin-bottom:10px}
-.kb-wrap{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin;
-  scroll-snap-type:x proximity;align-items:flex-start}
-.kb-wrap::-webkit-scrollbar{height:8px}
-.kb-wrap::-webkit-scrollbar-thumb{background:var(--line-hi);border-radius:99px}
-.kb-col{flex:0 0 clamp(230px,78vw,290px);scroll-snap-align:start;border:1px solid var(--line);
-  border-radius:14px;background:var(--pane);padding:10px;min-height:120px;transition:border-color .15s,background .15s}
-.kb-col.over{border-color:var(--gold);background:var(--gold-soft)}
-.kb-h{display:flex;align-items:center;gap:8px;padding:2px 4px 10px}
-.kb-h .kb-n{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kb-col[style*="--kc"] .kb-h .kb-n{color:var(--kc)}
-.kb-h .kb-c{margin-left:auto;font-size:11px;font-weight:700;color:var(--dim);font-variant-numeric:tabular-nums;flex:none}
-.kb-list{display:flex;flex-direction:column;gap:8px;min-height:60px}
-.kb-card{position:relative;border:1px solid var(--line);border-radius:11px;background:var(--ink);padding:11px 12px;
-  cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;transition:border-color .15s,transform .15s}
-.kb-card:hover{border-color:var(--line-hi)}
-.kb-card.kb-lifting{opacity:.34}
-.kb-card.done{opacity:.55}
-.kb-card.done .kb-t{text-decoration:line-through;color:var(--mute)}
-.kb-card.imp{border-color:rgba(255,59,48,.5);background:var(--imp-soft)}
-.kb-card.pin .kb-t::before{content:"📌 ";font-size:11px}
-.kb-imp{font-size:9.5px;font-weight:800;letter-spacing:.09em;color:var(--imp);margin-bottom:4px}
-.kb-t{font-size:13.5px;font-weight:500;line-height:1.4;word-break:break-word}
-.kb-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
-.kb-m{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--dim);
-  border:1px solid var(--line);border-radius:5px;padding:2px 6px}
-.kb-m i{width:5px;height:5px;border-radius:50%;display:inline-block}
-.kb-m.late{color:var(--red);border-color:rgba(201,123,110,.4)}
-.kb-m.warn{color:var(--amber);border-color:rgba(217,160,91,.35)}
-.kb-empty{font-size:11.5px;color:var(--dim);text-align:center;padding:18px 8px;
-  border:1px dashed var(--line);border-radius:10px}
-.kb-ghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;opacity:.95;
-  box-shadow:0 18px 40px -12px rgba(0,0,0,.8);transform:translate(-9999px,-9999px);cursor:grabbing}
-@media(min-width:900px){.kb-col{flex:1 1 0;min-width:0}}
 
 /* ============ v4.8 — pins and archived groups ============ */
 .group-h.pin{color:var(--gold)}
@@ -1246,13 +1164,6 @@ html.personal .sp.on .n{color:#B69AD9}
 </div></div>
 
 <!-- INSTALL HELP -->
-<div class="overlay" id="moreOv"><div class="modal">
-  <div class="grab"></div>
-  <h3>More</h3>
-  <div id="moreBody" class="more-list"></div>
-  <div class="m-foot"><button class="btn ghost sm" id="moreClose">Close</button></div>
-</div></div>
-
 <div class="overlay" id="pwaOv"><div class="modal">
   <div class="grab"></div>
   <h3>Install <em>Daily Ops</em></h3>
@@ -1354,34 +1265,6 @@ function hexRGB(h){var n=h.replace('#','');return[parseInt(n.slice(0,2),16),pars
 function rgba(h,a){var c=hexRGB(h);return'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'}
 function shade(h,p){var c=hexRGB(h);function f(x){return Math.round(Math.min(255,Math.max(0,p<0?x*(1+p):x+(255-x)*p)))}
   return'#'+[f(c[0]),f(c[1]),f(c[2])].map(function(x){return x.toString(16).padStart(2,'0')}).join('')}
-/* ---------- LEGIBILITY ----------
-   Every text colour used to be a fixed hex per theme, which meant each one was
-   really only checked against the theme it was designed for. The accent is the
-   clearest case: a pale gold chosen to glow on near-black sits at about 1.6:1
-   on the two light themes, so a popup title's italic word, the arrow in the
-   command bar and the invite URL were all but invisible there. Rather than
-   hand-tune five themes by six accents, each text colour is now pulled toward
-   the far end of the scale until it actually reads on the page it lands on. */
-function relLum(c){
-  function f(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)}
-  return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]);
-}
-function contrastOn(a,b){var x=relLum(a),y=relLum(b);
-  return(Math.max(x,y)+0.05)/(Math.min(x,y)+0.05)}
-function rgbHex(c){return'#'+c.map(function(v){
-  return Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')}).join('')}
-/* Keeps the hue, changes only the distance from the background. */
-function legible(hex,inkHex,target){
-  var c=hexRGB(hex),ink=hexRGB(inkHex);
-  if(contrastOn(c,ink)>=target)return hex;
-  var lighten=relLum(ink)<0.35;
-  for(var i=1;i<=48;i++){
-    var t=i/48;
-    var m=[0,1,2].map(function(k){return lighten?c[k]+(255-c[k])*t:c[k]*(1-t)});
-    if(contrastOn(m,ink)>=target)return rgbHex(m);
-  }
-  return lighten?'#FFFFFF':'#000000';
-}
 function initials(n){return String(n).trim().split(/\s+/).map(function(w){return w[0]}).slice(0,2).join('').toUpperCase()}
 function ago(ms){var s=(Date.now()-ms)/1000;if(s<60)return'now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
 
@@ -1398,7 +1281,7 @@ function migrate(){
   S.people.forEach(function(p){if(p.email==null)p.email='';if(!p.label&&p.name)p.label=p.name});
   var map={'var(--t-summit)':'#E2C27A','var(--t-imark)':'#7FA3C9','var(--t-portfolio)':'#A88FC9','var(--t-personal)':'#8FBF9B'};
   S.tags.forEach(function(t){if(map[t.color])t.color=map[t.color];if(!/^#/.test(t.color||''))t.color='#9AA3B2'});
-  S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy',space:'work',remind:true,kanbanBy:'status'},S.prefs||{});
+  S.prefs=Object.assign({accent:'gold',custom:null,bg:'midnight',density:'comfy',space:'work',remind:true},S.prefs||{});
   if(S.prefs.space!=='personal')S.prefs.space='work';
   var t=todayStr();
   var gids={};S.groups.forEach(function(g){gids[g.id]=1});
@@ -1548,39 +1431,14 @@ async function initFirebase(){
 /* ---------- THEME ---------- */
 function applyTheme(){
   var p=S.prefs,R=document.documentElement.style;
-  /* the background has to be resolved first — every text colour below is
-     measured against it rather than assumed to work */
-  var bg=BGS[p.bg]||BGS.midnight;
-  /* 5.0 rather than the bare 4.5: most of this text sits on --pane, a
-     translucent tile a little lighter or darker than the page, which eats
-     some of the margin before it reaches the reader */
-  var T=5.0;
   var acc=(p.accent==='custom'&&p.custom)?[p.custom,shade(p.custom,-0.34)]:(ACCENTS[p.accent]||ACCENTS.gold);
-  /* the accent needs a touch more headroom than the greys: it is the colour
-     most often painted on its own soft tint (chips, command rows, pills) */
-  var accent=legible(acc[0],bg.ink,5.5);
-  /* the gradient's far end follows the adjusted accent, not the original */
-  var deep=(accent===acc[0])?acc[1]:shade(accent,relLum(hexRGB(bg.ink))<0.35?-0.34:-0.22);
-  R.setProperty('--gold',accent);R.setProperty('--gold-deep',deep);
-  R.setProperty('--gold-soft',rgba(accent,0.14));
-  var c=hexRGB(accent);
+  R.setProperty('--gold',acc[0]);R.setProperty('--gold-deep',acc[1]);R.setProperty('--gold-soft',rgba(acc[0],0.14));
+  var c=hexRGB(acc[0]);
   R.setProperty('--on-gold',((0.299*c[0]+0.587*c[1]+0.114*c[2])/255>0.55)?'#07080B':'#FFFFFF');
+  var bg=BGS[p.bg]||BGS.midnight;
   R.setProperty('--ink',bg.ink);R.setProperty('--line',bg.line);R.setProperty('--line-hi',bg.lineHi);
   R.setProperty('--pane',bg.pane);R.setProperty('--pane-hi',bg.paneHi);
-  R.setProperty('--text',bg.text);
-  /* --dim carries placeholders, hints and footnotes — the text most likely to
-     be squinted at, and it was the weakest in every one of the five themes */
-  R.setProperty('--mute',legible(bg.mute,bg.ink,T));
-  R.setProperty('--dim',legible(bg.dim,bg.ink,T));
-  /* the semantic colours were fixed hexes tuned for a dark page, so Delete,
-     Revoke and Wipe data all faded out on the two light themes */
-  R.setProperty('--red',legible('#C97B6E',bg.ink,T));
-  R.setProperty('--amber',legible('#D9A05B',bg.ink,T));
-  R.setProperty('--ok',legible('#8FBF9B',bg.ink,T));
-  R.setProperty('--blue',legible('#7FA3C9',bg.ink,T));
-  /* the IMPORTANT flag stays loud — it is only pulled far enough to be read,
-     and it is usually sitting on its own red tint, hence the extra headroom */
-  R.setProperty('--imp',legible('#FF3B30',bg.ink,5.2));
+  R.setProperty('--text',bg.text);R.setProperty('--mute',bg.mute);R.setProperty('--dim',bg.dim);
   R.setProperty('color-scheme',bg.scheme);
   document.documentElement.classList.toggle('compact',p.density==='compact');
   var mt=$('#metaTheme');if(mt)mt.content=bg.ink;
@@ -1810,21 +1668,14 @@ async function createShared(o){
 }
 
 /* ---------- VIEWS / RENDER ---------- */
-/* [key, tab label, bottom-nav label] */
-var VIEWS=[['today','Today','Today'],['board','Board','Board'],['upcoming','Upcoming','Soon'],['calendar','Calendar','Cal'],
+/* [key, tab label, bottom-nav label] — eight tabs across a phone leaves ~45px
+   each, so the nav gets its own short names instead of ellipsised ones. */
+var VIEWS=[['today','Today','Today'],['upcoming','Upcoming','Soon'],['calendar','Calendar','Cal'],
   ['history','History','Past'],['analytics','Analytics','Stats'],['team','Team','Team'],
   ['activity','Activity','Feed'],['requests','Requests','Inbox']];
 var ADMIN_VIEWS={requests:1,activity:1,team:1};
-/* Every view used to get its own tab in the phone nav. At nine that left about
-   39px each — icons, labels and badges all fighting for the same strip. Only
-   these four stay in the bar; the rest live in a sheet behind More, which
-   borrows the name and icon of whichever one you're in so the bar still tells
-   you where you are. */
-var NAV_PRIMARY=['today','board','upcoming','calendar'];
-var MOREICON='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>';
 var NAVICONS={
   today:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>',
-  board:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="5.5" height="16" rx="1.6"/><rect x="9.5" y="4" width="5.5" height="11" rx="1.6"/><rect x="16" y="4" width="5" height="14" rx="1.6"/></svg>',
   upcoming:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg>',
   history:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 7v5l3 2"/><path d="M3.5 12a8.5 8.5 0 108.5-8.5A8.5 8.5 0 005 7"/><path d="M3.5 4v3.5H7"/></svg>',
   analytics:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
@@ -1838,7 +1689,7 @@ function counts(){
   return{today:A.filter(function(k){return k.status!=='done'&&k.date===t}).length,
     upcoming:A.filter(function(k){return k.status!=='done'&&k.date&&k.date>t}).length,
     history:A.filter(function(k){return k.status==='done'}).length,
-    analytics:0,activity:0,calendar:0,board:0,
+    analytics:0,activity:0,calendar:0,
     team:isAdmin?teamRoster().length:0,
     requests:requests.length+shared.filter(function(k){return k.status==='review'}).length+allTasks().filter(function(k){return k.vmark==='review'}).length};
 }
@@ -1913,51 +1764,12 @@ function renderTabs(){
     return'<button class="tab '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+v[1]
       +(v[0]==='requests'?(c.requests?'<span class="alert"></span>':'')
         :((v[0]==='analytics'||v[0]==='activity'||v[0]==='calendar')?'':'<span class="n">'+(c[v[0]]||0)+'</span>'))+'</button>'}).join('');
-  var prim=tabs.filter(function(v){return NAV_PRIMARY.indexOf(v[0])>=0});
-  var rest=tabs.filter(function(v){return NAV_PRIMARY.indexOf(v[0])<0});
-  /* History's badge is every task ever finished — a number that only grows and
-     never asks anything of you. It belongs in the sheet, not the bar. */
-  function bnBadge(id){
-    var n=c[id]||0;
-    if(!n||id==='analytics'||id==='history')return'';
-    return'<span class="bd '+(id==='requests'?'alert':'')+'">'+(n>99?'99':n)+'</span>';
-  }
-  var h=prim.map(function(v){
-    return'<button class="bn '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+NAVICONS[v[0]]
-      +'<span>'+esc(v[2]||v[1])+'</span>'+bnBadge(v[0])+'</button>'}).join('');
-  if(rest.length){
-    var here=rest.filter(function(v){return v[0]===view})[0];
-    /* Requests is the only thing back there that needs answering, so its count
-       surfaces on More rather than staying hidden until you look. */
-    var pend=rest.filter(function(v){return v[0]==='requests'}).length?(c.requests||0):0;
-    h+='<button class="bn '+(here?'on':'')+'" data-more="1">'
-      +(here?NAVICONS[here[0]]:MOREICON)
-      +'<span>'+esc(here?(here[2]||here[1]):'More')+'</span>'
-      +(pend?'<span class="bd alert">'+(pend>99?'99':pend)+'</span>':'')+'</button>';
-  }
-  $('#bnav').innerHTML=h;
-  if($('#moreOv').classList.contains('open'))renderMore();
-}
-function renderMore(){
-  var c=counts();
-  var rest=VIEWS.filter(function(v){
-    return((isAdmin&&!isPersonal())||!ADMIN_VIEWS[v[0]])&&NAV_PRIMARY.indexOf(v[0])<0});
-  $('#moreBody').innerHTML=rest.map(function(v){
-    var n=v[0]==='analytics'?0:(c[v[0]]||0);
-    return'<button class="more-row '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'
-      +'<span class="mi">'+NAVICONS[v[0]]+'</span>'
-      +'<span class="ml">'+esc(v[1])+'</span>'
-      +(n?'<span class="mn '+(v[0]==='requests'?'alert':'')+'">'+(n>999?'999+':n)+'</span>':'')
-      +'<svg class="mc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>'
-      +'</button>'}).join('');
-}
-function openMore(){renderMore();$('#moreOv').classList.add('open')}
-function goView(v){
-  closePeerBoard(true);view=v;selDate=null;render();
-  window.scrollTo({top:0,behavior:'smooth'});
+  $('#bnav').innerHTML=tabs.map(function(v){
+    return'<button class="bn '+(view===v[0]?'on':'')+'" data-view="'+v[0]+'">'+NAVICONS[v[0]]+'<span>'+(v[2]||v[1])+'</span>'
+      +((v[0]!=='analytics'&&c[v[0]])?'<span class="bd '+(v[0]==='requests'?'alert':'')+'">'+(c[v[0]]>99?'99':c[v[0]])+'</span>':'')+'</button>'}).join('');
 }
 function renderFilters(){
-  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team'&&view!=='board';
+  var show=view!=='requests'&&view!=='analytics'&&view!=='activity'&&view!=='calendar'&&view!=='team';
   $('#filters').style.display=show?'flex':'none';
   if(!show)return;
   /* only tags this board actually uses — Summit and iMark are noise on the
@@ -2187,217 +1999,6 @@ function saveGroupEditor(){
   if($('#setOv').classList.contains('open'))renderGroupMgr();
 }
 
-/* ---------- KANBAN ----------
-   Columns are just a grouping key, so the same board reads four ways: by
-   status (the classic), by person (who is carrying what), by group, or by
-   tag. Dragging writes the same field the column represents.               */
-var KB_DONE_DAYS=7;      /* Done would grow forever otherwise */
-function kanbanBy(){
-  var b=S.prefs.kanbanBy;
-  return(b==='person'||b==='group'||b==='tag')?b:'status';
-}
-function kanbanCols(){
-  var by=kanbanBy();
-  if(by==='status')return[{k:'open',label:'Open'},{k:'progress',label:'In progress'},
-    {k:'review',label:'In review'},{k:'done',label:'Done'}];
-  if(by==='person'){
-    var c=[{k:'',label:'Unassigned'}];
-    S.people.forEach(function(p){c.push({k:p.id,label:p.label})});
-    return c;
-  }
-  if(by==='group'){
-    var g=[{k:'',label:'No group'}];
-    S.groups.filter(function(x){return !x.archived})
-      .forEach(function(x){g.push({k:x.id,label:x.label||'Group',color:x.color})});
-    return g;
-  }
-  var t=[{k:'',label:'No tag'}];
-  S.tags.forEach(function(x){t.push({k:x.id,label:x.label,color:x.color})});
-  return t;
-}
-function kanbanKey(k){
-  var by=kanbanBy();
-  if(by==='status')return(k.status==='done'||k.status==='review'||k.status==='progress')?k.status:'open';
-  if(by==='person')return k.person||'';
-  if(by==='group')return k.group||'';
-  return k.tag||'';
-}
-function kanbanPool(){
-  var cut=todayStr(-KB_DONE_DAYS);
-  return allTasks().filter(function(k){
-    if(!matches(k))return false;
-    if(k.status==='done'){
-      var d=k.doneAt?dsOf(k.doneAt):(k.date||'');
-      return d>=cut;                       /* recent finishes only */
-    }
-    return true;
-  });
-}
-function kbCard(k){
-  var t=todayStr(),bits=[];
-  if(k.date)bits.push('<span class="kb-m'+(k.date<t&&k.status!=='done'?' late':'')+'">'
-    +(k.date===t?'Today':esc(fmtDateShort(k.date)))+(k.time?' · '+esc(fmtTime12(k.time)):'')+'</span>');
-  var p=k.person?personOf(k.person):null;
-  if(p&&kanbanBy()!=='person')bits.push('<span class="kb-m">@'+esc(p.label)+'</span>');
-  var tg=k.tag?tagOf(k.tag):null;
-  if(tg&&kanbanBy()!=='tag')bits.push('<span class="kb-m"><i style="background:'+tg.color+'"></i>'+esc(tg.label)+'</span>');
-  if((k.carried||0)>0&&k.status!=='done')bits.push('<span class="kb-m warn">↻'+k.carried+'</span>');
-  if(k.subs&&k.subs.length)bits.push('<span class="kb-m">☑'+k.subs.filter(function(x){return x.done}).length+'/'+k.subs.length+'</span>');
-  return'<article class="kb-card'+(k.important?' imp':'')+(k.status==='done'?' done':'')
-    +(k.pinned?' pin':'')+'" data-kb="'+k.id+'" draggable="false">'
-    +(k.important?'<div class="kb-imp">IMPORTANT!</div>':'')
-    +'<div class="kb-t">'+esc(k.title)+'</div>'
-    +(bits.length?'<div class="kb-meta">'+bits.join('')+'</div>':'')
-    +'</article>';
-}
-function renderKanban(){
-  var cols=kanbanCols(),by=kanbanBy(),pool=kanbanPool();
-  var buckets={};cols.forEach(function(c){buckets[c.k]=[]});
-  var stray=[];
-  pool.forEach(function(k){
-    var key=kanbanKey(k);
-    if(buckets[key])buckets[key].push(k);else stray.push(k);
-  });
-  /* a task pointing at a person or tag that no longer exists still has to land
-     somewhere, or it would silently vanish from the board */
-  if(stray.length)buckets[cols[0].k]=buckets[cols[0].k].concat(stray);
-  cols.forEach(function(c){
-    buckets[c.k].sort(function(a,b){
-      if(by==='status'&&c.k==='done')return(b.doneAt||0)-(a.doneAt||0);
-      return(b.important?1:0)-(a.important?1:0)||sortPri(a,b);
-    });
-  });
-  var seg=[['status','Status'],['person','Person'],['group','Group'],['tag','Tag']]
-    .map(function(x){return'<button class="kb-by'+(by===x[0]?' on':'')+'" data-kbby="'+x[0]+'">'+x[1]+'</button>'}).join('');
-  var h='<div class="kb-head"><span class="kb-lb">Columns by</span><div class="kb-seg">'+seg+'</div></div>'
-    +'<div class="kb-hint">Drag a card to another column'+(by==='status'?' to change its status.':' to move it.')
-    +' Tap to open it.</div>';
-  h+='<div class="kb-wrap" id="kbWrap">'+cols.map(function(c){
-    var list=buckets[c.k];
-    return'<section class="kb-col" data-kbcol="'+esc(c.k)+'"'
-      +(c.color?' style="--kc:'+c.color+'"':'')+'>'
-      +'<header class="kb-h"><span class="kb-n">'+esc(c.label)+'</span>'
-        +'<span class="kb-c">'+list.length+'</span></header>'
-      +'<div class="kb-list">'+(list.length?list.map(kbCard).join('')
-        :'<div class="kb-empty">Drop here</div>')+'</div></section>';
-  }).join('')+'</div>';
-  return h;
-}
-/* Writes whichever field the column axis represents, honouring the same
-   permission rules the rest of the board uses. */
-async function kanbanMove(id,col){
-  var k=findTask(id);if(!k)return;
-  var by=kanbanBy(),isShared=!!k.assigneeEmail;
-  if(kanbanKey(k)===col)return;
-  if(by==='status'){
-    var ns=col;
-    if(isShared){
-      if(!FB.ready){toast('Sync offline');return}
-      if(!isAdmin&&!k.selfCreated&&ns==='done')ns='review';   /* members send for review */
-      try{
-        await FB.F.updateDoc(fdoc('tasks',k.id),
-          {status:ns,doneAt:(ns==='done'||ns==='review')?(k.doneAt||Date.now()):null});
-        if(ns==='done')bumpDoneDate(todayStr(),1);
-        save();render();
-        toast(ns==='review'?'Sent for review':'Moved to '+ns);
-      }catch(e){console.error(e);toast('Update blocked — check permissions')}
-      return;
-    }
-    if(ns==='done'){k.status='done';k.doneAt=Date.now();delete k.pinned;bumpDoneDate(todayStr(),1);ding()}
-    else{
-      if(k.status==='done')bumpDoneDate(dsOf(k.doneAt||Date.now()),-1);
-      k.status=ns;delete k.doneAt;
-      if(k.date&&k.date<todayStr())k.date=todayStr();
-    }
-    save();render();return;
-  }
-  if(by==='person'){
-    if(!isAdmin){toast('Only Kalash can reassign');return}
-    if(isShared){
-      var np=col?personOf(col):null,em=String((np&&np.email)||'').toLowerCase();
-      if(!col||!em){toast('A delegated task needs a person with an account');return}
-      if(!FB.ready){toast('Sync offline');return}
-      try{await FB.F.updateDoc(fdoc('tasks',k.id),{person:col,assigneeEmail:em});render();toast('Reassigned')}
-      catch(e){toast('Failed')}
-      return;
-    }
-    if(col)k.person=col;else k.person=null;
-  }else if(by==='group'){
-    if(isShared){toast('Delegated tasks can’t be grouped');return}
-    if(col)k.group=col;else delete k.group;
-  }else{
-    if(isShared){
-      if(!isAdmin&&!k.selfCreated){toast('Only Kalash can retag this');return}
-      if(!FB.ready){toast('Sync offline');return}
-      try{await FB.F.updateDoc(fdoc('tasks',k.id),{tag:col||null});render();toast('Retagged')}
-      catch(e){toast('Failed')}
-      return;
-    }
-    if(col)k.tag=col;else k.tag=null;
-  }
-  save();render();
-}
-function bindKanban(){
-  $$('#ledger [data-kbby]').forEach(function(b){b.addEventListener('click',function(){
-    S.prefs.kanbanBy=b.dataset.kbby;save();renderLedger();
-  })});
-  var wrap=$('#kbWrap');if(!wrap)return;
-  var drag=null;
-  function colUnder(x,y){
-    var el=document.elementFromPoint(x,y);
-    return el?el.closest('[data-kbcol]'):null;
-  }
-  wrap.addEventListener('pointerdown',function(e){
-    var card=e.target.closest('.kb-card');if(!card)return;
-    if(e.button!==undefined&&e.button!==0)return;
-    drag={id:card.dataset.kb,el:card,x:e.clientX,y:e.clientY,on:false,ghost:null,pid:e.pointerId};
-  });
-  wrap.addEventListener('pointermove',function(e){
-    if(!drag)return;
-    var dx=e.clientX-drag.x,dy=e.clientY-drag.y;
-    if(!drag.on){
-      if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
-      drag.on=true;
-      try{drag.el.setPointerCapture(drag.pid)}catch(err){}
-      var r=drag.el.getBoundingClientRect();
-      drag.ox=drag.x-r.left;drag.oy=drag.y-r.top;
-      var g=drag.el.cloneNode(true);
-      g.className+=' kb-ghost';
-      g.style.width=r.width+'px';
-      document.body.appendChild(g);
-      drag.ghost=g;drag.el.classList.add('kb-lifting');
-    }
-    e.preventDefault();
-    drag.ghost.style.transform='translate('+(e.clientX-drag.ox)+'px,'+(e.clientY-drag.oy)+'px)';
-    var c=colUnder(e.clientX,e.clientY);
-    $$('#ledger .kb-col.over').forEach(function(x){x.classList.remove('over')});
-    if(c)c.classList.add('over');
-  });
-  function end(e){
-    if(!drag)return;
-    var d=drag;drag=null;
-    if(!d.on)return;                       /* a tap, not a drag — let click run */
-    if(d.ghost)d.ghost.remove();
-    d.el.classList.remove('kb-lifting');
-    var c=colUnder(e.clientX,e.clientY);
-    $$('#ledger .kb-col.over').forEach(function(x){x.classList.remove('over')});
-    d.el.dataset.dragged='1';
-    if(c)kanbanMove(d.id,c.dataset.kbcol);
-  }
-  wrap.addEventListener('pointerup',end);
-  wrap.addEventListener('pointercancel',function(){
-    if(drag&&drag.ghost)drag.ghost.remove();
-    if(drag&&drag.el)drag.el.classList.remove('kb-lifting');
-    $$('#ledger .kb-col.over').forEach(function(x){x.classList.remove('over')});
-    drag=null;
-  });
-  wrap.addEventListener('click',function(e){
-    var card=e.target.closest('.kb-card');if(!card)return;
-    if(card.dataset.dragged){delete card.dataset.dragged;return}
-    var k=findTask(card.dataset.kb);if(k)openEdit(k);
-  });
-}
-
 /* ---------- TEAM ----------
    Every person the board knows about — the people roster, the published
    allowlist, invited guests and anyone who has ever signed in — folded
@@ -2590,7 +2191,6 @@ function renderLedger(){
   if(view==='analytics'){L.innerHTML=renderAnalytics();bindAnalytics();return}
   if(view==='activity'){L.innerHTML=renderActivityScreen();bindActivityScreen();return}
   if(view==='calendar'){L.innerHTML=renderCalScreen();bindCalScreen();return}
-  if(view==='board'){L.innerHTML=renderKanban();bindKanban();return}
   if(view==='requests'){
     var vm=allTasks().filter(function(k){return k.vmark==='review'});
     if(vm.length){
@@ -4386,7 +3986,6 @@ function renderBulkUI(){
   var n=Object.keys(bulkSel).length;
   if(bulkMode&&!n){exitBulk();return}
   $('#bulkBar').classList.toggle('hidden',!bulkMode);
-  document.documentElement.classList.toggle('bulking',bulkMode);
   $('#bbCount').textContent=n+' selected';
   $('#bbAssign').style.display=(isAdmin&&!isPersonal())?'':'none';
   var vis=visibleIds();
@@ -4395,7 +3994,6 @@ function renderBulkUI(){
 }
 function exitBulk(){
   bulkMode=false;bulkSel={};bulkAnchor=null;
-  document.documentElement.classList.remove('bulking');
   $('#bulkBar').classList.add('hidden');$('#bulkTray').classList.add('hidden');
   $$('#ledger .task.bulk-on').forEach(function(el){el.classList.remove('bulk-on')});
 }
@@ -4685,10 +4283,7 @@ function bindAll(){
   $('#tabs').addEventListener('click',function(e){var b=e.target.closest('.tab');if(!b)return;
     closePeerBoard(true);view=b.dataset.view;selDate=null;render()});
   $('#bnav').addEventListener('click',function(e){var b=e.target.closest('.bn');if(!b)return;
-    if(b.dataset.more)openMore();else goView(b.dataset.view)});
-  $('#moreBody').addEventListener('click',function(e){var b=e.target.closest('.more-row');if(!b)return;
-    closeOv('moreOv');goView(b.dataset.view)});
-  $('#moreClose').addEventListener('click',function(){closeOv('moreOv')});
+    closePeerBoard(true);view=b.dataset.view;selDate=null;render();window.scrollTo({top:0,behavior:'smooth'})});
   $('#filters').addEventListener('click',function(e){var b=e.target.closest('.f-chip');if(!b)return;activeTag=b.dataset.tag;render()});
   $('#week').addEventListener('click',function(e){var b=e.target.closest('.wd');if(!b)return;
     selDate=b.dataset.day===todayStr()?null:b.dataset.day;renderWeek();renderLedger()});
@@ -5286,9 +4881,6 @@ window.addEventListener('beforeinstallprompt',function(e){
 window.addEventListener('appinstalled',function(){deferredPrompt=null;toast('Daily Ops installed')});
 
 (function boot(){
-  /* the sign-in gate paints before either bootApp or bootViewer runs, so
-     without this it was the one screen still using the raw defaults */
-  applyTheme();
   var vk=new URLSearchParams(location.search).get('view');
 
   /* ---- PUBLIC VIEWER ---- */
